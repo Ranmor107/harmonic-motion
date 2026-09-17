@@ -13,7 +13,10 @@ const timeLabel = (time: number) => `${String(Math.floor(time / 60)).padStart(2,
 const pitchLabel = (midi: number) => `${['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'][midi % 12]}${Math.floor(midi / 12) - 1}`
 
 export function App() {
-  const { compiled, seed, preset, setScore, regenerate, setPreset } = useStudio()
+  const {
+    compiled, seed, preset, viewMode, visibilityMode,
+    setScore, regenerate, setPreset, setViewMode, setVisibilityMode,
+  } = useStudio()
   const { score, world, plan } = compiled
   const [controller] = useState(() => {
     const clock = new PlaybackClock(0, audioNow)
@@ -25,6 +28,7 @@ export function App() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [starting, setStarting] = useState(false)
+  const [fitRequest, setFitRequest] = useState(0)
   const importRevision = useRef(0)
   const noteById = useMemo(() => new Map(score.notes.map(note => [note.id, note])), [score])
 
@@ -88,30 +92,52 @@ export function App() {
   const noteIds = current ? current.type === 'chord-hit' ? current.noteIds : [current.noteId] : []
   const pitches = noteIds.map(id => noteById.get(id)).filter(note => note !== undefined)
   const sounding = pitches.filter(note => playback.time < note.startTime + note.duration)
+  const activeTrack = sounding[0] ? score.tracks.find(track => track.id === sounding[0]!.trackId) : undefined
   const playing = playback.status === 'playing'
   const progress = score.duration ? playback.time / score.duration * 100 : 0
+  const bpm = score.bpm ?? score.metadata.tempoMap?.[0]?.bpm
 
   return <main className="studio">
     <header className="topbar">
-      <a className="brand" href="./" aria-label="Harmonic Motion home"><img src="/mark.svg" alt="" /><span>Harmonic <em>Motion</em></span></a>
-      <span className="topbar-note">A score-to-world engine</span>
+      <a className="brand" href="./" aria-label="Harmonic Motion home">
+        <svg className="brand-motif" viewBox="0 0 52 28" aria-hidden="true"><path d="M2 7h48M2 14h48M2 21h48" /><circle cx="13" cy="14" r="3.4" /><circle cx="28" cy="7" r="2.5" /><circle cx="41" cy="21" r="3" /><path className="motif-link" d="M13 14 28 7l13 14" /></svg>
+        <span>Harmonic <em>Motion</em></span>
+      </a>
+      <span className="topbar-note">Scores, performed as spatial studies</span>
       <span className={`status ${playing ? 'is-playing' : ''}`}><i />{playing ? 'Performing' : playback.status === 'ended' ? 'Complete' : playback.status === 'paused' ? 'Paused' : 'Ready to play'}</span>
     </header>
 
     <section className="world-stage" aria-label="Music world">
-      <Scene world={world} plan={plan} preset={preset} playback={snapshot} cameraController={StaticCamera} />
-      <div className="scene-caption">
-        <p className="eyebrow">Musical constellation</p>
+      <Scene score={score} world={world} plan={plan} preset={preset} playback={snapshot} cameraController={StaticCamera} viewMode={viewMode} visibilityMode={visibilityMode} fitRequest={fitRequest} />
+      <div className="score-card">
+        <p className="eyebrow">Music artwork · {score.metadata.source === 'demo' ? 'Original study' : 'Local MIDI'}</p>
         <h1>{score.metadata.title}</h1>
-        <p className="score-source">{score.metadata.source === 'demo' ? 'An original study in C major' : 'Your MIDI, in musical space'}</p>
+        <p className="score-source">{viewMode === 'constellation' ? 'A score arranged as a navigable constellation' : 'A local performance moving through musical time'}</p>
+        <dl className="artwork-data">
+          <div><dt>Duration</dt><dd>{timeLabel(score.duration)}</dd></div>
+          <div><dt>Tracks</dt><dd>{score.tracks.length}</dd></div>
+          <div><dt>Notes</dt><dd>{score.notes.length}</dd></div>
+          <div><dt>Chords</dt><dd>{score.chords.length}</dd></div>
+          {bpm && <div><dt>Tempo</dt><dd>{Math.round(bpm)} BPM</dd></div>}
+        </dl>
       </div>
-      <div className="scene-reading" aria-label="Current notes">
-        <span className="eyebrow">{current?.type === 'chord-hit' ? 'Chord' : 'Note'}</span>
+      <div className="live-reading" aria-label="Current music">
+        <span className="eyebrow">Now · {current?.type === 'chord-hit' ? 'Chord' : 'Note'}</span>
         <span className={`pitch-reading ${sounding.length ? 'sounding' : ''}`}>{pitches.length ? pitches.map(note => pitchLabel(note.midi)).join(' · ') : '—'}</span>
+        <span className="voice-reading">{activeTrack?.name || (activeTrack ? `Voice ${score.tracks.indexOf(activeTrack) + 1}` : 'Waiting for the next onset')}</span>
+      </div>
+      <div className="view-controls" aria-label="View controls">
+        <div className="control-group"><span>View</span><div className="segmented">
+          {(['constellation', 'stream'] as const).map(mode => <button key={mode} className={viewMode === mode ? 'selected' : ''} onClick={() => setViewMode(mode)}>{mode === 'constellation' ? 'Constellation' : 'Stream'}</button>)}
+        </div></div>
+        <div className="control-group"><span>Visibility</span><div className="segmented">
+          {(['overview', 'focus', 'path'] as const).map(mode => <button key={mode} className={visibilityMode === mode ? 'selected' : ''} onClick={() => setVisibilityMode(mode)} disabled={viewMode === 'stream'}>{mode === 'path' ? 'Current path' : mode[0]!.toUpperCase() + mode.slice(1)}</button>)}
+        </div></div>
+        <button className="fit-button" onClick={() => setFitRequest(value => value + 1)}><Icon name="fit" />Fit world</button>
       </div>
       <div className="scene-footer">
-        <div className="legend"><span><i className="note-dot" />Note</span><span><i className="chord-dot" />Chord</span><span><i className="performer-dot" />Performer</span></div>
-        <span className="world-detail">{world.nodes.length} nodes <span>·</span> {world.layers.length} {world.layers.length === 1 ? 'voice' : 'voices'} <span>·</span> Seed {String(seed).padStart(3, '0')}</span>
+        <div className="legend"><span><i className="note-dot" />Note</span><span><i className="chord-dot" />Chord</span><span><i className="performer-dot" />Main performer</span></div>
+        <span className="world-detail">{viewMode === 'stream' ? 'Local time window' : `${world.nodes.length} world nodes`} <span>·</span> {world.layers.length} {world.layers.length === 1 ? 'voice' : 'voices'} <span>·</span> Seed {String(seed).padStart(3, '0')}</span>
       </div>
     </section>
 
@@ -140,7 +166,7 @@ export function App() {
         </div>
         <button className="effects-toggle" onClick={toggleEffects} aria-pressed={preset.effects.hit.enabled}><span className={`toggle-dot ${preset.effects.hit.enabled ? 'on' : ''}`} />Effects {preset.effects.hit.enabled ? 'on' : 'off'}</button>
       </div>
-      <div className="transport-note"><span>{score.metadata.source === 'demo' ? 'Built-in score · 10 notes · 1 chord' : `${score.notes.length} notes · ${score.chords.length} chords · Local MIDI`}</span><span>Music becomes space.</span></div>
+      <div className="transport-note"><span>Scroll to zoom · drag to pan · all views follow authoritative song time</span><span>Read the score in motion.</span></div>
       {error && <div className="error-message" role="alert"><span>{error}</span><button onClick={() => setError('')} aria-label="Dismiss error">×</button></div>}
     </footer>
   </main>

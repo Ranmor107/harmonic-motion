@@ -1,6 +1,9 @@
 import type { CameraConfig, CameraController } from '../../domain/visual'
 
-export const DefaultCamera: CameraConfig = { type: 'static', fov: 42, padding: 1.12, direction: { x: 0.35, y: 0.14, z: 1 } }
+export const DefaultCamera: CameraConfig = {
+  type: 'navigable', fov: 42, padding: 1.12, direction: { x: 0.35, y: 0.14, z: 1 },
+  minDistance: 1.4, maxDistance: 180,
+}
 
 export const StaticCamera: CameraController = {
   getState(_time, { bounds, aspect, config }) {

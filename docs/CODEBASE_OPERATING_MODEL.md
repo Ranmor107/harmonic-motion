@@ -120,10 +120,10 @@ Last verified: 2026-09-17；审阅 `db67599` 的全部 40 个 src 文件、4 个
 <a id="visual"></a>
 ## Visual configuration and camera
 
-- **Primary paths / entry points**：[themes/defaultCosmic.ts](../src/visual/themes/defaultCosmic.ts)、[effects/defaultEffects.ts](../src/visual/effects/defaultEffects.ts)、[environments/defaultEnvironment.ts](../src/visual/environments/defaultEnvironment.ts)、[camera/staticCamera.ts](../src/visual/camera/staticCamera.ts)、[presets/defaultPreset.ts](../src/visual/presets/defaultPreset.ts)。
+- **Primary paths / entry points**：[themes/defaultCosmic.ts](../src/visual/themes/defaultCosmic.ts)、[effects/defaultEffects.ts](../src/visual/effects/defaultEffects.ts)、[environments/defaultEnvironment.ts](../src/visual/environments/defaultEnvironment.ts)、[camera/staticCamera.ts](../src/visual/camera/staticCamera.ts)、[presentation/evaluatePresentation.ts](../src/visual/presentation/evaluatePresentation.ts)、[presentation/defaultPresentation.ts](../src/visual/presentation/defaultPresentation.ts)、[presets/defaultPreset.ts](../src/visual/presets/defaultPreset.ts)。
 - **Responsibility / owns**：视觉配置及纯 CameraController；组合 preset，独立于乐谱编译。
 - **Consumes → produces**：domain/visual 类型、相机 bounds/aspect/config → VisualTheme/EffectProfile/EnvironmentConfig/VisualPreset/CameraState。
-- **Public contracts / symbols**：`DefaultCosmicTheme`、`DefaultEffects`、`DefaultEnvironment`、`DefaultCamera`、`StaticCamera`、`DefaultPreset`；类型定义在 domain/visual。
+- **Public contracts / symbols**：默认 theme/effects/environment/camera/presentation/preset；`evaluateNodePresentation`、`selectReadableNodeIds`、`evaluateStreamPerformer`、`evaluateStreamSatellites`；类型定义在 domain/visual。
 - **Allowed dependencies**：domain、其他 visual 配置、纯 utils（如确有需要）。**Forbidden / undesirable**：MIDI 解析、修改 score/world/plan、音频调度、生成轨迹。
 - **Related tests**：[engine.test.ts](../tests/engine.test.ts) 的 `Independent extension points` 仅证明编译数据引用稳定；无相机或渲染单测。
 - **Safe local changes**：既有字段内换色/调参/组合 preset；确认对应字段已被 Renderer 解释。
@@ -133,7 +133,7 @@ Last verified: 2026-09-17；审阅 `db67599` 的全部 40 个 src 文件、4 个
 <a id="render"></a>
 ## Render
 
-- **Primary paths / entry points**：[Scene.tsx](../src/render/Scene.tsx)、[WorldRenderer.tsx](../src/render/WorldRenderer.tsx)、[PerformerRenderer.tsx](../src/render/PerformerRenderer.tsx)、[EffectsRenderer.tsx](../src/render/EffectsRenderer.tsx)、[EnvironmentRenderer.tsx](../src/render/EnvironmentRenderer.tsx)、[CameraRig.tsx](../src/render/CameraRig.tsx)、[types.ts](../src/render/types.ts)。
+- **Primary paths / entry points**：[Scene.tsx](../src/render/Scene.tsx)、[WorldRenderer.tsx](../src/render/WorldRenderer.tsx)、[PerformerRenderer.tsx](../src/render/PerformerRenderer.tsx)、[TrajectoryRenderer.tsx](../src/render/TrajectoryRenderer.tsx)、[StreamRenderer.tsx](../src/render/StreamRenderer.tsx)、[EffectsRenderer.tsx](../src/render/EffectsRenderer.tsx)、[EnvironmentRenderer.tsx](../src/render/EnvironmentRenderer.tsx)、[CameraRig.tsx](../src/render/CameraRig.tsx)、[types.ts](../src/render/types.ts)。
 - **Responsibility / owns**：R3F/Three 对象生命周期、由音乐数据推导的视觉状态、画面取景执行与错误降级。
 - **Consumes → produces**：world + plan + `PlaybackSnapshot` + preset + 独立传入的 CameraController → canvas/3D 场景；快照是 `RefObject<PlaybackState>`。
 - **Public contracts / symbols**：Scene props、各 renderer props、PlaybackSnapshot；通过纯 evaluator 获取位置与时间窗口。
@@ -142,15 +142,15 @@ Last verified: 2026-09-17；审阅 `db67599` 的全部 40 个 src 文件、4 个
 - **Safe local changes**：材质解释、显示层过滤、既有参数的效果表现；保持绝对时间求值。
 - **Adjacent scope**：显示模式先看 visual 类型；交互操作再看 App；新增计划语义才需 domain/performance，不能从视觉需求直接倒推重写 planner。
 - **Must NOT decide**：音符时序、几何生成或编舞路线。
-- **关键连接**：Scene 接收的 `cameraController` 与 preset.camera 配置是两个入口；CameraRig 当前调用 `getState(0, ...)`。连接线直接连节点，并非绘制 Bézier 曲线；trail 才采样已有 Performer 路径。
+- **关键连接**：Scene 接收的 `cameraController` 与 preset.camera 配置是两个入口；CameraRig 用 `getState(0, ...)` 恢复 home view，再由 OrbitControls 处理受限 zoom/pan。连接线直接连节点；TrajectoryRenderer/Performer trail 才采样已有 Bézier。StreamRenderer 使用 score 音高/轨道及绝对时间生成临时显示对象，不改变 world/plan。
 
 <a id="state"></a>
 ## State / application composition
 
 - **Primary path / entry points**：[src/state/store.ts](../src/state/store.ts) `createStudioStore` / `useStudio`。
-- **Responsibility / owns**：compiled、seed、strategy、preset 及应用级默认值。
+- **Responsibility / owns**：compiled、seed、strategy、preset、viewMode、visibilityMode 及应用级默认值。
 - **Consumes → produces**：demo/导入 score、compileScore、默认策略/preset → Zustand 应用状态和 actions。
-- **Public contracts / symbols**：`setScore`、`regenerate`、`setPreset`；`StudioState` 为文件内接口，没有 setStrategy action。
+- **Public contracts / symbols**：`setScore`、`regenerate`、`setPreset`、`setViewMode`、`setVisibilityMode`；`StudioState` 为文件内接口，没有 setStrategy action。
 - **Allowed dependencies**：Zustand、domain、compile、策略、demo、visual 默认值。**Forbidden / undesirable**：把歌曲时钟/每帧对象移入 store、解析二进制或控制 Tone 声部。
 - **Related tests**：[engine.test.ts](../tests/engine.test.ts) 的 preset 引用不变与 regenerate 用例。
 - **Safe local changes**：应用组合或新增局部选择状态；不要为了一个 UI 控件重构 store。

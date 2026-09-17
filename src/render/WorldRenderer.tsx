@@ -2,11 +2,15 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Color, InstancedMesh, Object3D } from 'three'
 import type { WorldModel } from '../domain/world'
-import type { VisualTheme } from '../domain/visual'
+import type { PresentationConfig, VisibilityMode, VisualTheme } from '../domain/visual'
 import { evaluateNode } from '../engine/choreography/evaluator'
+import { evaluateNodePresentation, selectReadableNodeIds } from '../visual/presentation/evaluatePresentation'
 import type { PlaybackSnapshot } from './types'
 
-export function WorldRenderer({ world, theme, playback }: { world: WorldModel; theme: VisualTheme; playback: PlaybackSnapshot }) {
+export function WorldRenderer({ world, theme, playback, visibilityMode, presentation }: {
+  world: WorldModel; theme: VisualTheme; playback: PlaybackSnapshot
+  visibilityMode: VisibilityMode; presentation: PresentationConfig
+}) {
   const mesh = useRef<InstancedMesh>(null)
   const scratch = useMemo(() => ({ object: new Object3D(), color: new Color() }), [])
   const lines = useMemo(() => {
@@ -25,15 +29,18 @@ export function WorldRenderer({ world, theme, playback }: { world: WorldModel; t
   useFrame(() => {
     if (!mesh.current) return
     const time = playback.current.time
+    const readable = selectReadableNodeIds(world.nodes, time, visibilityMode, presentation.visibility)
     world.nodes.forEach((node, index) => {
       const state = evaluateNode(node, time)
+      const display = evaluateNodePresentation(node, time, visibilityMode, presentation.visibility)
+      const visible = display.visible && (!readable || readable.has(node.id))
       const radius = theme.nodeStyle.radius * (node.kind === 'chord' ? theme.nodeStyle.chordScale : 1) *
-        (state === 'active' ? theme.nodeStyle.activeScale : 1)
+        (state === 'active' ? theme.nodeStyle.activeScale : 1) * (visible ? 1 : 0)
       scratch.object.position.set(node.position.x, node.position.y, node.position.z)
       scratch.object.scale.setScalar(radius)
       scratch.object.updateMatrix()
       mesh.current!.setMatrixAt(index, scratch.object.matrix)
-      const opacity = state === 'active' ? 1 : state === 'past' ? theme.nodeStyle.pastOpacity : theme.nodeStyle.upcomingOpacity
+      const opacity = visible ? (state === 'active' ? 1 : state === 'past' ? theme.nodeStyle.pastOpacity : theme.nodeStyle.upcomingOpacity) * display.opacity : 0
       scratch.color.set(node.kind === 'chord' ? theme.palette.chord : theme.palette.note).multiplyScalar(opacity)
       mesh.current!.setColorAt(index, scratch.color)
     })
@@ -48,11 +55,11 @@ export function WorldRenderer({ world, theme, playback }: { world: WorldModel; t
     </instancedMesh>
     <lineSegments>
       <bufferGeometry><bufferAttribute attach="attributes-position" args={[lines.sequence, 3]} /></bufferGeometry>
-      <lineBasicMaterial color={theme.palette.connection} transparent opacity={theme.connectionStyle.opacity} />
+      <lineBasicMaterial color={theme.palette.connection} transparent opacity={visibilityMode === 'overview' ? theme.connectionStyle.opacity : visibilityMode === 'focus' ? theme.connectionStyle.opacity * 0.22 : 0} />
     </lineSegments>
     <lineSegments>
       <bufferGeometry><bufferAttribute attach="attributes-position" args={[lines.voices, 3]} /></bufferGeometry>
-      <lineBasicMaterial color={theme.palette.connection} transparent opacity={theme.connectionStyle.voiceOpacity} />
+      <lineBasicMaterial color={theme.palette.connection} transparent opacity={visibilityMode === 'overview' ? theme.connectionStyle.voiceOpacity : visibilityMode === 'focus' ? theme.connectionStyle.voiceOpacity * 0.18 : 0} />
     </lineSegments>
   </group>
 }

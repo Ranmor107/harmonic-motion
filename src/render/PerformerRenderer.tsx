@@ -40,6 +40,10 @@ export function PerformerRenderer({ performer, theme, effects, playback }: {
         <sphereGeometry args={[1, 16, 12]} />
         <meshBasicMaterial color={theme.palette.performer} transparent opacity={style.haloOpacity} depthWrite={false} />
       </mesh>
+      <mesh scale={style.radius * style.haloScale * 1.55}>
+        <sphereGeometry args={[1, 16, 12]} />
+        <meshBasicMaterial color={theme.palette.performer} transparent opacity={style.haloOpacity * 0.34} depthWrite={false} />
+      </mesh>
     </group>
     {effects.trail.enabled && <instancedMesh key={effects.trail.samples} ref={trail} args={[undefined, undefined, effects.trail.samples]} frustumCulled={false}>
       <sphereGeometry args={[1, 6, 4]} />

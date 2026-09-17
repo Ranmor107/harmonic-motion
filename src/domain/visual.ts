@@ -18,11 +18,43 @@ export interface EffectProfile {
   particles: { enabled: boolean; lifetime: number; count: number; radius: number; distance: number; opacity: number }
 }
 
+export type ViewMode = 'constellation' | 'stream'
+export type VisibilityMode = 'overview' | 'focus' | 'path'
+
+export interface PresentationConfig {
+  visibility: {
+    activePast: number
+    activeFuture: number
+    contextPast: number
+    contextFuture: number
+    contextOpacity: number
+    farOpacity: number
+    focusMaxNodes: number
+    pathMaxNodes: number
+  }
+  stream: {
+    leadInTime: number
+    hitDuration: number
+    fadeOutTime: number
+    timeScale: number
+    pitchSpread: number
+    trackSpacing: number
+    maxVisibleNotes: number
+  }
+}
+
 export type EnvironmentConfig =
   | { type: 'solid'; color: string }
   | { type: 'gradient'; top: string; bottom: string; stars: { enabled: boolean; count: number; seed: number; color: string; opacity: number; size: number } }
 
-export interface CameraConfig { type: 'static'; fov: number; padding: number; direction: Vec3 }
+export interface CameraConfig {
+  type: 'navigable'
+  fov: number
+  padding: number
+  direction: Vec3
+  minDistance: number
+  maxDistance: number
+}
 export interface CameraState { position: Vec3; target: Vec3; fov: number; near: number; far: number }
 export interface CameraContext { bounds: WorldBounds; aspect: number; config: CameraConfig }
 export interface CameraController { getState(time: number, context: CameraContext): CameraState }
@@ -34,4 +66,5 @@ export interface VisualPreset {
   effects: EffectProfile
   environment: EnvironmentConfig
   camera: CameraConfig
+  presentation: PresentationConfig
 }

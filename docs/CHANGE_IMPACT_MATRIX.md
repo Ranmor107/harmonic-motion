@@ -29,10 +29,10 @@ Secondary 是有证据才展开的邻域；不是默认要修改的清单。
 
 ## 相机与可见性路由的当前事实
 
-- 已有“根据全世界 bounds 自动静态取景”；没有用户可操作的 Fit all/overview 开关。
-- CameraRig 的执行方式是 layout effect + `getState(0, ...)`，不是按歌曲时间更新。Follow 需先定义目标和更新路径，不能只写一个新配置就声称完成。
-- WorldRenderer 每帧更新全部节点并显示所有连接；没有 Active Window。
-- 节点间直线是 WorldModel 的连接，不等于 PerformancePlan 的 Bézier。Current Trajectory Only 应显示已有 plan 的当前段，不在 Renderer 里重新规划轨迹。
+- 已有按 presentation bounds 自动取景、受限 zoom/pan 与 Fit World；follow 仍未实现。CameraRig 以 `getState(0, ...)` 恢复 home view，Follow 仍需先定义目标和时间更新路径。
+- Focus/Current Path 从 songTime 派生强调集合并使用配置预算；隐藏不删 WorldModel。WorldRenderer 仍遍历实例，超大曲目性能需测量。
+- 节点间直线仍是 WorldModel 连接；TrajectoryRenderer 采样已有 PerformancePlan 当前段，不在 Renderer 重新规划轨迹。
+- Stream V1 已选择 R11-A：presentation/render mode，复用 score/world/plan/playback；不是 GeometryStrategy。未来若改变空间语义再单独评估 R11-B。
 
 <a id="near-term-routing"></a>
 ## 已讨论方向的 future routing

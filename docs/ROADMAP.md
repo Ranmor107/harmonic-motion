@@ -30,11 +30,11 @@ Last verified: 2026-09-17；依据当前源码、已知限制与用户提出的�
 
 | 方向 | 状态 | 拟解决的问题 / 下一步验证 | 路由 |
 | --- | --- | --- | --- |
-| Zoom / pan、可操作 Fit all、overview | Candidate | 在现有静态整体取景上增加导航；先定义交互状态和 reset 行为 | [C05](CHANGE_IMPACT_MATRIX.md#c05-camera) |
+| Zoom / pan、Fit World、Overview | Completed | Iteration 02；不修改 world/plan/playback | [C05](CHANGE_IMPACT_MATRIX.md#c05-camera) |
 | Follow view、fit current active region | Candidate | 保持音乐世界不变，定义跟随目标/时间输入 | [C05/C06](CHANGE_IMPACT_MATRIX.md#c06-visibility) |
-| Active Window、可见性过滤、current trajectory emphasis | Candidate | 用真实片段验证可读性；先实现显示语义，不以删节点解决 | [C06](CHANGE_IMPACT_MATRIX.md#c06-visibility) |
-| 主 Performer 视觉焦点 | Candidate | 先验证对比度/大小/视角；不要混入声部编舞 | [C09](CHANGE_IMPACT_MATRIX.md#c09-appearance) |
-| Artistic UI：标题、音乐元数据、时间线、motif 装饰、层级 | Candidate | 明确最重要的用户操作与所需音乐信息；装饰不产生新音乐分析 | [C01](CHANGE_IMPACT_MATRIX.md#c01-ui) |
+| Focus / Current Path / trajectory emphasis | Completed | Iteration 02；配置时间窗和显示预算，不删 WorldModel 节点 | [C06](CHANGE_IMPACT_MATRIX.md#c06-visibility) |
+| 主 Performer 视觉焦点与 Stream satellites | Completed | Iteration 02 presentation；仍是一名 choreography Performer | [C09](CHANGE_IMPACT_MATRIX.md#c09-appearance) |
+| Artistic UI：作品信息、实时音乐、时间线、motif、层级 | Completed | Iteration 02；只使用现有可靠 score/playback 数据 | [C01](CHANGE_IMPACT_MATRIX.md#c01-ui) |
 | 新主题、效果、环境、相机样式 | Candidate | 先区分可配置字段和缺少的 Renderer 能力；参考 D-01 | [C02–C05](CHANGE_IMPACT_MATRIX.md#c02-theme) |
 
 ## Later

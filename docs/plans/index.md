@@ -24,6 +24,6 @@ plan 是实施边界，不是永久架构规范。真正的架构决策另用 [A
 
 | Plan | Status | Path | Evidence / next step |
 | --- | --- | --- | --- |
-| 暂无登记的产品实施计划 | — | [active](active/README.md) / [completed](completed/README.md) | 本轮为一次性 documentation-only 盘点；后续选定任务再创建 |
+| Iteration 02 - Visual Readability and Performance Narrative | Completed | [completed plan](completed/iteration-02-visual-readability.md) | [验证证据](../VERIFICATION.md#iteration-02) |
 
 与 [ROADMAP](../ROADMAP.md) 关联时，只有真实计划才写 Planned/Active；模板和候选清单不算计划。

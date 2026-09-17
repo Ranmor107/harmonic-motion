@@ -59,3 +59,25 @@ build 只重新生成被忽略的 dist/与 TypeScript 缓存；没有修改构�
 - 定向命令 `npm run test -- tests/engine.test.ts -t "Independent extension points"` 已实际运行：3 项通过、12 项按过滤条件跳过；完整 31 项基线结果见上表。
 - Git 差异及暂存文件逐项检查，只包含 Markdown；相对产品基线没有源码、测试、依赖或配置变更。用户已有的 `midi/` 未提交文件保留在此次变更之外。
 - 已记录视觉配置的实现差异和 seek 文案澄清；没有为解决差异修改产品代码，也没有编造历史 plan/ADR。
+
+<a id="iteration-02"></a>
+## Iteration 02 · Visual Readability and Performance Narrative
+
+日期：2026-09-17。产品起点：`769bc55`。
+
+| 检查 | 结果 |
+| --- | --- |
+| `npm run test` | PASS，5 文件 / 38 测试；新增 7 项 presentation/camera/store 回归 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS；JS 1,400.14 kB（gzip 379.59 kB），CSS 8.79 kB（gzip 2.79 kB）；既有 >500 kB warning 保留 |
+| 浏览器 console | 无 error；只有既有 Three.js Clock deprecated warning |
+
+浏览器检查了内置 10 音符 demo，以及临时程序生成的 4 轨/720 音符/约 14.5 秒 MIDI（132 BPM；不写入仓库）。实际观察：
+
+- UI 作品信息、实时音符/声部、timeline、view/visibility/fit/effects 控件在 675 px 宽窗口仍可读。
+- Constellation 的 Overview/Focus/Current Path 可切换；密集曲目中 Focus 最多强调 96 节点，Current Path 最多 36 节点，当前路径保持清楚。
+- Stream 在 demo 和密集曲目中只显示局部绝对时间窗口；和弦时显示多个卫星，pitch 上下分布，主 Performer 保持突出。
+- 暂停后 seek 到 5.2 秒恢复 demo 的 C4/E4/G4 和弦；播放中切换 view 保留歌曲时间，未重新加载 MIDI。
+- 对 Canvas 执行 wheel、drag 与 Fit World；world/plan/playback 不由相机交互修改。自动测试另验证 compiled/world/plan 引用严格不变。
+
+未测量 FPS、GPU 时间、真实声卡输出或端到端音画延迟；720 音符截图证明局部化策略可用，不是性能承诺。

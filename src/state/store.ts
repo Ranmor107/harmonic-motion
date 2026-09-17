@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { NormalizedScore } from '../domain/score'
-import type { VisualPreset } from '../domain/visual'
+import type { ViewMode, VisibilityMode, VisualPreset } from '../domain/visual'
 import { compileScore, type CompiledScore } from '../engine/compile'
 import { ConstellationGeometryStrategy } from '../engine/music-geometry/strategies/constellation'
 import type { GeometryStrategy } from '../engine/music-geometry/GeometryStrategy'
@@ -12,9 +12,13 @@ interface StudioState {
   seed: number
   strategy: GeometryStrategy
   preset: VisualPreset
+  viewMode: ViewMode
+  visibilityMode: VisibilityMode
   setScore(score: NormalizedScore): void
   regenerate(): void
   setPreset(preset: VisualPreset): void
+  setViewMode(viewMode: ViewMode): void
+  setVisibilityMode(visibilityMode: VisibilityMode): void
 }
 
 export function createStudioStore() {
@@ -22,6 +26,7 @@ export function createStudioStore() {
   const strategy = ConstellationGeometryStrategy
   return create<StudioState>((set, get) => ({
     compiled: compileScore(createDemoScore(), strategy, seed), seed, strategy, preset: DefaultPreset,
+    viewMode: 'constellation', visibilityMode: 'focus',
     setScore: score => set({ compiled: compileScore(score, get().strategy, get().seed) }),
     regenerate: () => {
       const state = get()
@@ -30,6 +35,8 @@ export function createStudioStore() {
     },
     // Visual changes retain the exact same compiled objects, not just equal copies.
     setPreset: preset => set({ preset }),
+    setViewMode: viewMode => set({ viewMode }),
+    setVisibilityMode: visibilityMode => set({ visibilityMode }),
   }))
 }
 
