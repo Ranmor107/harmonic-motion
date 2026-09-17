@@ -1,6 +1,13 @@
 # Foundation 验证记录
 
+Purpose: 保留带日期、baseline 和适用边界的实际检查证据。
+Authority: 已发生验证的记录；不能作为未来提交自动通过的保证。
+Update when: 新一轮检查产生结果，或旧证据被确认需更正。
+Last verified: 2026-09-17；本轮重跑自动基线，浏览器结果为 Foundation 阶段历史记录。
+
 日期：2026-09-17。环境：Windows、Node.js 24.18.0、Codex 内置 Chromium 浏览器，1280 × 720。
+
+以下 Foundation 自动检查与浏览器记录来自产品基线 `db67599` 的建立过程。本轮 documentation-only 任务没有重跑浏览器、试听或演奏用户 MIDI；新增证据在文末。
 
 ## 自动检查
 
@@ -30,3 +37,25 @@
 ## 仍需人工确认
 
 音频接口和调度已通过代码测试和浏览器启动检查；本次没有采集声卡输出或真人听音，不将这些检查视作音质、听感或端到端音画延迟测量。复杂真实曲目、超密集 MIDI 与后台长期播放尚未作为性能基准测试。
+
+<a id="repository-os-baseline"></a>
+## Repository Operating System baseline · 2026-09-17
+
+产品起点：`db67599`。本轮完整审阅 40 个 src 文件、4 个测试文件、三份原有文档及 package/build/lint 配置；没有审阅第三方依赖全集。仅为核实 MeshBasicMaterial 的光照行为定向读取其安装源码说明。
+
+| 检查 | 本轮结果 |
+| --- | --- |
+| `npm run test` | PASS，4 文件 / 31 测试 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS，strict TypeScript + Vite；既有 bundle-size warning 保留 |
+| 生产资源 | JS 1,375.62 kB，gzip 372.59 kB；CSS 5.87 kB，gzip 1.96 kB |
+
+build 只重新生成被忽略的 dist/与 TypeScript 缓存；没有修改构建配置或依赖。命令用法和缺失覆盖见 [TEST_MATRIX](TEST_MATRIX.md)，本轮识别的差异见 [KNOWN_LIMITATIONS](KNOWN_LIMITATIONS.md#documentation-drift)。
+
+### 文档验收
+
+- 18 份 Markdown 文档（新增 15、更新 3）均有 freshness metadata；根 AGENTS 为 106 行。
+- 本地链接及锚点检查通过；zoom/pan、InkTheme、新 GeometryStrategy 的导航能到达真实模块、源码与验证入口。
+- 定向命令 `npm run test -- tests/engine.test.ts -t "Independent extension points"` 已实际运行：3 项通过、12 项按过滤条件跳过；完整 31 项基线结果见上表。
+- Git 差异及暂存文件逐项检查，只包含 Markdown；相对产品基线没有源码、测试、依赖或配置变更。用户已有的 `midi/` 未提交文件保留在此次变更之外。
+- 已记录视觉配置的实现差异和 seek 文案澄清；没有为解决差异修改产品代码，也没有编造历史 plan/ADR。

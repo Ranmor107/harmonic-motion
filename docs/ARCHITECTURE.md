@@ -1,5 +1,12 @@
 # Music Geometry Engine · Architecture
 
+Purpose: 定义稳定架构、音乐时间语义和不可破坏原则。
+Authority: 架构事实与契约的主要记录；当前支持状态不在此维护。
+Update when: 已落实的核心契约、语义、ownership 或 invariant 改变。
+Last verified: 2026-09-17；对照产品 `db67599`；已识别差异见 [Documentation Drift](KNOWN_LIMITATIONS.md#documentation-drift)。
+
+任务定位从 [文档导航](index.md) 与 [模块地图](CODEBASE_OPERATING_MODEL.md) 开始。本轮保留已有架构，不新增架构决策。
+
 ## Product philosophy
 
 **The score compiles a world.** 音乐规定节点、关系与抵达时刻。几何、编舞、播放、音频、视觉分别解释各自的数据，不通过碰撞或逐帧积分来决定音乐。
@@ -48,6 +55,8 @@ flowchart TD
 | Renderer | 读取 WorldModel、PerformancePlan、PlaybackState 快照与 VisualPreset；不读取 MIDI，不生成编舞 |
 
 `src/domain/visual.ts` 只声明视觉数据类型，不包含视觉默认值或渲染库对象。数值与颜色集中在 `src/visual/`。核心模块通过 ESLint 限制导入 React、Three、Tone、render、state、visual；播放协调器只引用音频接口的类型。
+
+核对注记：上一句描述视觉配置的设计归属，不代表当前全部外观细节均已配置化。固定参数、材质与字段语义的具体差异及待确认事项见 [D-01](KNOWN_LIMITATIONS.md#d01-visual-config)；本轮不修改实现。
 
 ## MIDI 和音乐语义
 
