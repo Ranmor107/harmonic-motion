@@ -3,7 +3,7 @@
 Purpose: 将用户需求路由到负责模块、最小源码范围、验证与文档更新。
 Authority: 任务路由的主要记录；实际符号和依赖见 [模块地图](CODEBASE_OPERATING_MODEL.md)。
 Update when: 模块边界、路由或已验证的责任归属变化。
-Last verified: 2026-09-17；产品基线 `db67599`。近期方向均为 future routing，不是已实现功能。
+Last verified: 2026-09-18；复核本轮 UI、展示、相机与会话路由；其他路由沿用原记录。
 
 表中 I1–I10 按 [ARCHITECTURE 十项 invariants](ARCHITECTURE.md#architecture-invariants) 的编号引用。
 验证代号 T-* 的完整命令、覆盖与全量条件仅在 [TEST_MATRIX](TEST_MATRIX.md#targeted-validation) 维护。
@@ -29,15 +29,16 @@ Secondary 是有证据才展开的邻域；不是默认要修改的清单。
 
 ## 相机与可见性路由的当前事实
 
-- 已有按 presentation bounds 自动取景、受限 zoom/pan 与 Fit World；follow 仍未实现。CameraRig 以 `getState(0, ...)` 恢复 home view，Follow 仍需先定义目标和时间更新路径。
+- 已有投影 bounds 取景、受限 zoom/pan、Fit/Reset 和 follow。CameraRig 以 controller 获取基础取景，再按 playback snapshot 跟随；Stream 仅水平前移。相机 effect 依赖真实 width/height，不依赖易被重建的 size 对象。
 - Focus/Current Path 从 songTime 派生强调集合并使用配置预算；隐藏不删 WorldModel。WorldRenderer 仍遍历实例，超大曲目性能需测量。
-- 节点间直线仍是 WorldModel 连接；TrajectoryRenderer 采样已有 PerformancePlan 当前段，不在 Renderer 重新规划轨迹。
-- Stream V1 已选择 R11-A：presentation/render mode，复用 score/world/plan/playback；不是 GeometryStrategy。未来若改变空间语义再单独评估 R11-B。
+- WorldModel 连接不变；visual/relations 把显著性、序列、声部与和弦成员解释为有层级的曲线。TrajectoryRenderer 继续采样正式计划当前段。
+- Stream 已扩展为主线/伴随组的 Ribbon/Helix 显示投影，复用 score/world/plan/playback；不是 GeometryStrategy。所有选音/坐标/生命周期纯函数在 visual/presentation；边界见 [ADR-0001](decisions/ADR-0001-musical-presentation.md)。
+- 多 MIDI 曲库的导入/切换/删除从 App + state/ScoreSession 开始，沿 T-STATE/T-PLAYBACK 验证；不为曲库重写 MIDI parser 或 compileScore。
 
 <a id="near-term-routing"></a>
 ## 已讨论方向的 future routing
 
-全部是 **Proposed**，此表不批准实现，也不替代 [ROADMAP](ROADMAP.md) 的状态。
+下表保留已讨论方向的责任路由，用于后续扩展；部分基础能力已实现，完成状态只由 [ROADMAP](ROADMAP.md) 记录。路由不自动批准新增功能。
 
 | ID / Direction | 最可能变更类型 | 路由与最小边界 / 待验证点 |
 | --- | --- | --- |
@@ -45,13 +46,13 @@ Secondary 是有证据才展开的邻域；不是默认要修改的清单。
 | R02 Zoom / pan navigation | camera change + renderer capability | C05；交互 view state 与音乐 world 分开；需要控件才扩 UI/state |
 | R03 Follow camera | camera change + renderer capability；可能 visual domain contract | C05；先明确跟随哪个 Performer、time/target 如何传入；不改他的轨迹 |
 | R04 Fit current active region | camera change + playback-derived display | C05 + C06；从当前时间窗的既有节点算临时显示 bounds，不覆盖 world.bounds |
-| R05 Overview mode | configuration + camera/display capability | C05/C06；已有静态整体取景可复用，但模式切换 UI 尚无 |
+| R05 Overview mode | configuration + camera/display capability | C05/C06；已有整体取景与 Overview 选择器，扩展保持显示层边界 |
 | R06 Active Window mode | visual change + renderer capability | C06；只过滤绘制集合/样式；保留完整 score/world/plan |
 | R07 Current Trajectory Only mode | renderer capability | C06；定位并采样既有 segment；不产生新计划 |
 | R08 Main Performer visual focus | visual/configuration；也可能 camera | C09，必要时 C05；改变大小/对比度不应改 routing |
 | R09 Temporary satellite note particles | effects/renderer capability | C03/C09；纯装饰读 hit/time；若每个对象有独立演奏职责与轨迹，则升级 C08 并先 plan |
 | R10 Note objects appear → perform → disappear | visibility / effects；是否 choreography 待确认 | C06/C03；显示生命期可由 note/event duration 派生；独立表演角色需新契约 |
-| R11 Left-to-right stream presentation | **Design decision to validate** | A：保持 Constellation 的 camera/presentation/visibility；B：新增 Flow/Ribbon GeometryStrategy。先确认是否要求世界坐标/连接真正改变，不能混用或预选 B |
+| R11 Left-to-right stream presentation | visual presentation；正式 geometry 为独立方向 | 当前使用纯展示投影，见 ADR-0001；未来只有明确要求 WorldModel 空间语义变化，才转 C07 评估新策略 |
 | R12 Alternative Geometry Strategy | geometry change | C07；保持旧 WorldModel/plan 契约时不动 audio/clock/visual |
 | R13 Alternative Visual Themes | configuration；可能 renderer capability | C02；已有材质/形状够用则仅配置；新视觉能力先明确 Renderer 缺口 |
 | R14 Alternative Effects | configuration；可能 renderer capability/domain visual contract | C03；生命周期仍由绝对时间计算 |

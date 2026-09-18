@@ -3,7 +3,7 @@
 Purpose: 按真实模块定位 ownership、输入输出、公共入口与最小修改邻域。
 Authority: 模块归属的主要记录；契约语义以 [ARCHITECTURE](ARCHITECTURE.md) 为准。
 Update when: 入口、依赖、公共符号、模块职责或测试归属发生变化。
-Last verified: 2026-09-17；审阅 `db67599` 的全部 40 个 src 文件、4 个测试文件和工程配置。
+Last verified: 2026-09-18；本轮仅重新核对 visual/render/state/UI 与相关测试入口；其他模块保留 Foundation 记录。
 
 下面“允许/禁止”是维护边界，不声称全由工具强制。实际 lint 仅对 domain/engine/playback 禁止列出的框架、视觉模块导入及 `Math.random`；不覆盖全部跨层规则，也没有禁止全局 DOM API。具体见 [eslint.config.js](../eslint.config.js)。
 
@@ -123,12 +123,12 @@ Last verified: 2026-09-17；审阅 `db67599` 的全部 40 个 src 文件、4 个
 - **Primary paths / entry points**：[themes/defaultCosmic.ts](../src/visual/themes/defaultCosmic.ts)、[effects/defaultEffects.ts](../src/visual/effects/defaultEffects.ts)、[environments/defaultEnvironment.ts](../src/visual/environments/defaultEnvironment.ts)、[camera/staticCamera.ts](../src/visual/camera/staticCamera.ts)、[presentation/evaluatePresentation.ts](../src/visual/presentation/evaluatePresentation.ts)、[presentation/defaultPresentation.ts](../src/visual/presentation/defaultPresentation.ts)、[presets/defaultPreset.ts](../src/visual/presets/defaultPreset.ts)。
 - **Responsibility / owns**：视觉配置及纯 CameraController；组合 preset，独立于乐谱编译。
 - **Consumes → produces**：domain/visual 类型、相机 bounds/aspect/config → VisualTheme/EffectProfile/EnvironmentConfig/VisualPreset/CameraState。
-- **Public contracts / symbols**：默认 theme/effects/environment/camera/presentation/preset；`evaluateNodePresentation`、`selectReadableNodeIds`、`evaluateStreamPerformer`、`evaluateStreamSatellites`；类型定义在 domain/visual。
-- **Allowed dependencies**：domain、其他 visual 配置、纯 utils（如确有需要）。**Forbidden / undesirable**：MIDI 解析、修改 score/world/plan、音频调度、生成轨迹。
-- **Related tests**：[engine.test.ts](../tests/engine.test.ts) 的 `Independent extension points` 仅证明编译数据引用稳定；无相机或渲染单测。
+- **Public contracts / symbols**：默认 theme/effects/environment/camera/presentation/preset；`evaluateNodePresentation`、`selectReadableNodeIds`；[musicalPresentation](../src/visual/presentation/musicalPresentation.ts) 的 `selectSalientNotes` / `createMusicalPresentation` / `evaluateLead` / `noteLifecycle` / `visibleStreamNotes`；[relations](../src/visual/presentation/relations.ts) 的 `createRelations`；类型定义在 domain/visual。
+- **Allowed dependencies**：domain、其他 visual 配置、纯 utils（如确有需要）。**Forbidden / undesirable**：MIDI 解析、修改 score/world/plan、音频调度、生成正式编舞。Stream 的纯显示曲线属于本层，边界见 [ADR-0001](decisions/ADR-0001-musical-presentation.md)。
+- **Related tests**：[visual.test.ts](../tests/visual.test.ts) 覆盖窗口/预算；[musical-presentation.test.ts](../tests/musical-presentation.test.ts) 覆盖选音、曲线、生命周期、关系与投影 fit。没有自动 WebGL 组件测试。
 - **Safe local changes**：既有字段内换色/调参/组合 preset；确认对应字段已被 Renderer 解释。
 - **Adjacent scope**：新材质/形状/环境/效果能力需 render；动态相机需 CameraRig 的时间/目标输入；选择器才涉及 UI/state。
-- **Must NOT decide**：音乐语义和节点坐标。约束与能力差异见 [D-01](KNOWN_LIMITATIONS.md#d01-visual-config)。
+- **Must NOT decide**：正式音乐语义和 WorldModel 节点坐标。只读展示投影不写回引擎。约束与能力差异见 [D-01](KNOWN_LIMITATIONS.md#d01-visual-config)。
 
 <a id="render"></a>
 ## Render
@@ -142,28 +142,28 @@ Last verified: 2026-09-17；审阅 `db67599` 的全部 40 个 src 文件、4 个
 - **Safe local changes**：材质解释、显示层过滤、既有参数的效果表现；保持绝对时间求值。
 - **Adjacent scope**：显示模式先看 visual 类型；交互操作再看 App；新增计划语义才需 domain/performance，不能从视觉需求直接倒推重写 planner。
 - **Must NOT decide**：音符时序、几何生成或编舞路线。
-- **关键连接**：Scene 接收的 `cameraController` 与 preset.camera 配置是两个入口；CameraRig 用 `getState(0, ...)` 恢复 home view，再由 OrbitControls 处理受限 zoom/pan。连接线直接连节点；TrajectoryRenderer/Performer trail 才采样已有 Bézier。StreamRenderer 使用 score 音高/轨道及绝对时间生成临时显示对象，不改变 world/plan。
+- **关键连接**：Scene memoize musical presentation，传给两种 renderer；Constellation 正式 Performer/Trajectory 仍消费 PerformancePlan。WorldRenderer 只显示筛选后的关系曲线与和弦成员，不移动 WorldModel 节点。StreamRenderer 消费独立显示主线/伴随组；CameraRig 在实际宽高/fit 请求变化时取景，按 playback snapshot 跟随，手动导航退出跟随。
 
 <a id="state"></a>
 ## State / application composition
 
 - **Primary path / entry points**：[src/state/store.ts](../src/state/store.ts) `createStudioStore` / `useStudio`。
-- **Responsibility / owns**：compiled、seed、strategy、preset、viewMode、visibilityMode 及应用级默认值。
+- **Responsibility / owns**：ScoreSession[]、activeSessionId、当前 compiled/seed、strategy、preset、viewMode、visibilityMode；每曲缓存独立，视觉偏好共用。
 - **Consumes → produces**：demo/导入 score、compileScore、默认策略/preset → Zustand 应用状态和 actions。
-- **Public contracts / symbols**：`setScore`、`regenerate`、`setPreset`、`setViewMode`、`setVisibilityMode`；`StudioState` 为文件内接口，没有 setStrategy action。
+- **Public contracts / symbols**：`ScoreSession`、`addScores`、`selectSession`、`removeSession`；`setScore` 委托单曲加入；`regenerate` 更新当前 session 缓存；`setPreset`、`setViewMode`、`setVisibilityMode` 只改显示。`compiled` 始终指向当前 session 的同一对象。
 - **Allowed dependencies**：Zustand、domain、compile、策略、demo、visual 默认值。**Forbidden / undesirable**：把歌曲时钟/每帧对象移入 store、解析二进制或控制 Tone 声部。
-- **Related tests**：[engine.test.ts](../tests/engine.test.ts) 的 preset 引用不变与 regenerate 用例。
+- **Related tests**：[engine.test.ts](../tests/engine.test.ts)；[session.test.ts](../tests/session.test.ts) 的多曲缓存、独立 seed、删除/回退、偏好与播放加载协调。
 - **Safe local changes**：应用组合或新增局部选择状态；不要为了一个 UI 控件重构 store。
-- **Adjacent scope**：策略选择 action 涉及 UI；setScore 生命周期由 App 的 score effect 接到 controller。
+- **Adjacent scope**：导入/切曲/删除当前曲目由 App 先 stop，再改 session；score effect 调 controller.load，保证音乐归零。新增解析发生在 App，store 只接收 normalized score。
 - **Must NOT decide**：曲线计算、时钟算法、材质解释。视觉变化只更新 preset，不触发 compileScore。
 
 <a id="ui"></a>
 ## UI and bootstrap
 
-- **Primary paths / entry points**：[src/main.tsx](../src/main.tsx)、[App.tsx](../src/ui/App.tsx)、[styles.css](../src/ui/styles.css)、[Icons.tsx](../src/ui/Icons.tsx)；品牌资产 [mark.svg](../public/mark.svg)，页面壳 [index.html](../index.html)。
+- **Primary paths / entry points**：[src/main.tsx](../src/main.tsx)、[App.tsx](../src/ui/App.tsx)、[styles.css](../src/ui/styles.css)、[Icons.tsx](../src/ui/Icons.tsx)；品牌配置 [branding/config.ts](../src/branding/config.ts)、品牌资产 [mark.svg](../public/mark.svg)，页面壳 [index.html](../index.html)。
 - **Responsibility / owns**：用户输入、布局/文案、错误/忙碌状态、服务装配、播放快照桥接。
 - **Consumes → produces**：用户文件/按钮、store、controller、Scene → DOM/UI 与用户命令；rAF 读取时钟并写快照，约 32ms 更新文本状态。
-- **Public contracts / symbols**：`App`、`Icon`；内部 `onLoad`、`togglePlayback`、`toggleEffects` 是主要定位符号。
+- **Public contracts / symbols**：`App`、`Icon`；内部 `onLoad`、`switchScore`、`deleteScore`、`togglePlayback`、`toggleEffects` 是主要定位符号。
 - **Allowed dependencies**：React、state、midi、playback、audio、visual camera、render、utils。**Forbidden / undesirable**：重新实现解析/生成/编舞/时钟；这层可装配多模块，不代表每次改布局都要修改它们。
 - **Related tests**：没有 UI 自动测试；需 [TEST_MATRIX 的浏览器清单](TEST_MATRIX.md#manual-smoke)。
 - **Safe local changes**：styles、标题、按钮布局、文案；尽量不触碰同文件中的 controller 生命周期。
@@ -204,7 +204,7 @@ Last verified: 2026-09-17；审阅 `db67599` 的全部 40 个 src 文件、4 个
 - **Consumes → produces**：真实模块、fixture、假时钟/mock Tone → Vitest 断言结果。
 - **Public contracts / symbols**：测试 suite 名称和 fixture 语义；精确命令由 [TEST_MATRIX](TEST_MATRIX.md) 管理。
 - **Allowed dependencies**：Vitest、待测模块、MIDI fixture 构造工具。**Forbidden / undesirable**：联网、用户私人 MIDI 作为默认fixture、把 mock 结果宣称为真实音频/浏览器结果。
-- **Related tests**：本模块即四份测试；发现规则为 [vite.config.ts](../vite.config.ts) 的 `tests/**/*.test.ts`，运行环境 Node。
+- **Related tests**：测试文件按以下发现规则运行；发现规则为 [vite.config.ts](../vite.config.ts) 的 `tests/**/*.test.ts`，运行环境 Node。
 - **Safe local changes**：需求相关的行为断言、最小可复现回归用例；不改断言来掩盖失败。
 - **Adjacent scope**：新增浏览器/音频集成框架会涉及依赖和配置，应单独计划；文档任务不创建它们。
 - **Must NOT decide**：未获请求的产品扩展或人为扩大支持范围。

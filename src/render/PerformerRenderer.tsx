@@ -32,9 +32,9 @@ export function PerformerRenderer({ performer, theme, effects, playback }: {
   const { performerStyle: style } = theme
   return <group>
     <group ref={body}>
-      <mesh scale={style.radius}>
+      <mesh scale={style.radius} renderOrder={10}>
         {style.shape === 'octahedron' ? <octahedronGeometry /> : <sphereGeometry args={[1, 16, 12]} />}
-        <meshBasicMaterial color={theme.palette.performer} />
+        <meshBasicMaterial color={theme.palette.performer} depthTest={false} depthWrite={false} />
       </mesh>
       <mesh scale={style.radius * style.haloScale}>
         <sphereGeometry args={[1, 16, 12]} />

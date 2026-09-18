@@ -1,9 +1,9 @@
-# Foundation 验证记录
+# 验证记录
 
 Purpose: 保留带日期、baseline 和适用边界的实际检查证据。
 Authority: 已发生验证的记录；不能作为未来提交自动通过的保证。
 Update when: 新一轮检查产生结果，或旧证据被确认需更正。
-Last verified: 2026-09-17；本轮重跑自动基线，浏览器结果为 Foundation 阶段历史记录。
+Last verified: 2026-09-18；最新证据见 Iteration 03，早期记录保留其日期和适用边界。
 
 日期：2026-09-17。环境：Windows、Node.js 24.18.0、Codex 内置 Chromium 浏览器，1280 × 720。
 
@@ -81,3 +81,37 @@ build 只重新生成被忽略的 dist/与 TypeScript 缓存；没有修改构�
 - 对 Canvas 执行 wheel、drag 与 Fit World；world/plan/playback 不由相机交互修改。自动测试另验证 compiled/world/plan 引用严格不变。
 
 未测量 FPS、GPU 时间、真实声卡输出或端到端音画延迟；720 音符截图证明局部化策略可用，不是性能承诺。
+
+<a id="iteration-03"></a>
+## Iteration 03 · Musical Identity, Relation Language & Multi-Score Experience
+
+日期：2026-09-18。产品起点：`5b67149`。Windows / 内置 Chromium；开发服务上的实际 WebGL 交互，生产构建另行检查。
+
+| 检查 | 结果 |
+| --- | --- |
+| `npm run test` | PASS，7 文件 / 49 测试（14:46）；含显著性、音乐输入派生主线、随机 seek、生命周期、关系、取景、会话引用缓存等回归 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS（14:47）；strict TypeScript + Vite；JS 1,412.69 kB / gzip 383.38 kB，CSS 10.70 kB / gzip 3.24 kB |
+| 定向复验 | 测试 fixture 补齐必须的 name/instrument 后，musical-presentation 10 项通过；修正仅涉及测试数据 |
+| 浏览器 console | 无 error；已有 Three.js Clock 弃用提示和构建 >500 kB 提示仍保留 |
+
+过程中 build 曾指出新增测试 fixture 缺少必需字段；Vitest 转译通过不代表 strict TypeScript 通过。补齐 fixture 后重新构建和定向测试通过，没有忽略该错误或降低类型约束。
+
+### 实际浏览器结果
+
+- 默认舞台、Cantivela SVG 字标、作品铭牌、可靠曲目统计、引语和默认关闭的控制抽屉均正常显示。1280 × 720、900 × 740、640 × 760 已观察；窄屏控制抽屉可滚动。
+- 抽屉打开后焦点移入，Escape 关闭后返回 View 按钮；关闭时内容 inert。初次焦点检查暴露 CSS visibility 的时序问题，已移除该冲突并复验。reduced-motion 样式已检查，未做操作系统偏好切换的端到端测试。
+- Constellation 显示主关系、序列、声部及和弦局部成员。720 音符样本中 Focus / Current Path 减少显示内容，但稠密交叠仍存在，不声称已解决所有谱面的可读性。
+- Stream 的 Ribbon / Helix 在 demo、双轨变速样本和 4 轨 / 720 音符临时样本上观察；主角沿主线运动，伴随组与长音有绝对时间生命周期。初次逐起音选主线导致密集金色折返，改为短时间窗显著性选择并加入交错起音回归。
+- 相机 wheel / drag 前后截图确认缩放和平移真正生效，等待界面更新后保持，Fit 恢复。定位到 R3F size 对象更新触发重复取景，依赖改为 width/height 后修复。**Iteration 02 的“执行 wheel/drag”只证明发出了操作，不能证明导航保持有效；以本轮结果更正该证据边界。**
+- Stream 暂停 3 秒处 Fit stage 没有跳回开头；跟随与手动浏览可切换。播放中切换视图时间由 3.04 秒继续到 3.98 秒；暂停后时间冻结。
+- 多选导入双轨变速样本和密集样本，曲库增加至三首；双轨样本显示 24 notes / 12 chords / 2 tracks / 80–120 BPM。播放中切曲停止并归零；删除非当前曲不改变当前曲，删除当前曲回退到剩余曲。
+- Helix、Effects off 等显示偏好切回和删除后保持。缓存复用的严格引用相等由 session 测试证明；仅凭 UI 切回不推断缓存是否命中。
+- 无效 MIDI 在暂停 4.037 秒处导入失败后保留原曲、显示和进度，并显示错误；多文件导入允许成功项保留。用户自带 MIDI 没有打开、修改或纳入验证素材。
+- 同一 songTime 往返 seek 的两幅截图对比：音乐舞台像素一致；整图有 1,454 像素差异，局限于右下音符标签的颜色过渡区域（1184,512–1280,592），最大通道差 13。因此不宣称整帧逐像素一致。
+
+本地截图：`artifacts/iteration-03/stream-helix.png`；该目录按现有规则忽略，不作为 Git 中永久可用的证据附件。测试 fixture 可复用；720 音符文件只保留在临时目录。
+
+### 适用边界
+
+显著性是可配置启发式，不是真实旋律提取；伴随短组也不是音乐学乐句识别。未采集真实声卡输出、试听音质、测量音画延迟/FPS/GPU 时间或 20,000 音符压力。浏览器检查使用开发服务，未把本轮生产构建通过写成生产浏览器复测。已知后续项见 [KNOWN_LIMITATIONS](KNOWN_LIMITATIONS.md)。

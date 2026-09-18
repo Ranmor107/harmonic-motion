@@ -3,7 +3,7 @@
 Purpose: 按改动选择真实存在的检查，区分纯函数、mock 与浏览器证据。
 Authority: 验证映射与覆盖缺口的主要记录；实际运行结果见 [VERIFICATION](VERIFICATION.md)。
 Update when: scripts、测试文件/suite、覆盖范围或验证要求改变。
-Last verified: 2026-09-17；检查 [package.json](../package.json)、[vite.config.ts](../vite.config.ts) 和全部测试源码。
+Last verified: 2026-09-18；展示与会话测试入口更新；命令仍沿用原 package scripts。
 
 所有命令在仓库根目录运行。`npm run test` 是 `vitest run`，额外文件和 `-t` 参数通过 `--` 传入。
 现有 scripts 没有独立 typecheck、coverage、E2E 或截图命令；需要类型检查时使用 `npm run build`（内含 `tsc -b`）。不要写不存在的 `npm run typecheck` / `test:render`。
@@ -18,11 +18,11 @@ Last verified: 2026-09-17；检查 [package.json](../package.json)、[vite.confi
 | T-CHOREOGRAPHY · curves / plan / seek | [engine.test.ts](../tests/engine.test.ts)：`Choreography and random access`，空谱/单节点在另一 suite | `npm run test -- tests/engine.test.ts` | PerformancePlan/curve/event 联合类型改变时 T-GLOBAL | 起音端点、前跳后跳、暂停冻结、首尾状态 |
 | T-PLAYBACK · clock / coordination | [playback.test.ts](../tests/playback.test.ts)：clock + coordination；[audio.test.ts](../tests/audio.test.ts) 检查联动 | `npm run test -- tests/playback.test.ts tests/audio.test.ts` | 时间源、状态集合、seek/loop 语义跨层改变时 T-GLOBAL | Play/Pause/Restart、播放中与暂停中 seek、结束重播、音频解锁 |
 | T-AUDIO · scheduler / voice management | playback 的 `Audio event scheduling` + audio 的 `Tone audio adapter` | `npm run test -- tests/playback.test.ts tests/audio.test.ts` | AudioEngine 接口、clock/sourceTimeFor 或 score 表达变化时 T-GLOBAL | 真人试听；同音重叠、和弦、seek 延音、暂停后无残留；明确设备与浏览器 |
-| T-VISUAL · theme/presentation/effects/appearance | [visual.test.ts](../tests/visual.test.ts) 测纯时间 presentation、预算、stream chord/seek/camera fit；engine 测 compiled 不变 | `npm run test -- tests/visual.test.ts tests/engine.test.ts`；`npm run lint`；`npm run build` | 引入计划/世界新语义时 T-GLOBAL；普通配色不要求全量核心测试 | 修改前后截图、可读性、seek/暂停、view 切换不改变播放/音乐 |
-| T-CAMERA · navigation/follow/fit | visual 测 home state 确定性和导航限制；真实 pointer 仍需浏览器 | `npm run test -- tests/visual.test.ts`；`npm run lint`；`npm run build` | 相机之外的核心 contract 改变时 T-GLOBAL | zoom/pan/fit、view 切换和中等窗口；比对 world/plan/playback 保持不变 |
-| T-VISIBILITY · focus/path/stream | visual 测窗口分类、显示预算、卫星生命周期/和弦/seek；engine 测 evaluator | `npm run test -- tests/visual.test.ts tests/engine.test.ts`；`npm run lint`；`npm run build` | 修改事件、世界或轨迹数据语义时 T-GLOBAL | 时间0/末尾、前后seek、pause、overview/focus/path/stream；密集测试曲 |
+| T-VISUAL · theme/presentation/effects/appearance | [visual.test.ts](../tests/visual.test.ts) 测窗口/预算；[musical-presentation.test.ts](../tests/musical-presentation.test.ts) 测显著性、短组、长音、随机 seek、和弦、投影 fit；engine 测 compiled 不变 | `npm run test -- tests/visual.test.ts tests/musical-presentation.test.ts tests/engine.test.ts`；`npm run lint`；`npm run build` | 引入计划/世界新语义时 T-GLOBAL；普通配色不要求全量核心测试 | 修改前后截图、可读性、seek/暂停、view 切换不改变播放/音乐 |
+| T-CAMERA · navigation/follow/fit | musical-presentation 测宽/窄视口投影角点，visual 测 home state；真实 pointer/follow 仍需浏览器 | `npm run test -- tests/visual.test.ts tests/musical-presentation.test.ts`；`npm run lint`；`npm run build` | 相机之外的核心 contract 改变时 T-GLOBAL | zoom/pan/fit、view 切换和中等窗口；比对 world/plan/playback 保持不变 |
+| T-VISIBILITY · focus/path/stream | visual 测窗口分类；musical-presentation 测显示预算、生命周期/和弦/seek；engine 测 evaluator | `npm run test -- tests/visual.test.ts tests/musical-presentation.test.ts tests/engine.test.ts`；`npm run lint`；`npm run build` | 修改事件、世界或轨迹数据语义时 T-GLOBAL | 时间0/末尾、前后seek、pause、overview/focus/path/stream；密集测试曲 |
 | T-UI · layout/title/buttons | 无 UI 自动测试；动作相关时使用对应核心 suite | `npm run lint`；`npm run build`；行为变化追加所属模块的 targeted test | UI 接线改变跨模块控制流时 T-GLOBAL | 控件、焦点、错误提示、标题长度、常用窗口尺寸；纯布局不冒充引擎变更 |
-| T-STATE · score/seed/preset composition | engine 的 `Independent extension points` | `npm run test -- tests/engine.test.ts -t "Independent extension points"` | compiled/score 生命周期或模块装配改变时 T-GLOBAL | 导入归零、regenerate 保持进度、preset 不重编译 |
+| T-STATE · score/session/seed/preset composition | [session.test.ts](../tests/session.test.ts)：缓存引用、切曲偏好、删除、seed、加载归零与 late unlock；engine 的 `Independent extension points` | `npm run test -- tests/session.test.ts tests/engine.test.ts` | compiled/score 生命周期或模块装配改变时 T-GLOBAL | 导入归零、regenerate 保持进度、preset 不重编译 |
 | T-DEMO · procedural example | engine/playback 使用 demo 的具体音符和时刻 | `npm run test -- tests/engine.test.ts tests/playback.test.ts` | 若 normalize/契约也改则 T-GLOBAL | 开页默认世界、标题/数量描述与实际一致 |
 | T-GLOBAL · cross-module / domain / shared semantics | 全部现有测试 + 静态约束 + 生产编译 | `npm run test`；`npm run lint`；`npm run build` | public contract、≥3 责任层或无法局部隔离的集成变化必做 | 按受影响行为补浏览器 smoke；全量单测不能替代它 |
 | T-DOC · documentation only | Markdown 路径、符号、命令、metadata 与 diff；无专门文档测试脚本 | `git diff --check`；`git diff --name-only`；若已暂存再加 `git diff --cached --check` / `--name-only`；`git status --short` | 需要确认 baseline 或文档引用检查结果时可运行 T-GLOBAL；不为文档修产品失败 | 路由演练：zoom、InkTheme、Spiral；相对链接和 anchors 可达；用户已有文件保持不变 |
@@ -35,7 +35,7 @@ Last verified: 2026-09-17；检查 [package.json](../package.json)、[vite.confi
 - audio mock 验证调用、独立声部及取消；不产生真实声卡信号，也不测输出延迟。
 - geometry 的替换测试把现有 constellation 结果包装为另一个 strategy ID，并没有实现/测量另一种真实空间布局。新增策略需要自己的位置、连接、bounds 和可抵达性断言。
 - seek 一致性测试比较同一个纯求值器在直接与逐次调用后的结果，证明不积累状态；不等同于真实逐帧音画同步测试。
-- 未有专用相机数学、64 声部溢出/复用压力、20,000 音符性能、真实 MIDI corpus 或可访问性自动测试。
+- 已有相机投影 fit 数学测试；尚无 pointer/React/WebGL 自动测试、64 声部溢出压力、20,000 音符性能、真实 MIDI corpus 或可访问性自动测试。
 - `lint` 的 import 禁令不是完整架构依赖图；不能把 lint 通过理解为全部 invariants 自动成立。
 
 <a id="manual-smoke"></a>
@@ -47,5 +47,7 @@ Last verified: 2026-09-17；检查 [package.json](../package.json)、[vite.confi
 4. Regenerate：seed 改变，score/timing/当前进度保留；视觉 preset 变化保留 world/plan。
 5. 导入 [tempo-and-voices.mid](../tests/fixtures/tempo-and-voices.mid)，验证双轨与变速；导入 [invalid.mid](../tests/fixtures/invalid.mid)，验证错误提示与原曲保留。
 6. 检查修改涉及的画面/相机/显示模式以及浏览器 console；需要证明听感时进行真人试听或实际音频输出测量。
+7. 多选导入、切曲停止归零、删除当前/非当前曲目、最后一曲回退；模式/形态/效果/跟随偏好保留。缓存引用复用由 session 单测证明，界面切回本身不能证明没重编译。
+8. pointer 操作前后截帧，等待一次 UI 更新后确认缩放/平移仍保持；Fit 恢复。不能把“发出了 wheel/drag”当成结果已生效。抽屉 Escape/焦点返回、不同宽度与 reduced-motion 样式另做人工检查。
 
 本清单是未来验证方法，不表示本轮全部重跑。已有浏览器结果的日期和范围见 [VERIFICATION](VERIFICATION.md)。

@@ -3,7 +3,7 @@
 Purpose: 保留已提出方向、状态和待验证设计，不将探索写成开发承诺。
 Authority: 未来方向与工作状态的主要记录；现状只看 [CURRENT_STATE](CURRENT_STATE.md)。
 Update when: 方向被选择、明确排期、开始实施、完成验证、延期或被替代。
-Last verified: 2026-09-17；依据当前源码、已知限制与用户提出的候选方向；没有产品功能排期。
+Last verified: 2026-09-18；本轮展示与曲库状态已更新，其他候选没有新增排期。
 
 ## 状态约定
 
@@ -24,14 +24,15 @@ Last verified: 2026-09-17；依据当前源码、已知限制与用户提出的�
 | --- | --- | --- |
 | Engine Foundation | Completed | 产品基线 `db67599`；[当前状态](CURRENT_STATE.md)、[验证记录](VERIFICATION.md) |
 | Repository Knowledge System | Completed | Markdown 导航、ownership、路由、验证映射及计划模板已建立；[本轮检查](VERIFICATION.md#repository-os-baseline)；不包含功能开发 |
-| 当前产品功能开发 | 无 Active 项 | 没有在本轮启动下一项产品需求 |
+| Musical Identity, Relation Language & Multi-Score Experience | Active | [Iteration 03 plan](plans/active/iteration-03-musical-identity.md)；实现与浏览器回归已完成，文档/Git 收尾 |
 
 ## Next · Candidates
 
 | 方向 | 状态 | 拟解决的问题 / 下一步验证 | 路由 |
 | --- | --- | --- | --- |
 | Zoom / pan、Fit World、Overview | Completed | Iteration 02；不修改 world/plan/playback | [C05](CHANGE_IMPACT_MATRIX.md#c05-camera) |
-| Follow view、fit current active region | Candidate | 保持音乐世界不变，定义跟随目标/时间输入 | [C05/C06](CHANGE_IMPACT_MATRIX.md#c06-visibility) |
+| Follow view | Completed | Iteration 03；Constellation 跟随正式主角，Stream 仅平稳前移；手动导航退出跟随 | [C05](CHANGE_IMPACT_MATRIX.md#c05-camera) |
+| Fit current active region | Candidate | 定义局部取景范围和与手动导航的关系 | [C05/C06](CHANGE_IMPACT_MATRIX.md#c06-visibility) |
 | Focus / Current Path / trajectory emphasis | Completed | Iteration 02；配置时间窗和显示预算，不删 WorldModel 节点 | [C06](CHANGE_IMPACT_MATRIX.md#c06-visibility) |
 | 主 Performer 视觉焦点与 Stream satellites | Completed | Iteration 02 presentation；仍是一名 choreography Performer | [C09](CHANGE_IMPACT_MATRIX.md#c09-appearance) |
 | Artistic UI：作品信息、实时音乐、时间线、motif、层级 | Completed | Iteration 02；只使用现有可靠 score/playback 数据 | [C01](CHANGE_IMPACT_MATRIX.md#c01-ui) |
@@ -51,7 +52,7 @@ Last verified: 2026-09-17；依据当前源码、已知限制与用户提出的�
 
 ## Exploration · Design decision to validate
 
-**“主 Performer 从左向右移动，周围音符出现、演奏、消失”暂不决定架构。**
+**Stream 展示方案已落实：使用独立纯展示投影，见 [ADR-0001](decisions/ADR-0001-musical-presentation.md)。** 以下保留两个方向的区别；真实 Flow GeometryStrategy 仍是独立探索，不能将当前 Ribbon/Helix 展示模式称作新几何引擎。
 
 | 选项 | 实际改变什么 | 需要验证 |
 | --- | --- | --- |
@@ -60,6 +61,6 @@ Last verified: 2026-09-17；依据当前源码、已知限制与用户提出的�
 
 二者看起来相近，但责任层不同。先问清楚用户需要的音乐/空间语义，不能先以“左到右”把时间硬编码成全产品 X 轴，也不能把新的真实空间组织伪装成无影响的相机改动。
 
-**Temporary satellite note objects** 同样有待分辨：只伴随命中事件的装饰属于 effects/render；若独立承担音符、轨迹或 split/merge，则属于 performance/choreography 契约。参见 [R09–R11](CHANGE_IMPACT_MATRIX.md#near-term-routing)。
+**Temporary satellite note objects** 当前已作为纯显示对象实现。未来若独立承担演奏职责、轨迹或 split/merge，则属于 performance/choreography 契约。参见 [R09–R11](CHANGE_IMPACT_MATRIX.md#near-term-routing)。
 
-选定候选后，在 [plans](plans/index.md) 建立必要的实施边界；只有真正的架构决策才进入 [decisions](decisions/index.md)。本页不预先替未来方案作决定。
+选定候选后，在 [plans](plans/index.md) 建立必要的实施边界；只有真正的架构决策才进入 [decisions](decisions/index.md)。本页不预先替尚未选择的未来方案作决定。

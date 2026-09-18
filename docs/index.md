@@ -29,7 +29,7 @@ Last verified: 2026-09-17；产品基线 `db67599`。
 - “增加 InkTheme”：先读 [C02](CHANGE_IMPACT_MATRIX.md#c02-theme)；MIDI 不在默认范围。
 - “增加 SpiralGeometryStrategy”：先读 [C07](CHANGE_IMPACT_MATRIX.md#c07-geometry)；Audio 不在默认范围。
 - “只显示当前轨迹/当前时间附近节点”：先读 [C06](CHANGE_IMPACT_MATRIX.md#c06-visibility)，不要先修改 WorldModel。
-- “主 Performer 从左向右穿过临时音符”：先读 [R11 的待验证设计](CHANGE_IMPACT_MATRIX.md#near-term-routing)，不能仅凭视觉描述选择几何方案。
+- “主 Performer 从左向右穿过临时音符”：先读 [R11 的展示路由](CHANGE_IMPACT_MATRIX.md#near-term-routing) 与 [ADR-0001](decisions/ADR-0001-musical-presentation.md)，不能仅凭视觉描述选择几何方案。
 
 源码与文档不一致时，代码是已发生行为的证据，ARCHITECTURE 仍是契约的主要记录。
 在 [Documentation Drift](KNOWN_LIMITATIONS.md#documentation-drift) 并列记录双方，再决定未来修改；不要悄悄让其中一方覆盖另一方。

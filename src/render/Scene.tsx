@@ -13,8 +13,10 @@ import { EffectsRenderer } from './EffectsRenderer'
 import { CameraRig } from './CameraRig'
 import { TrajectoryRenderer } from './TrajectoryRenderer'
 import { StreamRenderer } from './StreamRenderer'
+import { createMusicalPresentation, evaluateLead } from '../visual/presentation/musicalPresentation'
+import { evaluatePerformer } from '../engine/choreography/evaluator'
 
-const STREAM_BOUNDS = { min: { x: -11.5, y: -4.2, z: -1 }, max: { x: 11.5, y: 4.2, z: 1 } }
+const STREAM_BOUNDS = { min: { x: -5, y: -5, z: -2 }, max: { x: 11, y: 5, z: 2 } }
 
 class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
@@ -24,10 +26,15 @@ class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean
   }
 }
 
-export function Scene({ score, world, plan, preset, playback, cameraController, viewMode, visibilityMode, fitRequest }: {
+export function Scene({ score, world, plan, preset, playback, cameraController, viewMode, visibilityMode, fitRequest, follow, onNavigate }: {
   score: NormalizedScore; world: WorldModel; plan: PerformancePlan; preset: VisualPreset; playback: PlaybackSnapshot
   cameraController: CameraController; viewMode: ViewMode; visibilityMode: VisibilityMode; fitRequest: number
+  follow: boolean; onNavigate: () => void
 }) {
+  const model = useMemo(() => createMusicalPresentation(score, preset.presentation), [score, preset.presentation])
+  const followPosition = useMemo(() => viewMode === 'stream'
+    ? (time: number) => ({ x: evaluateLead(model, time).x, y: 0, z: 0 })
+    : (time: number) => plan.performers[0] ? evaluatePerformer(plan.performers[0], time) : { x: 0, y: 0, z: 0 }, [model, plan, viewMode])
   const environment = preset.environment
   const background = environment.type === 'solid' ? environment.color : `linear-gradient(160deg, ${environment.top}, ${environment.bottom})`
   const cameraConfig = useMemo(() => viewMode === 'stream'
@@ -40,16 +47,16 @@ export function Scene({ score, world, plan, preset, playback, cameraController, 
         <AdaptiveDpr pixelated />
         <ambientLight intensity={preset.theme.lighting.ambient} />
         <directionalLight position={[10, 10, 10]} intensity={preset.theme.lighting.key} color={preset.theme.lighting.color} />
-        <CameraRig bounds={cameraBounds} config={cameraConfig} controller={cameraController} fitRequest={fitRequest} />
+        <CameraRig bounds={cameraBounds} config={cameraConfig} controller={cameraController} fitRequest={fitRequest} follow={follow} travel={viewMode === 'stream'} followPosition={followPosition} playback={playback} onNavigate={onNavigate} />
         <EnvironmentRenderer config={environment} bounds={world.bounds} />
         {viewMode === 'constellation' ? <>
-          <WorldRenderer world={world} theme={preset.theme} playback={playback} visibilityMode={visibilityMode} presentation={preset.presentation} />
+          <WorldRenderer world={world} score={score} model={model} theme={preset.theme} playback={playback} visibilityMode={visibilityMode} presentation={preset.presentation} />
           {plan.performers.map(performer => <group key={performer.id}>
             <TrajectoryRenderer performer={performer} theme={preset.theme} visibilityMode={visibilityMode} playback={playback} />
             <PerformerRenderer performer={performer} theme={preset.theme} effects={preset.effects} playback={playback} />
           </group>)}
           <EffectsRenderer world={world} plan={plan} effects={preset.effects} theme={preset.theme} playback={playback} />
-        </> : <StreamRenderer score={score} theme={preset.theme} presentation={preset.presentation} playback={playback} />}
+        </> : <StreamRenderer model={model} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} />}
       </Canvas>
     </SceneBoundary>
   </div>

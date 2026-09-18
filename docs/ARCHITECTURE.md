@@ -3,9 +3,9 @@
 Purpose: 定义稳定架构、音乐时间语义和不可破坏原则。
 Authority: 架构事实与契约的主要记录；当前支持状态不在此维护。
 Update when: 已落实的核心契约、语义、ownership 或 invariant 改变。
-Last verified: 2026-09-17；对照产品 `db67599`；已识别差异见 [Documentation Drift](KNOWN_LIMITATIONS.md#documentation-drift)。
+Last verified: 2026-09-18；展示投影和会话缓存边界已更新；未改音乐核心契约。
 
-任务定位从 [文档导航](index.md) 与 [模块地图](CODEBASE_OPERATING_MODEL.md) 开始。本轮保留已有架构，不新增架构决策。
+任务定位从 [文档导航](index.md) 与 [模块地图](CODEBASE_OPERATING_MODEL.md) 开始。核心管线继续保留；Stream 的展示投影边界见 [ADR-0001](decisions/ADR-0001-musical-presentation.md)。
 
 ## Product philosophy
 
@@ -33,7 +33,7 @@ flowchart TD
   Preset[Theme + Effects + Environment + Camera] --> Render
 ```
 
-音频直接消费 `NormalizedScore` 的每个音符，保留同一和弦内不同的 note-off 时间；视觉消费编译出的 `PerformancePlan`。二者的时间来自同一个时钟。Renderer 不需要原始乐谱或 MIDI。
+音频直接消费 `NormalizedScore` 的每个音符，保留同一和弦内不同的 note-off 时间；Constellation 视觉消费编译出的 `PerformancePlan`；Stream 额外消费只读 NormalizedScore 派生的纯展示模型，绝不读取原始 MIDI。所有求值使用同一个歌曲时钟。
 
 ## Core abstractions
 
@@ -52,7 +52,9 @@ flowchart TD
 | EnvironmentConfig | 当前为 solid / gradient 判别联合；渐变可包含 seeded 星点 |
 | CameraController | `getState(time, context)`，消费 bounds、aspect、config；不能修改世界 |
 | VisualPreset | 组合 theme、effects、environment、camera |
-| Renderer | 读取 WorldModel、PerformancePlan、PlaybackState 快照与 VisualPreset；不读取 MIDI，不生成编舞 |
+| Renderer | 读取 world/plan、PlaybackState、VisualPreset 与纯 musical presentation；不读取 MIDI，不修改编舞或调度音乐 |
+| Musical presentation | 只读 score 的显著性选音、短组、Ribbon/Helix 显示投影；主角沿显示曲线按绝对时间求值，不能写回正式 world/plan |
+| ScoreSession | application 维护 id/filename/seed/CompiledScore；缓存 score/analysis/world/plan，切回复用；元数据由 score 派生 |
 
 `src/domain/visual.ts` 只声明视觉数据类型，不包含视觉默认值或渲染库对象。数值与颜色集中在 `src/visual/`。核心模块通过 ESLint 限制导入 React、Three、Tone、render、state、visual；播放协调器只引用音频接口的类型。
 

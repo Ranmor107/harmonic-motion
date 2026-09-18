@@ -1,15 +1,17 @@
-# Project Harmonic Motion
+# Cantivela · Project Harmonic Motion
 
 Purpose: 项目说明、启动及用户操作入口。
 Authority: 快速使用指南；现状、架构和维护规范分别链接到 canonical 文档。
 Update when: 启动方式、用户操作或导航入口变化。
-Last verified: 2026-09-17；Iteration 02 完成后。
+Last verified: 2026-09-18；Iteration 03 的用户操作与本地验证。
 
 **Music Geometry Engine — a score-to-world generative engine.**
 
 The score is compiling a world.
 
-本项目是可运行的 Engine Foundation：本地 MIDI / 内置原创乐谱 → 音乐语义 → 确定性音乐空间 → 编舞 → 合成音频与 3D 演奏。没有后端、账号、数据上传或物理引擎。
+暂定产品名 Cantivela；工程代号与核心引擎名称保持不变。品牌候选、字标文本与引语统一配置在 [branding/config](src/branding/config.ts)。
+
+本项目是可运行的音乐空间应用：本地 MIDI / 内置原创乐谱 → 音乐语义 → 确定性音乐空间 → 编舞 → 合成音频与 3D 演奏。没有后端、账号、数据上传或物理引擎。
 
 ## 启动
 
@@ -31,13 +33,18 @@ npm run dev
 | Play / Pause | 启动或冻结统一音乐时间，暂停立即停止声音 |
 | Restart | 从头重新演奏 |
 | 时间滑杆 | 播放或暂停时均可跳转，对既有轨迹求位置，恢复节点和效果状态；播放中恢复仍在延续的音符 |
-| Load MIDI | 在浏览器本地读取 `.mid` / `.midi`，成功后加载新世界并归零；错误文件保留原乐谱 |
+| Add MIDI / Library + Add | 一次选择多份 `.mid` / `.midi`；本地解析与编译后加入会话曲库。批次中有效文件正常加入，错误文件逐个提示；全部失败时保留原曲和时间 |
+| Library / 上一曲 / 下一曲 | 切换停止并归零；复用缓存 score/world/plan，保留视图、形态、效果和跟随偏好。移除最后一曲时回到内置示例；刷新页面清空会话 |
+| View | 打开右侧控制抽屉；默认关闭，Escape 关闭并返回入口焦点 |
 | Regenerate | seed 加一，重新生成世界和轨迹，保持乐谱、音乐时序与当前播放进度 |
 | Effects on/off | 只切换视觉反馈，不重新编译世界或演奏计划 |
-| Constellation / Stream | 在完整音乐世界与局部时间流展示间切换；保持乐谱、世界、演奏计划、播放时间和音频 |
+| Constellation / Stream | 在空间关系与 Lead Line + Satellite Phrases 之间切换；保持音乐时间与正式编译结果。Stream 可选 Ribbon / Helix |
 | Overview / Focus / Current path | 显示全世界、时间相关局部或最精简当前路径；Stream 自带局部时间窗 |
 | 滚轮 / 拖拽 | 在 3D 场景内受限缩放和平移，不中断播放 |
-| Fit world | 恢复当前 presentation 的合理整体取景 |
+| Fit world / Fit stage / Reset | 按投影范围恢复取景；Stream 在当前演奏位置取景 |
+| Follow performer | Constellation 跟随现有 Performer；Stream 稳定水平前移。手动缩放/平移会关闭跟随，可重新开启 |
+
+主线在 0.22 秒短窗内按力度、时长、音区和连续性选择显著音，属于可配置展示启发式，不是真正旋律提取。其余音符按轨道、休止间隔和长度上限组成短组；不改变音频或正式编舞。完整边界见 [ADR-0001](docs/decisions/ADR-0001-musical-presentation.md)。
 
 可导入 `tests/fixtures/tempo-and-voices.mid` 体验双轨、重叠音符和速度变化。该文件为程序生成的测试素材，不包含商业作品。
 
@@ -49,7 +56,7 @@ npm run lint
 npm run build
 ```
 
-定向测试与覆盖边界见 [TEST_MATRIX](docs/TEST_MATRIX.md)；最近实际结果见 [VERIFICATION](docs/VERIFICATION.md#repository-os-baseline)。
+定向测试与覆盖边界见 [TEST_MATRIX](docs/TEST_MATRIX.md)；最近实际结果见 [VERIFICATION](docs/VERIFICATION.md#iteration-03)。
 
 `npm run preview` 可预览生产构建。浏览器交互验收记录见 [docs/VERIFICATION.md](docs/VERIFICATION.md)。
 

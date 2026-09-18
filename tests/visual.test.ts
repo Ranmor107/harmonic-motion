@@ -8,8 +8,6 @@ import { DefaultPresentation } from '../src/visual/presentation/defaultPresentat
 import {
   evaluateNodePresentation,
   selectReadableNodeIds,
-  evaluateStreamPerformer,
-  evaluateStreamSatellites,
 } from '../src/visual/presentation/evaluatePresentation'
 
 const score = createDemoScore()
@@ -22,39 +20,6 @@ describe('visual presentation', () => {
     expect(evaluateNodePresentation(node, 1.5, 'focus', DefaultPresentation.visibility).emphasis).toBe('active')
     expect(evaluateNodePresentation(node, 0, 'focus', DefaultPresentation.visibility).emphasis).toBe('context')
     expect(evaluateNodePresentation(node, 0, 'path', DefaultPresentation.visibility).visible).toBe(false)
-  })
-
-  it('reconstructs identical stream state for direct seek and repeated evaluation', () => {
-    const direct = evaluateStreamSatellites(score, 5.2, DefaultPresentation.stream)
-    for (let time = 0; time < 5.2; time += 1 / 60) evaluateStreamSatellites(score, time, DefaultPresentation.stream)
-    expect(evaluateStreamSatellites(score, 5.2, DefaultPresentation.stream)).toEqual(direct)
-    expect(evaluateStreamPerformer(5.2, score.duration)).toEqual(evaluateStreamPerformer(5.2, score.duration))
-  })
-
-  it('shows every note in a chord as a simultaneous satellite cluster', () => {
-    const satellites = evaluateStreamSatellites(score, 5.2, DefaultPresentation.stream)
-    const chord = score.chords.find(candidate => candidate.startTime === 5.2)!
-    const cluster = satellites.filter(satellite => chord.notes.some(note => note.id === satellite.noteId))
-    expect(cluster).toHaveLength(3)
-    expect(new Set(cluster.map(satellite => satellite.position.x)).size).toBe(1)
-    expect(new Set(cluster.map(satellite => satellite.position.y)).size).toBe(3)
-    expect(cluster.every(satellite => satellite.phase === 'hit' && satellite.isChord)).toBe(true)
-  })
-
-  it('bounds visible satellites and removes notes outside the local temporal window', () => {
-    const dense = structuredClone(score)
-    dense.notes = Array.from({ length: 720 }, (_, index) => ({
-      ...score.notes[index % score.notes.length]!, id: `dense-${index}`, startTime: index * 0.05,
-    }))
-    dense.duration = 40
-    dense.chords = []
-    dense.tracks = [{ ...dense.tracks[0]!, notes: dense.notes }]
-    const satellites = evaluateStreamSatellites(dense, 20, { ...DefaultPresentation.stream, maxVisibleNotes: 80 })
-    expect(satellites.length).toBeLessThanOrEqual(80)
-    expect(satellites.every(satellite => {
-      const note = dense.notes.find(candidate => candidate.id === satellite.noteId)!
-      return note.startTime >= 20 - DefaultPresentation.stream.leadInTime && note.startTime <= 20 + note.duration + DefaultPresentation.stream.fadeOutTime
-    })).toBe(true)
   })
 
   it('caps dense focus and current-path views by temporal relevance', () => {

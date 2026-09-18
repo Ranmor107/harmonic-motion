@@ -22,6 +22,8 @@ export type ViewMode = 'constellation' | 'stream'
 export type VisibilityMode = 'overview' | 'focus' | 'path'
 
 export interface PresentationConfig {
+  salience: { windowSeconds: number; velocity: number; duration: number; register: number; trackContinuity: number; pitchContinuity: number }
+  relations: { curveHeight: number; samples: number; maxEdges: number; chordRadius: number; phraseGap: number; phraseSize: number }
   visibility: {
     activePast: number
     activeFuture: number
@@ -40,6 +42,13 @@ export interface PresentationConfig {
     pitchSpread: number
     trackSpacing: number
     maxVisibleNotes: number
+    shape: 'ribbon' | 'helix'
+    densitySpacing: number
+    durationSpacing: number
+    helixRadius: number
+    intervalRadius: number
+    phaseSpeed: number
+    densityCurvature: number
   }
 }
 
