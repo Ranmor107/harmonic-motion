@@ -24,7 +24,7 @@ Last verified: 2026-09-18；本轮展示与曲库状态已更新，其他候选�
 | --- | --- | --- |
 | Engine Foundation | Completed | 产品基线 `db67599`；[当前状态](CURRENT_STATE.md)、[验证记录](VERIFICATION.md) |
 | Repository Knowledge System | Completed | Markdown 导航、ownership、路由、验证映射及计划模板已建立；[本轮检查](VERIFICATION.md#repository-os-baseline)；不包含功能开发 |
-| Musical Identity, Relation Language & Multi-Score Experience | Active | [Iteration 03 plan](plans/active/iteration-03-musical-identity.md)；实现与浏览器回归已完成，文档/Git 收尾 |
+| Musical Identity, Relation Language & Multi-Score Experience | Completed | [Iteration 03 plan](plans/completed/iteration-03-musical-identity.md)；`a8f5319`；[验证证据](VERIFICATION.md#iteration-03) |
 
 ## Next · Candidates
 

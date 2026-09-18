@@ -5,7 +5,7 @@ Authority: 本轮实施计划；架构边界见 ADR-0001。
 Update when: 范围、验证或完成状态改变。
 Last verified: 2026-09-18。
 
-Status: Active
+Status: Completed
 Source baseline: `5b67149`；已有未跟踪 `midi/` 为用户素材，不修改或提交。
 Related request: 用户第三轮完整需求，2026-09-18。
 Related ADR: [Stream presentation boundary](../../decisions/ADR-0001-musical-presentation.md)
@@ -47,7 +47,9 @@ Related ADR: [Stream presentation boundary](../../decisions/ADR-0001-musical-pre
 - [x] 上述用户可见目标实现，公共边界核对。
 - [x] 全量检查通过，浏览器证据记录。
 - [x] 文档事实更新，diff 范围检查，用户素材保留。
-- [ ] 独立 Git 提交，计划完成后归档。
+- [x] 独立 Git 提交，计划完成后归档。
+
+Implementation commit: `a8f5319` — Add Cantivela identity, musical relations and multi-score sessions.
 
 ## Execution evidence
 
@@ -58,4 +60,4 @@ Related ADR: [Stream presentation boundary](../../decisions/ADR-0001-musical-pre
 - 选音、短组和 Stream 路径只在 visual/presentation；正式 score/world/plan、MIDI、音频和音乐时钟未改动。
 - 用户 MIDI SHA256 与起点一致，不暂存；截图只在被忽略的 artifacts 中。命名未进行商标检索。
 - 剩余视觉限制：密集关系重叠、部分曲目的 Helix 正面投影偏平；未进行真人试听和性能基准。限制不冒充已验证能力。
-- 用户追加要求：完成本地提交后上传 GitHub。当前无 remote，使用已认证账号创建私有 harmonic-motion 仓库；上传结果在最终交付核实。
+- 用户追加要求：完成本地提交后上传 GitHub。作为交付步骤使用已认证账号创建私有 harmonic-motion 仓库；上传结果在最终交付另行核实，不作为实现完成的假定证据。

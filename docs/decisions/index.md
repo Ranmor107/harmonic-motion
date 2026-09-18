@@ -3,7 +3,7 @@
 Purpose: 只保存真正架构选择的背景、替代方案、后果和迁移理由。
 Authority: 决策过程及状态；已落实的稳定架构事实仍由 [ARCHITECTURE](../ARCHITECTURE.md) 维护。
 Update when: 架构决策提出、接受、被替代，或迁移完成。
-Last verified: 2026-09-17；新建模板，没有补写历史 ADR。
+Last verified: 2026-09-18；ADR-0001 已实现，关联已完成计划。
 
 ## 何时使用
 
@@ -23,6 +23,6 @@ Last verified: 2026-09-17；新建模板，没有补写历史 ADR。
 
 | ID | Title | Status | Related plan |
 | --- | --- | --- | --- |
-| ADR-0001 | [Score-derived musical presentation](ADR-0001-musical-presentation.md) | Accepted / Implemented | [Iteration 03](../plans/active/iteration-03-musical-identity.md) |
+| ADR-0001 | [Score-derived musical presentation](ADR-0001-musical-presentation.md) | Accepted / Implemented | [Iteration 03](../plans/completed/iteration-03-musical-identity.md) |
 
 不要为了“补齐历史”给 `db67599` 追造当时不存在的决策记录。
