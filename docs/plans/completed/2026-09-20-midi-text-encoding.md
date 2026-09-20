@@ -5,7 +5,7 @@ Authority: 本次局部 bug 修复计划；长期输入边界仍以 CURRENT_STAT
 Update when: 修复范围、验证结果或完成状态变化。
 Last verified: 2026-09-20。
 
-Status: Active
+Status: Completed
 Source baseline: `08633e7`；已按用户要求放弃并完整撤销未提交的 Iteration 04 UI/preset 修改。用户 `midi/` 仅作为只读复现输入，不提交。
 Related request: 导入 `帕赫贝尔D大调卡农.mid` 后歌曲标题乱码。
 Related ADR: none；不改变架构边界。
@@ -39,7 +39,7 @@ ASCII MIDI 标题行为不变。对单字节形式的非 ASCII 元数据，尝�
 - [x] 实际卡农文件标题正常，普通 ASCII 标题无回归。
 - [x] test/lint/build 与浏览器验证通过。
 - [x] 无 UI 或核心音乐逻辑改动；用户 MIDI 未修改、未提交。
-- [ ] 记录验证与提交引用后归档。
+- [x] 记录验证与提交引用后归档。
 
 ## Evidence
 
@@ -48,4 +48,4 @@ ASCII MIDI 标题行为不变。对单字节形式的非 ASCII 元数据，尝�
 - `npm run lint`：PASS。
 - `npm run build`：PASS；保留既有 bundle-size 提示。
 - 内置 Chromium 实际导入用户卡农文件：标题为“帕赫贝尔D大调卡农”，无原乱码、无 console error；05:02 / 1 track / 1,956 notes / 617 chords。
-- 提交引用：待提交。
+- 实现与验证提交：`d4d012e`。
