@@ -3,13 +3,13 @@
 Purpose: 区分当前可用能力、部分接通的扩展点与未实现方向。
 Authority: 当前实现状态的主要记录；架构理由见 [ARCHITECTURE](ARCHITECTURE.md)。
 Update when: 用户能力、实现覆盖或运行方式改变。
-Last verified: 2026-09-18；Iteration 03 的展示、相机、曲库与 UI 段落。
+Last verified: 2026-09-20；补充实际 MIDI 的旧编码标题兼容边界。
 
 ## Implemented
 
 | 领域 | 当前实际能力 | 代码证据 |
 | --- | --- | --- |
-| 输入 | 本地 Standard MIDI Type 0/1、PPQ、共享 tempo map；保留轨道/channel/instrument | [parser](../src/midi/parser.ts) `parseMidi`；[normalize](../src/midi/normalize.ts) |
+| 输入 | 本地 Standard MIDI Type 0/1、PPQ、共享 tempo map；保留轨道/channel/instrument；UTF-8 标题直接读取，旧编码标题仅在文件名可验证时解码或回退 | [parser](../src/midi/parser.ts) `parseMidi`；[normalize](../src/midi/normalize.ts) |
 | 乐谱 | 秒制音符、稳定 IDs、独立 duration/velocity、跨轨同时起音组 | [score domain](../src/domain/score.ts)；[chords](../src/engine/music-analysis/chords.ts) |
 | 分析 | 音域、平均密度、各轨相邻音程、和弦引用和轨道分组；不产生视觉 | [analyzer](../src/engine/music-analysis/analyzer.ts) |
 | 几何 | Constellation；seed 决定可复现位置；顺序/声部连接与 bounds | [constellation](../src/engine/music-geometry/strategies/constellation.ts) |

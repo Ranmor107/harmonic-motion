@@ -3,7 +3,7 @@
 Purpose: 以任务为边界保存中型/跨模块工作的范围、理由、验证和完成标准。
 Authority: 实施上下文及其生命周期；长期事实归档后回到各 canonical 文档。
 Update when: plan 新建、范围或状态改变、完成归档。
-Last verified: 2026-09-18；Iteration 03 已完成并归档。
+Last verified: 2026-09-20；MIDI 标题编码兼容计划进行中。
 
 ## 使用时机
 
@@ -24,6 +24,7 @@ plan 是实施边界，不是永久架构规范。真正的架构决策另用 [A
 
 | Plan | Status | Path | Evidence / next step |
 | --- | --- | --- | --- |
+| MIDI text encoding compatibility | Active | [active plan](active/2026-09-20-midi-text-encoding.md) | [验证证据](../VERIFICATION.md#midi-text-encoding-2026-09-20)；待提交并归档 |
 | Iteration 03 - Musical Identity, Relation Language & Multi-Score Experience | Completed | [completed plan](completed/iteration-03-musical-identity.md) | `a8f5319`；[验证证据](../VERIFICATION.md#iteration-03) |
 | Iteration 02 - Visual Readability and Performance Narrative | Completed | [completed plan](completed/iteration-02-visual-readability.md) | [验证证据](../VERIFICATION.md#iteration-02) |
 

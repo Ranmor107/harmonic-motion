@@ -3,7 +3,7 @@
 Purpose: 保留带日期、baseline 和适用边界的实际检查证据。
 Authority: 已发生验证的记录；不能作为未来提交自动通过的保证。
 Update when: 新一轮检查产生结果，或旧证据被确认需更正。
-Last verified: 2026-09-18；最新证据见 Iteration 03，早期记录保留其日期和适用边界。
+Last verified: 2026-09-20；最新证据见 MIDI text encoding compatibility，早期记录保留其日期和适用边界。
 
 日期：2026-09-17。环境：Windows、Node.js 24.18.0、Codex 内置 Chromium 浏览器，1280 × 720。
 
@@ -117,3 +117,20 @@ build 只重新生成被忽略的 dist/与 TypeScript 缓存；没有修改构�
 显著性是可配置启发式，不是真实旋律提取；伴随短组也不是音乐学乐句识别。未采集真实声卡输出、试听音质、测量音画延迟/FPS/GPU 时间或 20,000 音符压力。浏览器检查使用开发服务，未把本轮生产构建通过写成生产浏览器复测。已知后续项见 [KNOWN_LIMITATIONS](KNOWN_LIMITATIONS.md)。
 
 交付范围检查：21 份 Markdown / 278 处本地链接与锚点检查通过，`git diff --check` 及暂存差异检查通过。实现提交 `a8f5319` 的 35 个文件已复核；用户 `midi/` 仍为未跟踪素材且 SHA256 未变化。计划登记该提交后归档，GitHub 上传另行核实。
+
+<a id="midi-text-encoding-2026-09-20"></a>
+## MIDI text encoding compatibility · 2026-09-20
+
+日期：2026-09-20。产品起点：`08633e7`。先完整撤销未提交的 Iteration 04 UI/preset 修改，再只修复 MIDI 文本规范化、回归测试和必要文档。
+
+| 检查 | 结果 |
+| --- | --- |
+| 定向测试 | PASS，`tests/midi.test.ts` 1 文件 / 8 测试；新增 GB18030 标题/轨道名与 ASCII 标题回归 |
+| `npm run test` | PASS，7 文件 / 51 测试 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS；JS 1,413.54 kB / gzip 383.67 kB，CSS 10.70 kB / gzip 3.24 kB；既有 >500 kB 提示保留 |
+| 浏览器 console | 无 error |
+
+实际文件 `帕赫贝尔D大调卡农.mid` 的标题元事件字节为 `C5 C1 BA D5 B1 B4 B6 FB 44 B4 F3 B5 F7 BF A8 C5 A9`；依赖原始输出为 `ÅÁºÕ±´¶ûD´óµ÷¿¨Å©`，GB18030 严格解码与正常文件名共同确认标题为“帕赫贝尔D大调卡农”。浏览器只读导入后可见标题精确匹配，原乱码未出现，并显示 05:02、1 track、1,956 notes、617 chords。没有启动音频播放，因此本次证据不涉及听感或端到端音画延迟。
+
+用户 `midi/` 保持未跟踪，不进入提交；修复不改写文件，不触碰 UI、视觉、geometry、choreography、playback 或 audio。

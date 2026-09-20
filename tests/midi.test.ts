@@ -17,6 +17,28 @@ function tempoFixture() {
 }
 
 describe('MIDI normalization', () => {
+  it('decodes a GB18030 title and track name without changing musical data', () => {
+    const bytes = Uint8Array.from([0xc5, 0xc1, 0xba, 0xd5, 0xb1, 0xb4, 0xb6, 0xfb, 0x44, 0xb4, 0xf3, 0xb5, 0xf7, 0xbf, 0xa8, 0xc5, 0xa9])
+    const encoded = String.fromCharCode(...bytes)
+    const midi = new Midi()
+    midi.header.name = encoded
+    const track = midi.addTrack()
+    track.name = encoded
+    track.addNote({ midi: 62, time: 0, duration: 1, velocity: 0.75 })
+    const score = parseMidi(midi.toArray(), '帕赫贝尔D大调卡农.mid')
+    expect(score.metadata.title).toBe('帕赫贝尔D大调卡农')
+    expect(score.tracks[0]!.name).toBe('帕赫贝尔D大调卡农')
+    expect(score.notes[0]).toMatchObject({ midi: 62, startTime: 0, duration: 1 })
+    expect(score.notes[0]!.velocity).toBeCloseTo(0.75, 2)
+  })
+
+  it('keeps a valid ASCII MIDI title instead of replacing it with the filename', () => {
+    const midi = new Midi()
+    midi.header.name = 'Canon in D'
+    midi.addTrack().addNote({ midi: 62, time: 0, duration: 1 })
+    expect(parseMidi(midi.toArray(), '帕赫贝尔D大调卡农.mid').metadata.title).toBe('Canon in D')
+  })
+
   it('uses one tempo map across tracks and across tempo-spanning notes', () => {
     const score = parseMidi(tempoFixture())
     expect(score.tracks).toHaveLength(2)

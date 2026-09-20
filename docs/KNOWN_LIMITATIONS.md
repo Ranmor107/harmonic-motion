@@ -3,7 +3,7 @@
 Purpose: 记录已确认限制、尚未验证的风险及文档/代码差异，防止候选方案冒充事实。
 Authority: 限制与 drift 的主要记录；验证证据见 [VERIFICATION](VERIFICATION.md)，候选状态见 [ROADMAP](ROADMAP.md)。
 Update when: 新证据、支持边界、解决情况或待确认决策变化。
-Last verified: 2026-09-18；Iteration 03 展示/相机/会话相关限制和浏览器观察。
+Last verified: 2026-09-20；补充 MIDI 文本编码识别边界与实际卡农文件观察。
 
 Priority 只是当前建议，不等于排期。`unknown` 表示缺乏影响/频率证据；不将未测量风险统一升级为 high。
 
@@ -11,7 +11,7 @@ Priority 只是当前建议，不等于排期。`unknown` 表示缺乏影响/频
 
 | ID / 状态 / Priority | 限制与证据 | Impact | Current workaround | Likely owner / Possible future direction |
 | --- | --- | --- | --- | --- |
-| L01 · Confirmed · unknown | [parser](../src/midi/parser.ts)：10 × 1024² 字节、20,000 notes；拒绝空谱、Type 2、SMPTE。不是完整 MIDI 格式兼容性认证 | 部分输入不能加载 | 导出 Type 0/1 PPQ、截取较短片段 | midi；按真实文件兼容性证据扩展，不能只放宽限额 |
+| L01 · Confirmed · unknown | [parser](../src/midi/parser.ts)：10 × 1024² 字节、20,000 notes；拒绝空谱、Type 2、SMPTE。MIDI 文本没有统一字符集标记；[normalize](../src/midi/normalize.ts) 只在文件名可验证时识别 UTF-8 / GB18030 / Big5 / Shift_JIS 候选，否则保留可靠文本或回退文件名。不是完整 MIDI 格式兼容性认证 | 部分输入不能加载；文件名与元数据无关时，旧编码标题可能无法可靠还原 | 导出 Type 0/1 PPQ、截取较短片段；用正常文件名辅助旧编码标题识别 | midi；按真实文件兼容性证据扩展，不能只放宽限额或猜编码 |
 | L02 · Confirmed · unknown | [normalize](../src/midi/normalize.ts) 只提取 notes/channel/instrument 与 tempos；[Tone adapter](../src/audio/ToneAudioEngine.ts) 统一 sine Synth | 原作乐器、踏板、弯音、CC、打击乐表现不还原 | 作为音符结构演示；需要忠实音色时另用原播放器对照 | midi/domain-score/audio；逐项定义表达和音色适配 |
 | L03 · Confirmed · unknown | Tone adapter 64 声部上限含 release；无空闲声部则跳过新音符；[EffectsRenderer](../src/render/EffectsRenderer.tsx) 最多显示最近64次瞬态 | 极密集音乐可能少发声/少画反馈；音乐计划不丢事件 | 较疏的片段；不要据画面反馈数量判断谱面丢音 | audio / render 各自拥有预算；需压力测试后讨论策略 |
 | L04 · Confirmed · unknown | [scheduler](../src/audio/scheduler.ts) seek 将仍持续音符按剩余 duration 重新起音；不重建相位/ADSR；后台 setInterval 可被节流 | seek 听感不等同于从头播放；后台连续性没有保证 | 前台播放；对照相邻音符与节奏，而非要求波形一致 | audio/playback；真实输出测量、明确恢复语义 |
@@ -47,7 +47,7 @@ Priority 只是当前建议，不等于排期。`unknown` 表示缺乏影响/频
 
 ## 尚未证明的事项
 
-Iteration 03 已做浏览器回归，但未真人试听/采集声卡输出，未打开用户自带 MIDI 进行演奏，没有对其内容、许可或性能作判断。
+Iteration 03 已做浏览器回归，但未真人试听/采集声卡输出。2026-09-20 只读导入用户的《帕赫贝尔D大调卡农》以验证标题和解析统计，没有演奏、修改文件，也没有对其内容、许可或性能作判断。
 现有工作树的非版本化素材是用户资料，不是已认证测试集。后续确需复现时由用户任务范围决定，不擅自提交进仓库。
 
 ## Iteration 03 的明确边界

@@ -40,15 +40,57 @@ export function normalizeScore(input: ScoreInput): NormalizedScore {
 }
 
 export function normalizeMidi(midi: Midi, filename = 'Untitled MIDI'): NormalizedScore {
+  const fallbackTitle = filename.replace(/\.midi?$/i, '')
+  const decodedTitle = decodeMidiTitle(midi.name, fallbackTitle)
   return normalizeScore({
     metadata: {
-      title: midi.name.trim() || filename.replace(/\.midi?$/i, ''), source: 'midi',
+      title: decodedTitle.text, source: 'midi',
       tempoMap: midi.header.tempos.map(tempo => ({ time: midi.header.ticksToSeconds(tempo.ticks), bpm: tempo.bpm })),
     },
     tracks: midi.tracks.map(track => ({
-      name: track.name, channel: track.channel, instrument: track.instrument.number,
+      name: decodedTitle.encoding ? decodeMidiText(track.name, decodedTitle.encoding) ?? track.name : track.name,
+      channel: track.channel, instrument: track.instrument.number,
       // @tonejs/midi resolves ticks through the shared header tempo map for every track.
       notes: track.notes.map(note => ({ time: note.time, duration: note.duration, midi: note.midi, velocity: note.velocity })),
     })),
   })
+}
+
+const MIDI_TEXT_ENCODINGS = ['utf-8', 'gb18030', 'big5', 'shift_jis'] as const
+
+function midiTextBytes(text: string) {
+  const values = Array.from(text, character => character.codePointAt(0)!)
+  return values.every(value => value <= 0xff) ? Uint8Array.from(values) : undefined
+}
+
+function decodeMidiText(text: string, encoding: string) {
+  const bytes = midiTextBytes(text)
+  if (!bytes) return undefined
+  try {
+    const decoded = new TextDecoder(encoding, { fatal: true }).decode(bytes).trim()
+    return decoded && !Array.from(decoded).some(character => {
+      const code = character.codePointAt(0)!
+      return code === 0xfffd || code < 0x20 && code !== 0x09 && code !== 0x0a && code !== 0x0d
+    }) ? decoded : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function decodeMidiTitle(value: string, fallback: string): { text: string; encoding?: string } {
+  const raw = value.trim()
+  if (!raw) return { text: fallback }
+  if (Array.from(raw).every(character => character.codePointAt(0)! <= 0x7f)) return { text: raw }
+  const expected = fallback.normalize('NFC').trim()
+  for (const encoding of MIDI_TEXT_ENCODINGS) {
+    const candidate = decodeMidiText(raw, encoding)
+    if (candidate?.normalize('NFC') === expected) return { text: candidate, encoding }
+  }
+  const utf8 = decodeMidiText(raw, 'utf-8')
+  if (utf8) return { text: utf8, encoding: 'utf-8' }
+  const legacyByteRatio = Array.from(raw).filter(character => {
+    const code = character.codePointAt(0)!
+    return code >= 0x80 && code <= 0xff
+  }).length / Array.from(raw).length
+  return legacyByteRatio > 0.35 && fallback ? { text: fallback } : { text: raw }
 }
