@@ -3,7 +3,7 @@
 Purpose: 区分当前可用能力、部分接通的扩展点与未实现方向。
 Authority: 当前实现状态的主要记录；架构理由见 [ARCHITECTURE](ARCHITECTURE.md)。
 Update when: 用户能力、实现覆盖或运行方式改变。
-Last verified: 2026-09-20；补充实际 MIDI 的旧编码标题兼容边界。
+Last verified: 2026-09-21；补充复杂音乐可读性、Ribbon 与 Ensemble 的实现边界。
 
 ## Implemented
 

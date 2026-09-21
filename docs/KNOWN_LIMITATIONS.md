@@ -3,7 +3,7 @@
 Purpose: 记录已确认限制、尚未验证的风险及文档/代码差异，防止候选方案冒充事实。
 Authority: 限制与 drift 的主要记录；验证证据见 [VERIFICATION](VERIFICATION.md)，候选状态见 [ROADMAP](ROADMAP.md)。
 Update when: 新证据、支持边界、解决情况或待确认决策变化。
-Last verified: 2026-09-20；补充 MIDI 文本编码识别边界与实际卡农文件观察。
+Last verified: 2026-09-21；补充 MIDI 文本编码识别边界、Ensemble 显示取舍与浏览器观察。
 
 Priority 只是当前建议，不等于排期。`unknown` 表示缺乏影响/频率证据；不将未测量风险统一升级为 high。
 

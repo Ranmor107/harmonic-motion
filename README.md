@@ -3,7 +3,7 @@
 Purpose: 项目说明、启动及用户操作入口。
 Authority: 快速使用指南；现状、架构和维护规范分别链接到 canonical 文档。
 Update when: 启动方式、用户操作或导航入口变化。
-Last verified: 2026-09-18；Iteration 03 的用户操作与本地验证。
+Last verified: 2026-09-21；复杂音乐可读性、Ribbon 与 Ensemble 的本地验证。
 
 **Music Geometry Engine — a score-to-world generative engine.**
 
