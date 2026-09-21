@@ -24,7 +24,7 @@ plan 是实施边界，不是永久架构规范。真正的架构决策另用 [A
 
 | Plan | Status | Path | Evidence / next step |
 | --- | --- | --- | --- |
-| Complex music: readability, depth and rendering budgets | Completed | [completed plan](completed/2026-09-20-complex-music.md) | 关系/预算、Ribbon 与独立 Ensemble 已实现；`5b59a90`；[验证证据](../VERIFICATION.md#complex-music-2026-09-21) |
+| Complex music: readability, depth and rendering budgets | Completed | [completed plan](completed/2026-09-20-complex-music.md) | 关系/预算、Ribbon 与独立 Ensemble 已实现；实现提交 `2e05838`；[验证证据](../VERIFICATION.md#complex-music-2026-09-21) |
 | MIDI text encoding compatibility | Completed | [completed plan](completed/2026-09-20-midi-text-encoding.md) | `d4d012e`；[验证证据](../VERIFICATION.md#midi-text-encoding-2026-09-20) |
 | Iteration 03 - Musical Identity, Relation Language & Multi-Score Experience | Completed | [completed plan](completed/iteration-03-musical-identity.md) | `a8f5319`；[验证证据](../VERIFICATION.md#iteration-03) |
 | Iteration 02 - Visual Readability and Performance Narrative | Completed | [completed plan](completed/iteration-02-visual-readability.md) | [验证证据](../VERIFICATION.md#iteration-02) |
