@@ -33,7 +33,7 @@ export function App() {
   const [busy, setBusy] = useState(false)
   const [starting, setStarting] = useState(false)
   const [fitRequest, setFitRequest] = useState(0)
-  const [followViews, setFollowViews] = useState({ constellation: false, stream: true })
+  const [followViews, setFollowViews] = useState({ constellation: false, stream: true, ensemble: false })
   const importRevision = useRef(0)
   const noteById = useMemo(() => new Map(score.notes.map(note => [note.id, note])), [score])
   const follow = followViews[viewMode]
@@ -178,9 +178,9 @@ export function App() {
       </div>
       <blockquote className="score-quote"><p>“{branding.quote.text}”</p><cite><a href={branding.quote.source} target="_blank" rel="noreferrer">{branding.quote.author}</a></cite></blockquote>
       <div className="live-reading" aria-label="Current music">
-        <span className="eyebrow">{viewMode} / {viewMode === 'stream' ? preset.presentation.stream.shape : visibilityMode}</span>
+        <span className="eyebrow">{viewMode} / {viewMode === 'stream' ? 'ribbon' : viewMode === 'ensemble' ? 'voices' : visibilityMode}</span>
         <span className={`pitch-reading ${sounding.length ? 'sounding' : ''}`}>{pitches.length ? pitches.map(note => pitchLabel(note.midi)).join(' · ') : '—'}</span>
-        <div className="legend"><span><i className="lead-dot" />Lead</span><span><i className="voice-dot" />Voices</span><span><i className="performer-dot" />Performer</span></div>
+        <div className="legend"><span><i className="lead-dot" />Lead</span><span><i className="voice-dot" />Voices</span><span><i className="performer-dot" />{viewMode === 'ensemble' ? 'Harmony' : 'Performer'}</span></div>
       </div>
       <span className="navigation-hint">Scroll to zoom · drag to explore</span>
     </section>
@@ -188,17 +188,17 @@ export function App() {
     <aside id="controls-drawer" className={`controls-drawer ${drawerOpen ? 'is-open' : ''}`} aria-label="View and library" aria-hidden={!drawerOpen} inert={!drawerOpen}>
       <div className="drawer-heading"><span>Score settings</span><button ref={drawerClose} aria-label="Close controls" onClick={() => { setDrawerOpen(false); drawerTrigger.current?.focus() }}>×</button></div>
       <section className="control-section"><h2>View</h2><div className="segmented">
-        {(['constellation', 'stream'] as const).map(mode => <button key={mode} aria-pressed={viewMode === mode} onClick={() => setViewMode(mode)}>{mode === 'constellation' ? 'Constellation' : 'Stream'}</button>)}
+        {(['constellation', 'stream', 'ensemble'] as const).map(mode => <button key={mode} aria-pressed={viewMode === mode} onClick={() => setViewMode(mode)}>{mode[0]!.toUpperCase() + mode.slice(1)}</button>)}
       </div>
-      {viewMode === 'stream' && <div className="segmented shape-options">{(['ribbon', 'helix'] as const).map(shape => <button key={shape} aria-pressed={preset.presentation.stream.shape === shape} onClick={() => setPreset({ ...preset, presentation: { ...preset.presentation, stream: { ...preset.presentation.stream, shape } } })}>{shape === 'ribbon' ? 'Ribbon' : 'Helix'}</button>)}</div>}
+      {viewMode === 'ensemble' && <p className="control-note">Stable voice arcs. Fewer marks in dense passages; the score is unchanged.</p>}
       </section>
       <section className="control-section"><h2>Visibility</h2><div className="segmented">
-        {(['overview', 'focus', 'path'] as const).map(mode => <button key={mode} aria-pressed={visibilityMode === mode} onClick={() => setVisibilityMode(mode)} disabled={viewMode === 'stream'}>{mode === 'path' ? 'Current path' : mode[0]!.toUpperCase() + mode.slice(1)}</button>)}
+        {(['overview', 'focus', 'path'] as const).map(mode => <button key={mode} aria-pressed={visibilityMode === mode} onClick={() => setVisibilityMode(mode)} disabled={viewMode !== 'constellation'}>{mode === 'path' ? 'Current path' : mode[0]!.toUpperCase() + mode.slice(1)}</button>)}
       </div>{viewMode === 'stream' && <p className="control-note">A moving window around the performance.</p>}</section>
       <section className="control-section"><h2>Camera</h2><div className="camera-actions">
-        <button onClick={fit}><Icon name="fit" />Fit {viewMode === 'stream' ? 'stage' : 'world'}</button>
+        <button onClick={fit}><Icon name="fit" />Fit {viewMode !== 'constellation' ? 'stage' : 'world'}</button>
         <button onClick={() => { setFollow(false); setFitRequest(value => value + 1) }}>Reset</button>
-      </div><button className="setting-toggle" onClick={() => { setFollow(!follow); if (!follow) setFitRequest(value => value + 1) }} aria-pressed={follow}>Follow performer <span>{follow ? 'On' : 'Off'}</span></button></section>
+      </div>{viewMode !== 'ensemble' && <button className="setting-toggle" onClick={() => { setFollow(!follow); if (!follow) setFitRequest(value => value + 1) }} aria-pressed={follow}>Follow performer <span>{follow ? 'On' : 'Off'}</span></button>}</section>
       <section className="control-section"><h2>Visual</h2><button className="setting-toggle" onClick={toggleEffects} aria-pressed={preset.effects.hit.enabled}>Performance effects <span>{preset.effects.hit.enabled ? 'On' : 'Off'}</span></button><button className="quiet-action" onClick={regenerate} disabled={busy}><Icon name="regenerate" />Regenerate constellation</button></section>
       <section className="control-section library"><div className="library-heading"><h2>Library <span>{sessions.length}</span></h2><button onClick={() => input.current?.click()} disabled={busy}>+ Add</button></div>
         <p className="control-note">Local scores · kept for this session</p>

@@ -18,7 +18,7 @@ export interface EffectProfile {
   particles: { enabled: boolean; lifetime: number; count: number; radius: number; distance: number; opacity: number }
 }
 
-export type ViewMode = 'constellation' | 'stream'
+export type ViewMode = 'constellation' | 'stream' | 'ensemble'
 export type VisibilityMode = 'overview' | 'focus' | 'path'
 
 export interface PresentationConfig {
@@ -42,10 +42,9 @@ export interface PresentationConfig {
     pitchSpread: number
     trackSpacing: number
     maxVisibleNotes: number
-    shape: 'ribbon' | 'helix'
     densitySpacing: number
     durationSpacing: number
-    helixRadius: number
+    radius: number
     intervalRadius: number
     phaseSpeed: number
     densityCurvature: number

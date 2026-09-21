@@ -13,6 +13,9 @@ export interface MusicalPresentation {
   leadIds: Set<string>
   chordIds: Set<string>
   maxDuration: number
+  noteBlocks: { first: number; last: number; start: number; end: number }[]
+  phraseByNote: Map<string, MusicalPhrase>
+  supportPaths: Map<string, Vec3[]>
 }
 
 // A deterministic display heuristic, not melody extraction. Equal scores use stable IDs.
@@ -52,9 +55,9 @@ export function createMusicalPresentation(score: NormalizedScore, config: Presen
     const density = prev ? 1 / (1 + dt) : 0
     x += dt * stream.timeScale * (1 + density * stream.densitySpacing) + (prev?.duration ?? 0) * stream.durationSpacing
     phase += dt * stream.phaseSpeed + density * stream.densityCurvature
-    const radius = stream.helixRadius + interval * stream.intervalRadius
+    const radius = stream.radius + interval * stream.intervalRadius
     const pitch = (note.midi - mid) / half * stream.pitchSpread
-    return { note, position: { x, y: pitch + (stream.shape === 'helix' ? Math.sin(phase) * radius : 0), z: stream.shape === 'helix' ? Math.cos(phase) * radius : Math.sin(phase) * interval * stream.intervalRadius } }
+    return { note, position: { x, y: pitch + Math.sin(phase) * radius, z: Math.cos(phase) * radius } }
   })
   const leadIds = new Set(selected.map(note => note.id))
   const positions = new Map(lead.map(point => [point.note.id, point.position]))
@@ -62,7 +65,7 @@ export function createMusicalPresentation(score: NormalizedScore, config: Presen
   // Consecutive notes from each track form bounded display phrases; rests split them.
   score.tracks.forEach((track, trackIndex) => {
     let phrase: MusicalPhrase | undefined
-    for (const note of notes.filter(n => n.trackId === track.id && !leadIds.has(n.id))) {
+    for (const note of track.notes.filter(n => !leadIds.has(n.id))) {
       const previous = phrase?.notes.at(-1)
       if (!phrase || !previous || note.startTime - previous.startTime > config.relations.phraseGap || phrase.notes.length >= config.relations.phraseSize) {
         phrase = { id: `phrase:${note.id}`, trackId: track.id, notes: [] }
@@ -71,10 +74,28 @@ export function createMusicalPresentation(score: NormalizedScore, config: Presen
       phrase.notes.push(note)
       const anchor = evaluateLead({ lead }, note.startTime)
       const offset = (trackIndex - (score.tracks.length - 1) / 2) * stream.trackSpacing
-      positions.set(note.id, { x: anchor.x, y: (note.midi - mid) / half * stream.pitchSpread + offset, z: anchor.z + stream.trackSpacing + offset })
+      const depthLane = (trackIndex % 2 ? -1 : 1) * (1.1 + Math.floor(trackIndex / 2) * stream.trackSpacing)
+      const arch = Math.sin((phrase.notes.length - 1) / Math.max(1, config.relations.phraseSize - 1) * Math.PI)
+      positions.set(note.id, { x: anchor.x, y: (note.midi - mid) / half * stream.pitchSpread + offset + arch * 0.35,
+        z: anchor.z * 0.4 + depthLane + arch * 0.5 })
     }
   })
-  return { lead, notes, phrases, positions, leadIds, chordIds: new Set(score.chords.flatMap(chord => chord.notes.map(n => n.id))), maxDuration: notes.reduce((max, n) => Math.max(max, n.duration), 0) }
+  const noteBlocks = []
+  for (let first = 0; first < notes.length; first += 32) {
+    const last = Math.min(notes.length, first + 32)
+    let end = 0
+    for (let i = first; i < last; i++) end = Math.max(end, notes[i]!.startTime + notes[i]!.duration)
+    noteBlocks.push({ first, last, start: notes[first]!.startTime, end })
+  }
+  const phraseByNote = new Map<string, MusicalPhrase>()
+  const supportPaths = new Map<string, Vec3[]>()
+  for (const phrase of phrases) phrase.notes.forEach((note, i) => {
+    phraseByNote.set(note.id, phrase)
+    const a = i ? positions.get(phrase.notes[i - 1]!.id)! : evaluateLead({ lead }, note.startTime)
+    supportPaths.set(note.id, curveBetween(a, positions.get(note.id)!, config.relations.curveHeight * 0.5, config.relations.samples))
+  })
+  return { lead, notes, phrases, positions, leadIds, noteBlocks, phraseByNote, supportPaths,
+    chordIds: new Set(score.chords.flatMap(chord => chord.notes.map(n => n.id))), maxDuration: notes.reduce((max, n) => Math.max(max, n.duration), 0) }
 }
 
 export function evaluateLead(model: Pick<MusicalPresentation, 'lead'>, time: number): Vec3 {
@@ -103,12 +124,29 @@ export function noteLifecycle(note: NoteEvent, time: number, config: Presentatio
   return { phase: 'fade', opacity: fade * 0.6, scale: 0.85 * fade } as const
 }
 
+export function notesInWindow(model: MusicalPresentation, time: number, past: number, future: number) {
+  const candidates: NoteEvent[] = []
+  const lastBlock = upperBound(model.noteBlocks, time + future, block => block.start)
+  for (let b = 0; b < lastBlock; b++) {
+    const block = model.noteBlocks[b]!
+    if (block.end + past < time) continue
+    for (let i = block.first; i < block.last; i++) {
+      const note = model.notes[i]!
+      if (note.startTime > time + future) break
+      if (note.startTime + note.duration + past >= time) candidates.push(note)
+    }
+  }
+  return candidates
+}
+
 export function visibleStreamNotes(model: MusicalPresentation, time: number, config: PresentationConfig['stream']) {
-  const first = upperBound(model.notes, time - model.maxDuration - config.fadeOutTime - 1e-7, n => n.startTime)
-  const last = upperBound(model.notes, time + config.leadInTime, n => n.startTime)
-  return model.notes.slice(first, last).filter(note => noteLifecycle(note, time, config).opacity > 0)
+  return notesInWindow(model, time, config.fadeOutTime, config.leadInTime)
     .sort((a, b) => Number(model.leadIds.has(b.id)) - Number(model.leadIds.has(a.id)) || Math.abs(a.startTime - time) - Math.abs(b.startTime - time) || a.id.localeCompare(b.id))
     .slice(0, config.maxVisibleNotes)
+}
+
+export function visiblePhrases(model: MusicalPresentation, notes: NoteEvent[]) {
+  return [...new Set(notes.map(note => model.phraseByNote.get(note.id)).filter(phrase => phrase !== undefined))]
 }
 
 export function curveBetween(a: Vec3, b: Vec3, height: number, samples: number): Vec3[] {

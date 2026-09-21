@@ -134,3 +134,20 @@ build 只重新生成被忽略的 dist/与 TypeScript 缓存；没有修改构�
 实际文件 `帕赫贝尔D大调卡农.mid` 的标题元事件字节为 `C5 C1 BA D5 B1 B4 B6 FB 44 B4 F3 B5 F7 BF A8 C5 A9`；依赖原始输出为 `ÅÁºÕ±´¶ûD´óµ÷¿¨Å©`，GB18030 严格解码与正常文件名共同确认标题为“帕赫贝尔D大调卡农”。浏览器只读导入后可见标题精确匹配，原乱码未出现，并显示 05:02、1 track、1,956 notes、617 chords。没有启动音频播放，因此本次证据不涉及听感或端到端音画延迟。
 
 用户 `midi/` 保持未跟踪，不进入提交；修复不改写文件，不触碰 UI、视觉、geometry、choreography、playback 或 audio。
+
+<a id="complex-music-2026-09-21"></a>
+## Complex music readability, Ensemble stage & render budgets · 2026-09-21
+
+日期：2026-09-21。产品起点：`b189533`。本轮扩展显示层，未修改 MIDI、geometry、choreography、playback 或 audio 核心模块。
+
+| 检查 | 结果 |
+| --- | --- |
+| `npm test` | PASS，10 文件 / 74 测试 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS；JS 1,425.86 kB / gzip 387.41 kB，CSS 10.70 kB / gzip 3.24 kB；既有 >500 kB 提示保留 |
+| 规模快照 | 100/700/2000/5000 notes 的 compile 1.19/2.13/4.83/6.93 ms；Ensemble 准备 0.39/0.37/0.93/2.02 ms；Ensemble seek P95 0.135/0.105/0.212/0.103 ms |
+| 数据不变 | world JSON 41945/310377/895622/2254588 bytes，plan JSON 52108/390249/1124446/2827599 bytes，与前次快照一致 |
+| 浏览器 | 1280×720 开发服务检查 demo、700、2000 和高速 2000；Ensemble 5 draw calls、约 100 个实例，120 帧窗口中位约 6.1 ms；刷新后的 console error 为空 |
+| 播放切换 | 播放中 Ensemble→Stream→Constellation→Ensemble，进度连续，audio load 计数保持不变；Ribbon 为正面镜头 |
+
+Ensemble 保持各轨道的稳定弧区，按发声状态、主线显著性、时长和音高轮廓在每声部中选择代表，并抑制同声部近距离重叠。省略只发生在绘制集合，完整 score/world/plan 和音频仍保留。浏览器截图和开发指标不是通用 FPS、GPU 内存或真实声卡延迟承诺；未使用用户 `midi/` 素材作为本轮测试数据。

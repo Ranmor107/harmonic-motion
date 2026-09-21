@@ -1,5 +1,6 @@
 import type { PresentationConfig, VisibilityMode } from '../../domain/visual'
 import type { MusicNode } from '../../domain/world'
+import { nearestNodes } from './renderBudget'
 
 export interface NodePresentation {
   visible: boolean
@@ -34,9 +35,5 @@ export function selectReadableNodeIds(
   const past = mode === 'path' ? config.activePast : config.contextPast
   const future = mode === 'path' ? config.activeFuture : config.contextFuture
   const limit = mode === 'path' ? config.pathMaxNodes : config.focusMaxNodes
-  return new Set(nodes
-    .filter(node => node.time - songTime >= -past && node.time - songTime <= future)
-    .sort((a, b) => Math.abs(a.time - songTime) - Math.abs(b.time - songTime) || a.id.localeCompare(b.id))
-    .slice(0, limit)
-    .map(node => node.id))
+  return new Set(nearestNodes(nodes, songTime, past, future, limit).map(node => node.id))
 }

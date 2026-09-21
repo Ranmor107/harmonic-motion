@@ -6,6 +6,7 @@ import type { WorldModel } from '../domain/world'
 import type { EffectProfile, VisualTheme } from '../domain/visual'
 import { eventsInWindow } from '../engine/choreography/evaluator'
 import { seededRandom } from '../utils/math'
+import { complexityPolicy } from '../visual/presentation/renderBudget'
 import type { PlaybackSnapshot } from './types'
 
 // A draw budget, independent of the event timeline. Never drops musical events.
@@ -27,9 +28,14 @@ export function EffectsRenderer({ world, plan, effects, theme, playback }: {
       return { x: Math.cos(azimuth) * radius, y: Math.sin(azimuth) * radius, z }
     })
   }, [world.metadata.seed, effects.particles.count])
-  useFrame(({ camera }) => {
+  useFrame(({ camera, size, controls }) => {
     const time = playback.current.time
-    const hits = eventsInWindow(plan, time, Math.max(effects.hit.lifetime, effects.particles.lifetime)).slice(-MAX_VISIBLE_HITS)
+    if (!rings.current && !particles.current) return
+    const target = (controls as unknown as { target?: { x: number; y: number; z: number } })?.target
+    const distance = target ? Math.hypot(camera.position.x - target.x, camera.position.y - target.y, camera.position.z - target.z) : camera.position.length()
+    const detail = Math.min(1, size.height * theme.nodeStyle.radius / Math.max(1, distance) / 5)
+    const budget = complexityPolicy(world.nodes.length, detail).hitBudget
+    const hits = eventsInWindow(plan, time, Math.max(effects.hit.lifetime, effects.particles.lifetime)).slice(-budget)
     let ringCount = 0
     let particleCount = 0
     for (const event of hits) {
@@ -47,7 +53,7 @@ export function EffectsRenderer({ world, plan, effects, theme, playback }: {
       }
       if (particles.current && age < effects.particles.lifetime) {
         const progress = age / effects.particles.lifetime
-        for (const direction of vectors) {
+        for (const direction of vectors.slice(0, Math.max(2, Math.ceil(vectors.length * (0.3 + detail * 0.7))))) {
           const distance = progress * effects.particles.distance * event.strength
           scratch.object.position.set(node.position.x + direction.x * distance, node.position.y + direction.y * distance, node.position.z + direction.z * distance)
           scratch.object.scale.setScalar(effects.particles.radius * (1 - progress))

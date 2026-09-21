@@ -38,11 +38,11 @@ npm run dev
 | View | 打开右侧控制抽屉；默认关闭，Escape 关闭并返回入口焦点 |
 | Regenerate | seed 加一，重新生成世界和轨迹，保持乐谱、音乐时序与当前播放进度 |
 | Effects on/off | 只切换视觉反馈，不重新编译世界或演奏计划 |
-| Constellation / Stream | 在空间关系与 Lead Line + Satellite Phrases 之间切换；保持音乐时间与正式编译结果。Stream 可选 Ribbon / Helix |
+| Constellation / Stream / Ensemble | 在空间关系、正面 Ribbon 主线和稳定声部弧区之间切换；保持音乐时间与正式编译结果。Ensemble 在密集段减少绘制代表，但不删除音频或乐谱 |
 | Overview / Focus / Current path | 显示全世界、时间相关局部或最精简当前路径；Stream 自带局部时间窗 |
 | 滚轮 / 拖拽 | 在 3D 场景内受限缩放和平移，不中断播放 |
 | Fit world / Fit stage / Reset | 按投影范围恢复取景；Stream 在当前演奏位置取景 |
-| Follow performer | Constellation 跟随现有 Performer；Stream 稳定水平前移。手动缩放/平移会关闭跟随，可重新开启 |
+| Follow performer | Constellation 跟随现有 Performer；Stream 稳定水平前移；Ensemble 保持舞台稳定。手动缩放/平移会关闭跟随，可重新开启 |
 
 主线在 0.22 秒短窗内按力度、时长、音区和连续性选择显著音，属于可配置展示启发式，不是真正旋律提取。其余音符按轨道、休止间隔和长度上限组成短组；不改变音频或正式编舞。完整边界见 [ADR-0001](docs/decisions/ADR-0001-musical-presentation.md)。
 

@@ -32,7 +32,7 @@ Secondary 是有证据才展开的邻域；不是默认要修改的清单。
 - 已有投影 bounds 取景、受限 zoom/pan、Fit/Reset 和 follow。CameraRig 以 controller 获取基础取景，再按 playback snapshot 跟随；Stream 仅水平前移。相机 effect 依赖真实 width/height，不依赖易被重建的 size 对象。
 - Focus/Current Path 从 songTime 派生强调集合并使用配置预算；隐藏不删 WorldModel。WorldRenderer 仍遍历实例，超大曲目性能需测量。
 - WorldModel 连接不变；visual/relations 把显著性、序列、声部与和弦成员解释为有层级的曲线。TrajectoryRenderer 继续采样正式计划当前段。
-- Stream 已扩展为主线/伴随组的 Ribbon/Helix 显示投影，复用 score/world/plan/playback；不是 GeometryStrategy。所有选音/坐标/生命周期纯函数在 visual/presentation；边界见 [ADR-0001](decisions/ADR-0001-musical-presentation.md)。
+- Stream 使用主线/伴随组的正面 Ribbon 显示投影；独立 Ensemble 使用稳定声部弧区和预算化代表音符，二者都复用 score/world/plan/playback，均不是 GeometryStrategy。所有选音/坐标/生命周期纯函数在 visual/presentation；边界见 [ADR-0001](decisions/ADR-0001-musical-presentation.md)。
 - 多 MIDI 曲库的导入/切换/删除从 App + state/ScoreSession 开始，沿 T-STATE/T-PLAYBACK 验证；不为曲库重写 MIDI parser 或 compileScore。
 
 <a id="near-term-routing"></a>

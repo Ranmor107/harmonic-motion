@@ -49,10 +49,10 @@ describe('musical presentation', () => {
     altered.notes[2]!.startTime += 0.2
     const changed = createMusicalPresentation(altered, config)
     expect(changed.lead[2]!.position.x).not.toBe(model.lead[2]!.position.x)
-    const helix = createMusicalPresentation(score, { ...config, stream: { ...config.stream, shape: 'helix' } })
-    expect(helix.lead.map(p => p.position)).not.toEqual(model.lead.map(p => p.position))
-    expect(new Set(helix.lead.map(p => Math.round(p.position.z * 100))).size).toBeGreaterThan(3)
-    expect(helix.lead.map(p => p.note.id)).toEqual(model.lead.map(p => p.note.id))
+    const wider = createMusicalPresentation(score, { ...config, stream: { ...config.stream, radius: 2 } })
+    expect(wider.lead.map(p => p.position)).not.toEqual(model.lead.map(p => p.position))
+    expect(new Set(model.lead.map(p => Math.round(p.position.z * 100))).size).toBeGreaterThan(3)
+    expect(wider.lead.map(p => p.note.id)).toEqual(model.lead.map(p => p.note.id))
   })
 
   it('groups supporting voices into bounded phrases split at rests, and represents every chord member', () => {

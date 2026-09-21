@@ -57,7 +57,6 @@ h1 { margin: 20px 0 27px; font: 400 33px/1.08 'Iowan Old Style', Baskerville, Ge
 .segmented { display: flex; border-bottom: 1px solid #ffffff1b; gap: 8px; }
 .segmented button { flex: 1; border-bottom: 1px solid transparent; margin-bottom: -1px; padding: 9px 2px; color: #98a5b1; font-size: 11px; white-space: nowrap; }
 .segmented button:hover { color: var(--paper); }.segmented button[aria-pressed=true] { color: var(--brass); border-bottom-color: var(--brass); }
-.shape-options { margin-top: 10px; }.shape-options button { font-style: italic; }
 .control-note { font-size: 11px; line-height: 1.5; color: var(--muted); margin: 13px 0 0; }
 .camera-actions { display: flex; gap: 27px; margin-bottom: 17px; }
 .camera-actions button, .quiet-action { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 0; color: #bdc5cc; }

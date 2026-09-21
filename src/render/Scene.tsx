@@ -13,10 +13,12 @@ import { EffectsRenderer } from './EffectsRenderer'
 import { CameraRig } from './CameraRig'
 import { TrajectoryRenderer } from './TrajectoryRenderer'
 import { StreamRenderer } from './StreamRenderer'
-import { createMusicalPresentation, evaluateLead } from '../visual/presentation/musicalPresentation'
+import { EnsembleRenderer } from './EnsembleRenderer'
+import { createEnsemblePresentation, ENSEMBLE_STAGE } from '../visual/presentation/ensemblePresentation'
+import { createMusicalPresentation } from '../visual/presentation/musicalPresentation'
+import { RIBBON_STAGE, streamCameraTarget } from '../visual/camera/streamCamera'
 import { evaluatePerformer } from '../engine/choreography/evaluator'
-
-const STREAM_BOUNDS = { min: { x: -5, y: -5, z: -2 }, max: { x: 11, y: 5, z: 2 } }
+import { RenderDiagnostics } from './RenderDiagnostics'
 
 class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
@@ -32,22 +34,25 @@ export function Scene({ score, world, plan, preset, playback, cameraController, 
   follow: boolean; onNavigate: () => void
 }) {
   const model = useMemo(() => createMusicalPresentation(score, preset.presentation), [score, preset.presentation])
+  const ensemble = useMemo(() => createEnsemblePresentation(score, model), [score, model])
   const followPosition = useMemo(() => viewMode === 'stream'
-    ? (time: number) => ({ x: evaluateLead(model, time).x, y: 0, z: 0 })
+    ? (time: number) => streamCameraTarget(model, time)
     : (time: number) => plan.performers[0] ? evaluatePerformer(plan.performers[0], time) : { x: 0, y: 0, z: 0 }, [model, plan, viewMode])
   const environment = preset.environment
   const background = environment.type === 'solid' ? environment.color : `linear-gradient(160deg, ${environment.top}, ${environment.bottom})`
-  const cameraConfig = useMemo(() => viewMode === 'stream'
-    ? { ...preset.camera, direction: { x: 0, y: 0, z: 1 }, padding: 1.08 }
-    : preset.camera, [preset.camera, viewMode])
-  const cameraBounds = viewMode === 'stream' ? STREAM_BOUNDS : world.bounds
+  const stage = viewMode === 'ensemble' ? ENSEMBLE_STAGE : RIBBON_STAGE
+  const cameraConfig = useMemo(() => viewMode !== 'constellation'
+    ? { ...preset.camera, direction: stage.direction, padding: 1.08 }
+    : preset.camera, [preset.camera, viewMode, stage])
+  const cameraBounds = viewMode === 'ensemble' ? ensemble.bounds : viewMode === 'stream' ? RIBBON_STAGE.bounds : world.bounds
   return <div className="scene-canvas" style={{ background }} aria-label="Generated music constellation">
     <SceneBoundary>
       <Canvas dpr={[1, 1.75]} gl={{ antialias: true, alpha: true }} fallback={<div className="scene-fallback">WebGL is unavailable. Enable hardware acceleration to see the world.</div>}>
         <AdaptiveDpr pixelated />
+        {import.meta.env.DEV && new URLSearchParams(window.location.search).has('benchmark') && <RenderDiagnostics />}
         <ambientLight intensity={preset.theme.lighting.ambient} />
         <directionalLight position={[10, 10, 10]} intensity={preset.theme.lighting.key} color={preset.theme.lighting.color} />
-        <CameraRig bounds={cameraBounds} config={cameraConfig} controller={cameraController} fitRequest={fitRequest} follow={follow} travel={viewMode === 'stream'} followPosition={followPosition} playback={playback} onNavigate={onNavigate} />
+        <CameraRig bounds={cameraBounds} config={cameraConfig} controller={cameraController} fitRequest={fitRequest} follow={viewMode !== 'ensemble' && follow} travel={viewMode === 'stream'} followPosition={followPosition} playback={playback} onNavigate={onNavigate} />
         <EnvironmentRenderer config={environment} bounds={world.bounds} />
         {viewMode === 'constellation' ? <>
           <WorldRenderer world={world} score={score} model={model} theme={preset.theme} playback={playback} visibilityMode={visibilityMode} presentation={preset.presentation} />
@@ -56,7 +61,8 @@ export function Scene({ score, world, plan, preset, playback, cameraController, 
             <PerformerRenderer performer={performer} theme={preset.theme} effects={preset.effects} playback={playback} />
           </group>)}
           <EffectsRenderer world={world} plan={plan} effects={preset.effects} theme={preset.theme} playback={playback} />
-        </> : <StreamRenderer model={model} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} />}
+        </> : viewMode === 'stream' ? <StreamRenderer model={model} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} />
+          : <EnsembleRenderer model={ensemble} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} />}
       </Canvas>
     </SceneBoundary>
   </div>

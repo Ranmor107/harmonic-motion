@@ -19,9 +19,10 @@ export function CameraRig({ bounds, config, controller, fitRequest, follow, trav
   useLayoutEffect(() => {
     const state = controller.getState(0, { bounds, config, aspect: width / height })
     const point = followPosition(playback.current.time)
-    const offset = travel ? point.x - followPosition(0).x : 0
-    state.position.x += offset
-    state.target.x += offset
+    if (travel) for (const axis of ['x', 'y', 'z'] as const) {
+      state.position[axis] += point[axis]
+      state.target[axis] += point[axis]
+    }
     camera.position.set(state.position.x, state.position.y, state.position.z)
     camera.lookAt(state.target.x, state.target.y, state.target.z)
     camera.near = state.near

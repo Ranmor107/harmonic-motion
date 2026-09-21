@@ -12,7 +12,7 @@ Status: Accepted / Implemented in iteration 03.
 
 ## Decision
 
-visual/presentation 增加纯、确定性、可缓存的展示模型：只读 NormalizedScore，按可配置显著性选音，并导出 ribbon/helix 显示坐标与短音组。由绝对 songTime 求值。Renderer 只消费它，不在帧循环中推断音乐结构。此路径是 Stream 显示投影，不写回 WorldModel/PerformancePlan，不改变真实 note-hit、音符时间或音频调度。Constellation 仍使用正式 PerformancePlan 的主角轨迹。
+visual/presentation 增加纯、确定性、可缓存的展示模型：只读 NormalizedScore，按可配置显著性选音，并导出正面 Ribbon 主线、伴随短组及独立 Ensemble 的稳定声部弧区。由绝对 songTime 求值。Renderer 只消费它，不在帧循环中推断音乐结构。此路径是显示投影，不写回 WorldModel/PerformancePlan，不改变真实 note-hit、音符时间或音频调度。Constellation 仍使用正式 PerformancePlan 的主角轨迹；Ensemble 的密集绘制省略只影响显示。
 
 application 的 ScoreSession 缓存正式 CompiledScore；展示模型按 score/config memoize。切换视图不重编译正式世界与计划。无需新增 GeometryStrategy、修改 planner 或引入第二个时钟。
 
