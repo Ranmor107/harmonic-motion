@@ -3,7 +3,7 @@ import { normalizeScore } from '../src/midi/normalize'
 import { createDemoScore } from '../src/demo/score'
 import { createStudioStore } from '../src/state/store'
 import { createMusicalPresentation } from '../src/visual/presentation/musicalPresentation'
-import { createEnsemblePresentation, ensembleMotion, ensemblePoint, ENSEMBLE_BUDGET, visibleEnsembleNotes } from '../src/visual/presentation/ensemblePresentation'
+import { createEnsemblePresentation, ensembleMotion, ensembleNoteState, ensemblePath, ensemblePoint, ENSEMBLE_BUDGET, visibleEnsembleNotes } from '../src/visual/presentation/ensemblePresentation'
 import { DefaultPresentation as config } from '../src/visual/presentation/defaultPresentation'
 
 const dense = normalizeScore({ metadata: { title: 'Fast polyphony', source: 'demo' }, tracks: Array.from({ length: 4 }, (_, voice) => ({
@@ -20,7 +20,8 @@ describe('Ensemble presentation', () => {
     expect(new Set(model.regions.map(region => region.angle)).size).toBe(4)
     expect(model.placements.size).toBe(dense.notes.length)
     const a = dense.tracks[0]!.notes[0]!, b = dense.tracks[0]!.notes[12]!
-    expect(model.placements.get(a.id)).toEqual(model.placements.get(b.id))
+    expect(model.placements.get(a.id)!.voice).toBe(model.placements.get(b.id)!.voice)
+    expect(model.placements.get(a.id)!.radius).toBe(model.placements.get(b.id)!.radius)
     expect(model.placements.get(dense.tracks[0]!.notes[1]!.id)!.angle).toBeGreaterThan(model.placements.get(a.id)!.angle)
     expect(dense).toEqual(before)
   })
@@ -50,14 +51,23 @@ describe('Ensemble presentation', () => {
     expect(visibleEnsembleNotes(model, dense.duration + 2)).toEqual([])
   })
 
-  it('approaches and holds notes throughout their true duration', () => {
+  it('emerges from a deep inner layer, approaches its outer structure, resonates and fades', () => {
     const model = prepare()
     const note = dense.tracks[0]!.notes[40]!
+    const hidden = ensembleNoteState(model, note, note.startTime - 4)
+    const emerging = ensembleNoteState(model, note, note.startTime - 2.5)
     const before = ensemblePoint(model, note, note.startTime - 1)
     const hit = ensemblePoint(model, note, note.startTime)
-    expect(Math.hypot(before.x, before.y)).toBeGreaterThan(Math.hypot(hit.x, hit.y))
-    expect(ensemblePoint(model, note, note.startTime + 1)).toEqual(hit)
-    expect(ensemblePoint(model, note, note.startTime + note.duration + 0.5)).not.toEqual(hit)
+    expect(hidden.phase).toBe('hidden')
+    expect(emerging.phase).toBe('emerging')
+    expect(emerging.depth).toBeLessThan(before.z)
+    expect(Math.hypot(emerging.position.x, emerging.position.y)).toBeLessThan(Math.hypot(hit.x, hit.y))
+    expect(Math.hypot(before.x, before.y)).toBeLessThan(Math.hypot(hit.x, hit.y))
+    expect(ensembleNoteState(model, note, note.startTime + 1).phase).toBe('active')
+    expect(ensembleNoteState(model, note, note.startTime + note.duration + 0.5).phase).toBe('fading')
+    expect(ensembleNoteState(model, note, note.startTime + note.duration + 2).phase).toBe('hidden')
+    expect(ensemblePath(model, note, note.startTime - 1).at(-1)).toEqual(before)
+    expect(new Set(ensemblePath(model, note, note.startTime - 1).map(point => point.z)).size).toBeGreaterThan(2)
   })
 
   it('keeps ordinary demo chords complete and associates their members', () => {
@@ -75,12 +85,14 @@ describe('Ensemble presentation', () => {
     for (const time of [0, 0.9999, 1, 2, 100]) {
       const motion = ensembleMotion(model, time)
       expect(Math.abs(motion.rotation)).toBeLessThanOrEqual(0.055)
+      expect(Math.abs(motion.tiltX)).toBeLessThanOrEqual(0.018)
+      expect(Math.abs(motion.tiltY)).toBeLessThanOrEqual(0.02)
       expect(Math.abs(motion.x)).toBeLessThanOrEqual(0.12)
       expect(motion.scale).toBeGreaterThanOrEqual(1)
       expect(motion.scale).toBeLessThanOrEqual(1.025)
       expect(Math.abs(ensembleMotion(model, time + 0.0001).scale - motion.scale)).toBeLessThan(0.001)
     }
-    expect(ensembleMotion(model, 3, true)).toEqual({ x: 0, y: 0, rotation: 0, scale: 1 })
+    expect(ensembleMotion(model, 3, true)).toEqual({ x: 0, y: 0, rotation: 0, tiltX: 0, tiltY: 0, scale: 1 })
     expect(ensembleMotion(prepare(), 3)).toEqual(ensembleMotion(model, 3))
   })
 

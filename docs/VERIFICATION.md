@@ -151,3 +151,19 @@ build 只重新生成被忽略的 dist/与 TypeScript 缓存；没有修改构�
 | 播放切换 | 播放中 Ensemble→Stream→Constellation→Ensemble，进度连续，audio load 计数保持不变；Ribbon 为正面镜头 |
 
 Ensemble 保持各轨道的稳定弧区，按发声状态、主线显著性、时长和音高轮廓在每声部中选择代表，并抑制同声部近距离重叠。省略只发生在绘制集合，完整 score/world/plan 和音频仍保留。浏览器截图和开发指标不是通用 FPS、GPU 内存或真实声卡延迟承诺；未使用用户 `midi/` 素材作为本轮测试数据。
+
+<a id="radial-depth-emergence-2026-09-21"></a>
+## Radial Stage inner-to-outer depth emergence · 2026-09-21
+
+日期：2026-09-21。基于 `5f29b5b`，只扩展 Ensemble/Radial Stage 的 presentation、render、camera staging 与显示生命周期。
+
+| 检查 | 结果 |
+| --- | --- |
+| `npm test` | PASS，10 文件 / 74 测试 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS；JS 1,427.73 kB / gzip 388.08 kB，CSS 10.63 kB / gzip 3.21 kB；既有 >500 kB 提示保留 |
+| 定向生命周期 | PASS；Hidden、Emerging、Approaching、Active、Fading 的阶段、内外半径、深度、弧形路径、seek 结果均确定 |
+| Node 性能快照 | 100/700/2000/5000 的 Ensemble 准备 0.85/1.53/2.08/4.50 ms；Ensemble seek P95 0.156/0.110/0.184/0.092 ms；world/plan JSON 字节保持原值 |
+| 浏览器 | 1280×720 开发服务检查 700、2000 和起始深处状态；中心深层小音符、弧形向外丝线、外层活跃结构均可见，5 draw calls，700 样本约 103 实例，console error 为空 |
+
+阶段是纯 songTime 求值：预备音符从内层小尺度/低亮度/负 z 深度进入，接近时沿带弧度路径向外展开，活跃时在声部弧区共鸣，结束后短暂松开并淡出。没有固定判定圈、命中线、评分或输入玩法；完整音频和音乐数据不受显示省略影响。截图和帧间隔只说明本地开发环境表现，不构成跨设备 FPS 或音画延迟承诺。

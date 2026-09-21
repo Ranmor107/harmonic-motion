@@ -4,12 +4,11 @@ import { BufferGeometry, Color, Group, InstancedMesh, Object3D } from 'three'
 import type { EffectProfile, PresentationConfig, VisualTheme } from '../domain/visual'
 import type { NoteEvent } from '../domain/score'
 import type { Vec3 } from '../domain/world'
-import { ENSEMBLE_BUDGET, ENSEMBLE_WINDOW, ensembleMotion, ensemblePoint, visibleEnsembleNotes, type EnsemblePresentation } from '../visual/presentation/ensemblePresentation'
-import { noteLifecycle } from '../visual/presentation/musicalPresentation'
+import { ENSEMBLE_BUDGET, ensembleMotion, ensembleNoteState, ensemblePath, ensemblePoint, visibleEnsembleNotes, type EnsemblePresentation } from '../visual/presentation/ensemblePresentation'
 import type { PlaybackSnapshot } from './types'
 
-const LINE_VERTICES = ENSEMBLE_BUDGET * 32
-const pointOnArc = (angle: number, radius: number): Vec3 => ({ x: Math.cos(angle) * radius, y: Math.sin(angle) * radius, z: 0 })
+const LINE_VERTICES = ENSEMBLE_BUDGET * 48
+const pointOnArc = (angle: number, radius: number, z = 0): Vec3 => ({ x: Math.cos(angle) * radius, y: Math.sin(angle) * radius, z })
 
 export function EnsembleRenderer({ model, theme, effects, presentation, playback }: {
   model: EnsemblePresentation; theme: VisualTheme; effects: EffectProfile; presentation: PresentationConfig; playback: PlaybackSnapshot
@@ -38,23 +37,36 @@ export function EnsembleRenderer({ model, theme, effects, presentation, playback
     }
     return new Float32Array(vertices)
   }, [model])
-  const lifecycle = { ...presentation.stream, leadInTime: ENSEMBLE_WINDOW.future, fadeOutTime: ENSEMBLE_WINDOW.past }
   useFrame(() => {
     if (!stage.current || !notes.current || !accents.current || !lines.current) return
     const time = playback.current.time
-    const motion = ensembleMotion(model, time, reducedMotion || !effects.hit.enabled)
+    const motion = ensembleMotion(model, time, reducedMotion)
     stage.current.position.set(motion.x, motion.y, 0)
-    stage.current.rotation.z = motion.rotation
+    stage.current.rotation.set(motion.tiltX, motion.rotation, motion.tiltY)
     stage.current.scale.setScalar(motion.scale)
+    let vertex = 0
+    const draw = (a: Vec3, b: Vec3, color: string, opacity: number) => {
+      if (vertex + 2 > LINE_VERTICES) return
+      scratch.color.set(color)
+      for (const point of [a, b]) {
+        buffers.positions.set([point.x, point.y, point.z], vertex * 3)
+        buffers.colors.set([scratch.color.r, scratch.color.g, scratch.color.b, opacity], vertex * 4)
+        vertex++
+      }
+    }
+    const drawPath = (path: Vec3[], color: string, opacity: number) => {
+      for (let i = 1; i < path.length; i++) draw(path[i - 1]!, path[i]!, color, opacity)
+    }
     const visible = visibleEnsembleNotes(model, time)
     const points = new Map<string, Vec3>()
-    const states = new Map(visible.map(note => [note.id, noteLifecycle(note, time, lifecycle)]))
+    const states = new Map(visible.map(note => [note.id, ensembleNoteState(model, note, time)]))
     let accentCount = 0
     visible.forEach((note, i) => {
       const point = ensemblePoint(model, note, time)
       points.set(note.id, point)
       const state = states.get(note.id)!
       const lead = model.source.leadIds.has(note.id)
+      drawPath(ensemblePath(model, note, time), lead ? theme.palette.chord : theme.palette.note, state.opacity * (lead ? 0.24 : 0.16))
       const radius = theme.nodeStyle.radius * (lead ? 0.9 : 0.7) * state.scale * (0.7 + note.velocity * 0.35)
       scratch.object.position.set(point.x, point.y, point.z)
       scratch.object.scale.setScalar(radius)
@@ -76,16 +88,6 @@ export function EnsembleRenderer({ model, theme, effects, presentation, playback
       mesh.instanceMatrix.needsUpdate = true
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
     }
-    let vertex = 0
-    const draw = (a: Vec3, b: Vec3, color: string, opacity: number) => {
-      if (vertex + 2 > LINE_VERTICES) return
-      scratch.color.set(color)
-      for (const point of [a, b]) {
-        buffers.positions.set([point.x, point.y, point.z], vertex * 3)
-        buffers.colors.set([scratch.color.r, scratch.color.g, scratch.color.b, opacity], vertex * 4)
-        vertex++
-      }
-    }
     const lastByVoice = new Map<string, NoteEvent>()
     const chords = new Map<string, NoteEvent[]>()
     for (const note of visible) {
@@ -96,17 +98,18 @@ export function EnsembleRenderer({ model, theme, effects, presentation, playback
       if (previous && note.startTime - previous.startTime > 0.03 && note.startTime - previous.startTime < presentation.relations.phraseGap) {
         const a = points.get(previous.id)!
         // A short curved phrase link leaves the centre free for cross-voice harmony.
-        const midpoint = { x: (a.x + point.x) * 0.54, y: (a.y + point.y) * 0.54, z: -0.01 }
-        draw(a, midpoint, theme.palette.note, opacity * 0.28)
-        draw(midpoint, point, theme.palette.note, opacity * 0.28)
+        const length = Math.hypot(point.x - a.x, point.y - a.y) || 1
+        const midpoint = { x: (a.x + point.x) * 0.54 - (point.y - a.y) / length * 0.16,
+          y: (a.y + point.y) * 0.54 + (point.x - a.x) / length * 0.16, z: (a.z + point.z) * 0.5 - 0.02 }
+        drawPath([a, midpoint, point], theme.palette.note, opacity * 0.28)
       }
       lastByVoice.set(note.trackId, note)
       const remaining = Math.max(0, note.startTime + note.duration - Math.max(time, note.startTime))
       if (note.duration > 0.4) {
         const radius = Math.hypot(point.x, point.y)
         const length = Math.min(remaining, 3) * 0.13
-        for (let i = 0; i < 8; i++) draw(pointOnArc(placement.angle + length * i / 8, radius),
-          pointOnArc(placement.angle + length * (i + 1) / 8, radius), theme.palette.chord, opacity * 0.65)
+        for (let i = 0; i < 8; i++) draw(pointOnArc(placement.angle + length * i / 8, radius, point.z),
+          pointOnArc(placement.angle + length * (i + 1) / 8, radius, point.z), theme.palette.chord, opacity * 0.65)
       }
       const chord = model.chordByNote.get(note.id)
       if (chord && Math.abs(note.startTime - time) < 1.5) {
