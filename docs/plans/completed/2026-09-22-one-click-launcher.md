@@ -96,4 +96,4 @@ Related ADR: none
 
 ## Execution notes and completion evidence
 
-2026-09-22：新增 `启动 Harmonic Motion.cmd` 和 `scripts/start-harmonic-motion.ps1`。PowerShell 语法、`-NoBrowser`、真实 Edge/profile 生命周期、端口释放、临时目录清理、`npm run test`（74）、`npm run lint`、`npm run build` 与 `git diff --check` 已通过。外部 Edge UI 未由 CUA 枚举，已在验证文档中标明边界。待提交后补 commit 与 GitHub push 证据。
+2026-09-22：新增 `启动 Harmonic Motion.cmd` 和 `scripts/start-harmonic-motion.ps1`。PowerShell 语法、`-NoBrowser`、真实 Edge/profile 生命周期、端口释放、临时目录清理、占用端口保护、`npm run test`（74）、`npm run lint`、`npm run build` 与 `git diff --check` 已通过。外部 Edge UI 未由 CUA 枚举，已在验证文档中标明边界。实现提交为 `202f0d4`，已成功推送到 GitHub `origin/main`。
