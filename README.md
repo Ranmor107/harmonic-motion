@@ -15,7 +15,7 @@ The score is compiling a world.
 
 ## 启动
 
-Windows 用户可直接双击仓库根目录的 `启动 Harmonic Motion.cmd`。它会启动本地服务并打开一个独立的 Harmonic Motion 浏览器窗口；关闭这个独立窗口后，启动器会自动停止自己启动的 Vite 进程并删除临时浏览器配置。普通浏览器标签页不属于这个关闭信号。
+Windows 用户可直接双击仓库根目录的 `start-harmonic-motion.cmd`。它会启动本地服务并打开一个独立的 Harmonic Motion 浏览器窗口；关闭这个独立窗口后，启动器会自动停止自己启动的 Vite 进程并删除临时浏览器配置。普通浏览器标签页不属于这个关闭信号。
 
 推荐 Node.js 24 LTS（开发验证使用 24.18.0）。在项目目录运行：
 

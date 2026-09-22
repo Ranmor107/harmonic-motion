@@ -50,7 +50,7 @@ Related ADR: none
 
 | File / symbol | Reason | Type of change |
 | --- | --- | --- |
-| `启动 Harmonic Motion.cmd` | 双击入口 | tool entry |
+| `start-harmonic-motion.cmd` | 双击入口 | tool entry |
 | `scripts/start-harmonic-motion.ps1` | 启动、等待、浏览器生命周期与清理 | tool behavior |
 | `README.md` | 记录一键启动和关闭边界 | documentation |
 | `docs/plans/index.md` | 登记本轮 plan | documentation |
@@ -96,4 +96,4 @@ Related ADR: none
 
 ## Execution notes and completion evidence
 
-2026-09-22：新增 `启动 Harmonic Motion.cmd` 和 `scripts/start-harmonic-motion.ps1`。PowerShell 语法、`-NoBrowser`、真实 Edge/profile 生命周期、端口释放、临时目录清理、占用端口保护、`npm run test`（74）、`npm run lint`、`npm run build` 与 `git diff --check` 已通过。外部 Edge UI 未由 CUA 枚举，已在验证文档中标明边界。实现提交为 `202f0d4`，已成功推送到 GitHub `origin/main`。
+2026-09-22：新增 `start-harmonic-motion.cmd` 和 `scripts/start-harmonic-motion.ps1`。PowerShell 语法、`-NoBrowser`、真实 Edge/profile 生命周期、端口释放、临时目录清理、占用端口保护、`npm run test`（74）、`npm run lint`、`npm run build` 与 `git diff --check` 已通过。外部 Edge UI 未由 CUA 枚举，已在验证文档中标明边界。实现提交为 `202f0d4`，已成功推送到 GitHub `origin/main`；入口文件名随后改为 ASCII 以兼容 `cmd.exe`。

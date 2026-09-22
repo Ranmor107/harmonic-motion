@@ -24,7 +24,7 @@ plan 是实施边界，不是永久架构规范。真正的架构决策另用 [A
 
 | Plan | Status | Path | Evidence / next step |
 | --- | --- | --- | --- |
-| Windows one-click launcher and process cleanup | Completed | [completed plan](completed/2026-09-22-one-click-launcher.md) | `启动 Harmonic Motion.cmd` + PowerShell lifecycle cleanup；[验证证据](../VERIFICATION.md#one-click-launcher-2026-09-22) |
+| Windows one-click launcher and process cleanup | Completed | [completed plan](completed/2026-09-22-one-click-launcher.md) | `start-harmonic-motion.cmd` + PowerShell lifecycle cleanup；[验证证据](../VERIFICATION.md#one-click-launcher-2026-09-22) |
 | Radial Stage: inner-to-outer depth emergence | Completed | [completed plan](completed/2026-09-21-radial-depth-emergence.md) | Hidden→Emerging→Approaching→Active→Fading、内外纵深与弧形展开已实现；实现提交 `1f1c891`；[验证证据](../VERIFICATION.md#radial-depth-emergence-2026-09-21) |
 | Complex music: readability, depth and rendering budgets | Completed | [completed plan](completed/2026-09-20-complex-music.md) | 关系/预算、Ribbon 与独立 Ensemble 已实现；实现提交 `2e05838`；[验证证据](../VERIFICATION.md#complex-music-2026-09-21) |
 | MIDI text encoding compatibility | Completed | [completed plan](completed/2026-09-20-midi-text-encoding.md) | `d4d012e`；[验证证据](../VERIFICATION.md#midi-text-encoding-2026-09-20) |

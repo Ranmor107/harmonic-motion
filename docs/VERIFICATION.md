@@ -126,6 +126,7 @@ build 只重新生成被忽略的 dist/与 TypeScript 缓存；没有修改构�
 | 检查 | 结果 |
 | --- | --- |
 | PowerShell 语法 | PASS；`scripts/start-harmonic-motion.ps1` 可解析 |
+| `.cmd` 入口 | PASS；`start-harmonic-motion.cmd -NoBrowser` 可启动并在退出后释放 5174 |
 | 受控启动 | PASS；`-NoBrowser` 启动 Vite、等待 HTTP 响应，退出后 5174 释放 |
 | Edge 启动生命周期 | PASS；真实 Edge 独立 profile 被创建，启动器结束后 5174 释放且 `harmonic-motion-*` 临时 profile 清除 |
 | `npm run test` | PASS，10 文件 / 74 测试 |
@@ -133,7 +134,7 @@ build 只重新生成被忽略的 dist/与 TypeScript 缓存；没有修改构�
 | `npm run build` | PASS；strict TypeScript + Vite；既有 >500 kB 提示保留 |
 | `git diff --check` | PASS；用户未跟踪的 `midi/` 未进入本轮文件 |
 
-一键入口为根目录的 `启动 Harmonic Motion.cmd`，实际逻辑在 `scripts/start-harmonic-motion.ps1`。启动器只在确认端口空闲后绑定 5174；关闭独立 `--app` 窗口后通过浏览器 profile 生命周期清理服务进程和临时目录，不把普通浏览器标签页当作关闭信号。当前 CUA 浏览器枚举返回 `nodeRepl.fetch` 错误，因此没有把外部 Edge 窗口截图或 UI 可见性写成已验证证据；宿主进程、HTTP、端口和临时 profile 生命周期已实测。
+一键入口为根目录的 `start-harmonic-motion.cmd`，实际逻辑在 `scripts/start-harmonic-motion.ps1`。启动器只在确认端口空闲后绑定 5174；关闭独立 `--app` 窗口后通过浏览器 profile 生命周期清理服务进程和临时目录，不把普通浏览器标签页当作关闭信号。当前 CUA 浏览器枚举返回 `nodeRepl.fetch` 错误，因此没有把外部 Edge 窗口截图或 UI 可见性写成已验证证据；宿主进程、HTTP、端口和临时 profile 生命周期已实测。入口使用 ASCII 文件名，以兼容 Windows `cmd.exe` 代码页。
 
 <a id="midi-text-encoding-2026-09-20"></a>
 ## MIDI text encoding compatibility · 2026-09-20
