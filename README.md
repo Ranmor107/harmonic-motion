@@ -3,7 +3,7 @@
 Purpose: 项目说明、启动及用户操作入口。
 Authority: 快速使用指南；现状、架构和维护规范分别链接到 canonical 文档。
 Update when: 启动方式、用户操作或导航入口变化。
-Last verified: 2026-09-21；复杂音乐可读性、Ribbon 与 Ensemble 的本地验证。
+Last verified: 2026-09-22；补充 Windows 一键启动与独立窗口关闭清理。
 
 **Music Geometry Engine — a score-to-world generative engine.**
 
@@ -14,6 +14,8 @@ The score is compiling a world.
 本项目是可运行的音乐空间应用：本地 MIDI / 内置原创乐谱 → 音乐语义 → 确定性音乐空间 → 编舞 → 合成音频与 3D 演奏。没有后端、账号、数据上传或物理引擎。
 
 ## 启动
+
+Windows 用户可直接双击仓库根目录的 `启动 Harmonic Motion.cmd`。它会启动本地服务并打开一个独立的 Harmonic Motion 浏览器窗口；关闭这个独立窗口后，启动器会自动停止自己启动的 Vite 进程并删除临时浏览器配置。普通浏览器标签页不属于这个关闭信号。
 
 推荐 Node.js 24 LTS（开发验证使用 24.18.0）。在项目目录运行：
 
