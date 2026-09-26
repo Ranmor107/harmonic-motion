@@ -89,23 +89,6 @@ function Stop-ProcessTree {
     }
 }
 
-function Remove-TemporaryProfile {
-    if ($null -eq $profilePath -or -not (Test-Path -LiteralPath $profilePath)) {
-        return
-    }
-
-    for ($attempt = 0; $attempt -lt 5; $attempt++) {
-        try {
-            Remove-Item -LiteralPath $profilePath -Recurse -Force -ErrorAction Stop
-            return
-        } catch {
-            Start-Sleep -Milliseconds 250
-        }
-    }
-
-    Write-Warning "Temporary browser profile could not be removed: $profilePath"
-}
-
 try {
     if ($Port -lt 1024 -or $Port -gt 65535) {
         throw "Port must be between 1024 and 65535."
@@ -157,13 +140,17 @@ try {
         throw 'Microsoft Edge or Google Chrome was not found.'
     }
 
-    $profilePath = Join-Path ([System.IO.Path]::GetTempPath()) ("harmonic-motion-" + [guid]::NewGuid().ToString('N'))
-    New-Item -ItemType Directory -Path $profilePath | Out-Null
+    $browserName = [System.IO.Path]::GetFileNameWithoutExtension($browserPath)
+    $profilePath = Join-Path $env:LOCALAPPDATA ("HarmonicMotion\Profiles\" + $browserName)
+    New-Item -ItemType Directory -Path $profilePath -Force | Out-Null
+    $lockFile = Join-Path $profilePath 'lockfile'
+    if (Test-Path -LiteralPath $lockFile) {
+        throw 'The dedicated browser profile is already in use. Close its existing window, then try again.'
+    }
     $browserArguments = '--app="' + $serverUrl + '" --user-data-dir="' + $profilePath + '" --no-first-run --no-default-browser-check'
 
     Write-Host 'Opening the dedicated browser window. Close that window to stop the server.'
     $browserProcess = Start-Process -FilePath $browserPath -ArgumentList $browserArguments -PassThru
-    $lockFile = Join-Path $profilePath 'lockfile'
     $browserReady = $false
     for ($attempt = 0; $attempt -lt 120; $attempt++) {
         if (Test-Path -LiteralPath $lockFile) {
@@ -181,6 +168,7 @@ try {
     }
 
     while (Test-Path -LiteralPath $lockFile) {
+        if ($browserProcess.HasExited) { break }
         Start-Sleep -Milliseconds 500
     }
 } catch {
@@ -192,7 +180,6 @@ try {
         Stop-Process -Id $serverListenerProcessId -Force -ErrorAction SilentlyContinue
     }
     Stop-ProcessTree -Process $serverProcess
-    Remove-TemporaryProfile
 }
 
 exit $exitCode

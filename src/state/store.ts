@@ -6,6 +6,7 @@ import { ConstellationGeometryStrategy } from '../engine/music-geometry/strategi
 import type { GeometryStrategy } from '../engine/music-geometry/GeometryStrategy'
 import { createQuickStudyScore } from '../demo/score'
 import { DefaultPreset } from '../visual/presets/defaultPreset'
+import type { SavedSession } from './persistence'
 
 export interface ScoreSession {
   id: string
@@ -25,6 +26,7 @@ interface StudioState {
   visibilityMode: VisibilityMode
   setScore(score: NormalizedScore): void
   addScores(scores: { score: NormalizedScore; filename: string }[]): void
+  restoreSessions(sessions: SavedSession[], activeSessionId: string): number
   selectSession(id: string): void
   removeSession(id: string): void
   regenerate(): void
@@ -48,6 +50,21 @@ export function createStudioStore() {
       const added = scores.map(({ score, filename }) => ({ id: `score-${nextId++}`, filename, seed: state.seed, compiled: compileScore(score, state.strategy, state.seed) }))
       if (!added.length) return
       set({ sessions: [...state.sessions, ...added], activeSessionId: added[0]!.id, compiled: added[0]!.compiled })
+    },
+    restoreSessions: (records, activeSessionId) => {
+      const sessions: ScoreSession[] = [demo]
+      for (const record of records) {
+        if (record.id === demo.id || sessions.some(session => session.id === record.id)) continue
+        try {
+          sessions.push({ id: record.id, filename: record.filename, seed: record.seed,
+            compiled: compileScore(record.score, strategy, record.seed) })
+          const id = /^score-(\d+)$/.exec(record.id)
+          if (id) nextId = Math.max(nextId, Number(id[1]) + 1)
+        } catch { /* Keep other saved scores available if one record cannot compile. */ }
+      }
+      const active = sessions.find(session => session.id === activeSessionId) ?? demo
+      set({ sessions, activeSessionId: active.id, compiled: active.compiled, seed: active.seed })
+      return sessions.length - 1
     },
     selectSession: id => {
       const session = get().sessions.find(item => item.id === id)

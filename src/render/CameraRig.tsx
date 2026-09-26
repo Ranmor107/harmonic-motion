@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type ComponentRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { PerspectiveCamera } from 'three'
+import { PerspectiveCamera, Vector3 } from 'three'
 import type { CameraConfig, CameraController } from '../domain/visual'
 import type { Vec3, WorldBounds } from '../domain/world'
 import type { PlaybackSnapshot } from './types'
@@ -15,6 +15,8 @@ export function CameraRig({ bounds, config, controller, fitRequest, follow, trav
   const { width, height } = size
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null)
   const lastTarget = useRef<Vec3>({ x: 0, y: 0, z: 0 })
+  const navigationTarget = useRef(new Vector3())
+  const updatingFollow = useRef(false)
   const wasFollowing = useRef(false)
   useLayoutEffect(() => {
     const state = controller.getState(0, { bounds, config, aspect: width / height })
@@ -30,6 +32,7 @@ export function CameraRig({ bounds, config, controller, fitRequest, follow, trav
     if (camera instanceof PerspectiveCamera) camera.fov = state.fov
     camera.updateProjectionMatrix()
     controls.current?.target.set(state.target.x, state.target.y, state.target.z)
+    navigationTarget.current.set(state.target.x, state.target.y, state.target.z)
     controls.current?.update()
     lastTarget.current = point
     wasFollowing.current = false
@@ -45,7 +48,10 @@ export function CameraRig({ bounds, config, controller, fitRequest, follow, trav
       const dz = point.z - origin.z
       camera.position.x += dx; camera.position.y += dy; camera.position.z += dz
       controls.current.target.x += dx; controls.current.target.y += dy; controls.current.target.z += dz
+      updatingFollow.current = true
       controls.current.update()
+      updatingFollow.current = false
+      navigationTarget.current.copy(controls.current.target)
     }
     lastTarget.current = point
     wasFollowing.current = follow
@@ -54,7 +60,11 @@ export function CameraRig({ bounds, config, controller, fitRequest, follow, trav
     ref={controls}
     domElement={gl.domElement}
     makeDefault
-    onStart={onNavigate}
+    onChange={() => {
+      if (updatingFollow.current || !controls.current) return
+      if (follow && controls.current.target.distanceToSquared(navigationTarget.current) > 1e-6) onNavigate()
+      navigationTarget.current.copy(controls.current.target)
+    }}
     enableRotate={false}
     enablePan
     enableZoom

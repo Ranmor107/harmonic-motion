@@ -3,7 +3,7 @@
 Purpose: 保留带日期、baseline 和适用边界的实际检查证据。
 Authority: 已发生验证的记录；不能作为未来提交自动通过的保证。
 Update when: 新一轮检查产生结果，或旧证据被确认需更正。
-Last verified: 2026-09-26；最新证据见 First Experience，早期记录保留其日期和适用边界。
+Last verified: 2026-09-27；最新证据见 Continuity 与跟随镜头缩放，早期记录保留其日期和适用边界。
 
 日期：2026-09-17。环境：Windows、Node.js 24.18.0、Codex 内置 Chromium 浏览器，1280 × 720。
 
@@ -217,3 +217,20 @@ Ensemble 保持各轨道的稳定弧区，按发声状态、主线显著性、�
 | 真人试听 | **Needs human listening validation**：本环境没有可用的声卡听感证据；音色质量、爆音/残留与跨设备音量表现均未确认 |
 
 此处的 “piano-like” 仅描述合成设计方向，不代表采样钢琴或经试听证明的钢琴真实感。浏览器控制连接初次失败，重启本地开发服务后恢复；切曲自动化仍未完成。Milestone B 保持 Active；下一步用仓库测试 MIDI 核对切曲，再由实际听众记录设备、浏览器及具体段落。
+
+<a id="continuity-follow-zoom-2026-09-27"></a>
+## Continuity and follow-camera zoom · 2026-09-27
+
+实施基线 `c8e2475`。IndexedDB 保存规范化乐谱及少量偏好，重新打开时调用既有编译流程，默认暂停；Windows 独立窗口改用稳定应用专用 profile，关闭仍回收自身进程。CameraRig 只在用户平移目标点时退出 Follow，缩放保持 Follow。用户授权本轮使用其 `midi/` 做本机验证；源文件没有修改或进入版本控制。
+
+| 检查 | 结果 |
+| --- | --- |
+| 定向测试 | `session`、`audio`、`visual` 共 3 文件 / 11 测试通过；新增恢复两首乐谱、唯一 ID 延续以及切曲后旧声部清理/主增益保持断言 |
+| `npm run test` | PASS，11 文件 / 78 测试 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS，含 `tsc -b`；JS 1,435.12 kB / gzip 390.37 kB，CSS 12.74 kB / gzip 3.67 kB |
+| 浏览器曲库 | 内置浏览器导入双轨测试谱，设置 Stream、40% 音量、3 秒；刷新后曲目、暂停状态、时间和偏好均保留。导入用户授权的《帕赫贝尔D大调卡农》（1,956 notes）后中文标题正常，seek 至 1:30，刷新后标题和暂停位置保留；删除双轨测试谱并刷新，曲目没有复活。往返切曲归零而音量保留 |
+| 浏览器镜头与画面 | Stream 和 Constellation 均在 Follow On 时滚轮缩放，画面比例改变且开关保持 On；Stream 拖动画布后变为 Off。卡农的 Constellation/Stream 画面正常绘制，浏览器捕获的 error 日志为空 |
+| 启动器 | PowerShell 语法检查及 `-NoBrowser` 启动/清理通过；专用 Edge 窗口两次启动并关闭后脚本均正常退出，5176 端口释放，`%LOCALAPPDATA%\HarmonicMotion\Profiles\msedge` 目录保留，锁文件消失，第二次能复用该目录 |
+
+验证边界：内置浏览器完成了真正的导入、刷新恢复和删除回归；外部 Edge 启动后浏览器自动化连接中断，因此没有逐项核对它第二次打开后的页面曲库内容，也没有本轮 390 px 新截图。启动器的稳定目录和进程生命周期已实测。用户反馈当前音色可接受，但本轮没有声卡信号采集、跨设备试听或端到端延迟测量；不将主观反馈视作音质认证。

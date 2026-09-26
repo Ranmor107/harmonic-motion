@@ -142,15 +142,15 @@ Last verified: 2026-09-26；更新 Demo 默认入口与测试归属，其他模�
 - **Safe local changes**：材质解释、显示层过滤、既有参数的效果表现；保持绝对时间求值。
 - **Adjacent scope**：显示模式先看 visual 类型；交互操作再看 App；新增计划语义才需 domain/performance，不能从视觉需求直接倒推重写 planner。
 - **Must NOT decide**：音符时序、几何生成或编舞路线。
-- **关键连接**：Scene memoize musical presentation，传给两种 renderer；Constellation 正式 Performer/Trajectory 仍消费 PerformancePlan。WorldRenderer 只显示筛选后的关系曲线与和弦成员，不移动 WorldModel 节点。StreamRenderer 消费独立显示主线/伴随组；CameraRig 在实际宽高/fit 请求变化时取景，按 playback snapshot 跟随，手动导航退出跟随。
+- **关键连接**：Scene memoize musical presentation，传给两种 renderer；Constellation 正式 Performer/Trajectory 仍消费 PerformancePlan。WorldRenderer 只显示筛选后的关系曲线与和弦成员，不移动 WorldModel 节点。StreamRenderer 消费独立显示主线/伴随组；CameraRig 在实际宽高/fit 请求变化时取景，按 playback snapshot 跟随；用户平移 target 才退出跟随，滚轮改变距离保持跟随。
 
 <a id="state"></a>
 ## State / application composition
 
-- **Primary path / entry points**：[src/state/store.ts](../src/state/store.ts) `createStudioStore` / `useStudio`。
-- **Responsibility / owns**：ScoreSession[]、activeSessionId、当前 compiled/seed、strategy、preset、viewMode、visibilityMode；每曲缓存独立，视觉偏好共用。
+- **Primary path / entry points**：[src/state/store.ts](../src/state/store.ts) `createStudioStore` / `useStudio`；[src/state/persistence.ts](../src/state/persistence.ts) 本机保存记录。
+- **Responsibility / owns**：ScoreSession[]、activeSessionId、当前 compiled/seed、strategy、preset、viewMode、visibilityMode；每曲缓存独立，视觉偏好共用。持久化模块只读写规范化乐谱与版本化偏好，不保存运行时 compiled 对象。
 - **Consumes → produces**：demo/导入 score、compileScore、默认策略/preset → Zustand 应用状态和 actions。
-- **Public contracts / symbols**：`ScoreSession`、`addScores`、`selectSession`、`removeSession`；`setScore` 委托单曲加入；`regenerate` 更新当前 session 缓存；`setPreset`、`setViewMode`、`setVisibilityMode` 只改显示。`compiled` 始终指向当前 session 的同一对象。
+- **Public contracts / symbols**：`ScoreSession`、`addScores`、`restoreSessions`、`selectSession`、`removeSession`；`setScore` 委托单曲加入；`regenerate` 更新当前 session 缓存；`setPreset`、`setViewMode`、`setVisibilityMode` 只改显示。`compiled` 始终指向当前 session 的同一对象；跨重启则由已保存的 score 重新编译。
 - **Allowed dependencies**：Zustand、domain、compile、策略、demo、visual 默认值。**Forbidden / undesirable**：把歌曲时钟/每帧对象移入 store、解析二进制或控制 Tone 声部。
 - **Related tests**：[engine.test.ts](../tests/engine.test.ts)；[session.test.ts](../tests/session.test.ts) 的多曲缓存、独立 seed、删除/回退、偏好与播放加载协调。
 - **Safe local changes**：应用组合或新增局部选择状态；不要为了一个 UI 控件重构 store。
@@ -162,7 +162,7 @@ Last verified: 2026-09-26；更新 Demo 默认入口与测试归属，其他模�
 
 - **Primary paths / entry points**：[src/main.tsx](../src/main.tsx)、[App.tsx](../src/ui/App.tsx)、[styles.css](../src/ui/styles.css)、[Icons.tsx](../src/ui/Icons.tsx)；品牌配置 [branding/config.ts](../src/branding/config.ts)、品牌资产 [mark.svg](../public/mark.svg)，页面壳 [index.html](../index.html)。
 - **Responsibility / owns**：用户输入、布局/文案、错误/忙碌状态、服务装配、播放快照桥接。
-- **Consumes → produces**：用户文件/按钮、store、controller、Scene → DOM/UI 与用户命令；rAF 读取时钟并写快照，约 32ms 更新文本状态。
+- **Consumes → produces**：用户文件/按钮、本机保存记录、store、controller、Scene → DOM/UI 与用户命令；先恢复曲库再加载当前曲目，恢复进度时保持暂停；rAF 读取时钟并写快照，约 32ms 更新文本状态。
 - **Public contracts / symbols**：`App`、`Icon`；内部 `onLoad`、`switchScore`、`deleteScore`、`togglePlayback`、`toggleEffects` 是主要定位符号。
 - **Allowed dependencies**：React、state、midi、playback、audio、visual camera、render、utils。**Forbidden / undesirable**：重新实现解析/生成/编舞/时钟；这层可装配多模块，不代表每次改布局都要修改它们。
 - **Related tests**：没有 UI 自动测试；需 [TEST_MATRIX 的浏览器清单](TEST_MATRIX.md#manual-smoke)。

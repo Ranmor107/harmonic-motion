@@ -85,9 +85,17 @@ describe('Tone audio adapter', () => {
     expect(fake.masters[0]!.gain.rampTo).toHaveBeenLastCalledWith(0, expect.any(Number))
     audio.setVolume(2)
     expect(fake.masters[0]!.gain.rampTo).toHaveBeenLastCalledWith(1, expect.any(Number))
-    await controller.load(score)
+    await controller.play()
+    const previousVoice = fake.voices.at(-1)!
+    const nextScore = normalizeScore({ metadata: { title: 'Next', source: 'demo' }, tracks: [{
+      name: 'Voice', channel: 0, instrument: 0,
+      notes: [{ time: 0, duration: 1, midi: 65, velocity: 0.5 }],
+    }] })
+    await controller.load(nextScore)
+    expect(previousVoice.dispose).toHaveBeenCalledOnce()
     await controller.play()
     expect(fake.masters).toHaveLength(1)
+    expect(fake.voices.at(-1)!.triggerAttackRelease).toHaveBeenCalledWith(65, 1, expect.any(Number), 0.5)
     controller.dispose()
     expect(fake.masters[0]!.dispose).toHaveBeenCalledOnce()
   })

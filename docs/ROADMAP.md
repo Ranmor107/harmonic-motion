@@ -3,7 +3,7 @@
 Purpose: 保留已提出方向、状态和待验证设计，不将探索写成开发承诺。
 Authority: 未来方向与工作状态的主要记录；现状只看 [CURRENT_STATE](CURRENT_STATE.md)。
 Update when: 方向被选择、明确排期、开始实施、完成验证、延期或被替代。
-Last verified: 2026-09-26；按产品迭代计划选择 First Experience，记录本轮实现与待外部验证。
+Last verified: 2026-09-27；按产品迭代计划实施 Continuity，并记录声音接受反馈。
 
 ## 状态约定
 
@@ -27,8 +27,8 @@ Last verified: 2026-09-26；按产品迭代计划选择 First Experience，记�
 | 目标 | 状态 | 当前证据 / 剩余问题 |
 | --- | --- | --- |
 | A · First Experience | Partially completed · Needs external user validation | [本轮计划](plans/completed/2026-09-26-first-experience.md)：原创约 31 秒 Quick Study、首屏试听/导入入口、可关闭视觉解释与 View 用途已实现；开发者浏览器验证通过。尚无陌生用户的首次使用观察，也未筛选 Full Studies |
-| B · Listening Quality | Active · implementation ready, validation pending | [本轮计划](plans/active/2026-09-26-listening-quality.md)：已加入默认合成音色与 Volume/Mute，自动检查和默认曲浏览器交互部分通过；切曲与真人试听待验证，不承诺音色质量 |
-| C · Continuity | Candidate | 曲库、进度和偏好只在当前页面内存保留；刷新后不能恢复 |
+| B · Listening Quality | Active · implementation ready, measurement pending | [本轮计划](plans/active/2026-09-26-listening-quality.md)：用户反馈当前音色可接受；切曲控制已补自动与浏览器验证。真实声卡输出、跨设备和延迟仍未测量 |
+| C · Continuity | Completed · local browser verified | [本轮计划](plans/completed/2026-09-27-continuity-and-follow-zoom.md)：本机曲库、最近曲、偏好和暂停位置已恢复；跟随时可缩放。[验证边界](VERIFICATION.md#continuity-follow-zoom-2026-09-27)记录外部 Edge 的未核对项 |
 | D · Musical Understanding | Candidate | 已有基本视图解释和启发式主线；未有手动 track/voice 高亮与旋律轨选择 |
 | E · Long-session Comfort | Candidate | 尚无长曲舒适度与稳定性系统验证 |
 | F · Capture & Share | Deferred | 先证明首次进入、听感和回访体验 |

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useStudio } from '../state/store'
+import { loadSavedState, savePreferences, saveSessions, type SavedPreferences } from '../state/persistence'
 import { PlaybackClock, type PlaybackState } from '../playback/clock'
 import { PlaybackController } from '../playback/controller'
 import { ToneAudioEngine, audioNow, DEFAULT_VOLUME } from '../audio/ToneAudioEngine'
@@ -16,7 +17,7 @@ const pitchLabel = (midi: number) => `${['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F�
 export function App() {
   const {
     compiled, preset, viewMode, visibilityMode, sessions, activeSessionId,
-    addScores, selectSession, removeSession, regenerate, setPreset, setViewMode, setVisibilityMode,
+    addScores, restoreSessions, selectSession, removeSession, regenerate, setPreset, setViewMode, setVisibilityMode,
   } = useStudio()
   const { score, world, plan } = compiled
   const [{ controller, audio }] = useState(() => {
@@ -35,6 +36,11 @@ export function App() {
   const [starting, setStarting] = useState(false)
   const [volume, setVolume] = useState(DEFAULT_VOLUME)
   const [muted, setMuted] = useState(false)
+  const [readReady, setReadReady] = useState(false)
+  const [ready, setReady] = useState(false)
+  const [storageReady, setStorageReady] = useState(false)
+  const restorePosition = useRef<number | null>(null)
+  const lastSavedPosition = useRef(0)
   const [entered, setEntered] = useState(false)
   const [guideOpen, setGuideOpen] = useState(true)
   const [fitRequest, setFitRequest] = useState(0)
@@ -43,14 +49,89 @@ export function App() {
   const noteById = useMemo(() => new Map(score.notes.map(note => [note.id, note])), [score])
   const follow = followViews[viewMode]
   const setFollow = (value: boolean) => setFollowViews(current => ({ ...current, [viewMode]: value }))
+  const storageFailed = useCallback(() => {
+    setStorageReady(false)
+    setError('Local saving is unavailable. Your scores will remain only in this session.')
+  }, [])
+  const currentPreferences = useCallback((): SavedPreferences => ({
+    version: 1, activeSessionId, position: controller.clock.getState().time,
+    viewMode, visibilityMode, effectsEnabled: preset.effects.hit.enabled,
+    volume, muted, followViews,
+  }), [activeSessionId, controller, viewMode, visibilityMode, preset.effects.hit.enabled, volume, muted, followViews])
+  const persistNow = useCallback(() => {
+    if (!storageReady) return
+    const preferences = currentPreferences()
+    lastSavedPosition.current = preferences.position
+    void savePreferences(preferences).catch(storageFailed)
+  }, [storageReady, currentPreferences, storageFailed])
 
   useEffect(() => {
     document.title = `${branding.name} — ${branding.descriptor}`
   }, [])
 
   useEffect(() => {
-    void controller.load(score).catch(cause => setError(String(cause)))
-  }, [controller, score])
+    let active = true
+    void loadSavedState().then(({ sessions: saved, preferences }) => {
+      if (!active) return
+      const restored = restoreSessions(saved, preferences?.activeSessionId ?? 'score-0')
+      if (restored < saved.length) setError('Some saved scores could not be restored.')
+      if (preferences) {
+        setViewMode(preferences.viewMode)
+        setVisibilityMode(preferences.visibilityMode)
+        const current = useStudio.getState().preset
+        setPreset({ ...current, effects: {
+          ...current.effects,
+          hit: { ...current.effects.hit, enabled: preferences.effectsEnabled },
+          trail: { ...current.effects.trail, enabled: preferences.effectsEnabled },
+          particles: { ...current.effects.particles, enabled: preferences.effectsEnabled },
+        } })
+        setVolume(preferences.volume)
+        audio.setVolume(preferences.volume)
+        setMuted(preferences.muted)
+        audio.setMuted(preferences.muted)
+        setFollowViews(preferences.followViews)
+        restorePosition.current = preferences.position
+        setEntered(true)
+      } else if (saved.length) setEntered(true)
+      setStorageReady(true)
+    }).catch(() => { if (active) storageFailed() }).finally(() => { if (active) setReadReady(true) })
+    return () => { active = false }
+  }, [audio, restoreSessions, setPreset, setViewMode, setVisibilityMode, storageFailed])
+
+  useEffect(() => {
+    if (!readReady) return
+    let active = true
+    void controller.load(score).then(() => {
+      if (!active) return
+      if (restorePosition.current !== null) {
+        const position = restorePosition.current >= score.duration ? 0 : Math.max(0, restorePosition.current)
+        restorePosition.current = null
+        controller.seek(position)
+        snapshot.current = controller.clock.getState()
+        setPlayback(snapshot.current)
+      }
+      setReady(true)
+    }).catch(cause => { if (active) setError(String(cause)) })
+    return () => { active = false }
+  }, [controller, score, readReady])
+
+  useEffect(() => {
+    if (!ready || !storageReady) return
+    void saveSessions(sessions.filter(session => session.id !== 'score-0').map(session => ({
+      id: session.id, filename: session.filename, seed: session.seed, score: session.compiled.score,
+    }))).catch(storageFailed)
+  }, [ready, storageReady, sessions, storageFailed])
+
+  useEffect(() => {
+    if (!ready || !storageReady) return
+    persistNow()
+    const savePosition = () => {
+      if (Math.abs(currentPreferences().position - lastSavedPosition.current) >= 1) persistNow()
+    }
+    const timer = setInterval(savePosition, 3000)
+    window.addEventListener('pagehide', persistNow)
+    return () => { clearInterval(timer); window.removeEventListener('pagehide', persistNow) }
+  }, [ready, storageReady, currentPreferences, persistNow])
 
   useEffect(() => {
     let frame: number
@@ -100,7 +181,7 @@ export function App() {
   }
   const togglePlayback = async () => {
     setError('')
-    if (controller.clock.getState().status === 'playing') { controller.pause(); return }
+    if (controller.clock.getState().status === 'playing') { controller.pause(); persistNow(); return }
     setStarting(true)
     try { await controller.play(); setEntered(true) } catch { setError('Audio could not start. Check your browser audio settings and press Play again.') }
     finally { setStarting(false) }
@@ -167,6 +248,8 @@ export function App() {
   const showGuide = entered && activeSessionId === 'score-0'
   const effectivelyMuted = muted || volume === 0
 
+  if (!ready) return <main className="studio restoring">Restoring your local library…</main>
+
   return <main className="studio">
     <header className="topbar">
       <a className="brand" href="./" aria-label={`${branding.name} home`}>
@@ -202,7 +285,7 @@ export function App() {
         <p className="first-experience-copy">Hear a melody gather bass and harmony as the music becomes a space.</p>
         <button className="study-action" onClick={() => void togglePlayback()} disabled={busy || starting}><Icon name="play" />Listen to a study <span>~30 sec</span></button>
         <button className="midi-action" onClick={() => input.current?.click()} disabled={busy}>Open my MIDI <span aria-hidden="true">↗</span></button>
-        <p className="first-experience-note">Your MIDI is processed locally in this browser.</p>
+        <p className="first-experience-note">Processed on this device. Saved in this browser; no files are uploaded.</p>
       </div> : showGuide ? <div className="reading-guide">
         {guideOpen ? <><button className="guide-close" aria-label="Close visual guide" onClick={() => setGuideOpen(false)}>×</button><p className="eyebrow">What am I seeing?</p><p>Follow the warm lead. Cool strands show accompanying voices; notes brighten as they sound.</p></> : <button className="guide-reopen" onClick={() => setGuideOpen(true)}>What am I seeing? <span aria-hidden="true">↗</span></button>}
       </div> : <blockquote className="score-quote"><p>“{branding.quote.text}”</p><cite><a href={branding.quote.source} target="_blank" rel="noreferrer">{branding.quote.author}</a></cite></blockquote>}
@@ -236,7 +319,7 @@ export function App() {
         if (muted) { setMuted(false); audio.setMuted(false) }
       }} /></section>
       <section className="control-section library"><div className="library-heading"><h2>Library <span>{sessions.length}</span></h2><button onClick={() => input.current?.click()} disabled={busy}>+ Add</button></div>
-        <p className="control-note">Local scores · kept for this session</p>
+        <p className="control-note">Saved in this browser · removing a score deletes its saved copy</p>
         <ol>{sessions.map((session, index) => <li key={session.id} className={session.id === activeSessionId ? 'is-current' : ''}>
           <button className="score-select" aria-current={session.id === activeSessionId ? 'true' : undefined} onClick={() => switchScore(session.id)} disabled={busy || starting} title={session.filename}><span className="score-number">{String(index + 1).padStart(2, '0')}</span><span className="score-name">{session.compiled.score.metadata.title}<small>{timeLabel(session.compiled.score.duration)} · {session.compiled.score.tracks.length} tracks</small></span></button>
           <button className="score-remove" aria-label={`Remove ${session.compiled.score.metadata.title}`} onClick={() => deleteScore(session.id)} disabled={busy || starting || (sessions.length === 1 && session.id === 'score-0')}>×</button>
@@ -255,6 +338,7 @@ export function App() {
             controller.seek(Number(event.target.value))
             snapshot.current = controller.clock.getState()
             setPlayback(snapshot.current)
+            persistNow()
           }} aria-valuetext={`${playback.time.toFixed(2)} seconds of ${score.duration.toFixed(2)}`} />
           <div className="timeline-ticks" aria-hidden="true">{[0, 0.25, 0.5, 0.75, 1].map(fraction => <span key={fraction} style={{ left: `${fraction * 100}%` }}>{timeLabel(fraction * score.duration)}</span>)}</div>
         </div>

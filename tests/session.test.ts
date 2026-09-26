@@ -49,6 +49,25 @@ describe('score sessions', () => {
     expect(store.getState().seed).toBe(nextSeed)
   })
 
+  it('restores saved scores by recompiling them and continues unique session IDs', () => {
+    const store = createStudioStore()
+    const first = createDemoScore()
+    const second = { ...createDemoScore(), metadata: { ...first.metadata, title: 'Saved second' } }
+    const restored = store.getState().restoreSessions([
+      { id: 'score-7', filename: 'first.mid', seed: 301, score: first },
+      { id: 'score-8', filename: 'second.mid', seed: 302, score: second },
+    ], 'score-8')
+    expect(restored).toBe(2)
+    expect(store.getState()).toMatchObject({ activeSessionId: 'score-8', seed: 302 })
+    expect(store.getState().compiled.score).toBe(second)
+    expect(store.getState().sessions[1]!.compiled.world.nodes.length).toBeGreaterThan(0)
+    expect(store.getState().sessions[2]!.compiled.plan.events.length).toBeGreaterThan(0)
+    store.getState().addScores([{ score: createDemoScore(), filename: 'new.mid' }])
+    expect(store.getState().activeSessionId).toBe('score-9')
+    store.getState().removeSession('score-7')
+    expect(store.getState().sessions.map(session => session.id)).toEqual(['score-0', 'score-8', 'score-9'])
+  })
+
   it('removes inactive and active sessions and falls back to the cached demo when the last score is removed', () => {
     const store = createStudioStore()
     const original = store.getState()

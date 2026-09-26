@@ -3,7 +3,7 @@
 Purpose: 按改动选择真实存在的检查，区分纯函数、mock 与浏览器证据。
 Authority: 验证映射与覆盖缺口的主要记录；实际运行结果见 [VERIFICATION](VERIFICATION.md)。
 Update when: scripts、测试文件/suite、覆盖范围或验证要求改变。
-Last verified: 2026-09-26；补充默认 Quick Study 与音频控制测试边界。
+Last verified: 2026-09-27；补充曲库恢复及跟随镜头的浏览器验收。
 
 所有命令在仓库根目录运行。`npm run test` 是 `vitest run`，额外文件和 `-t` 参数通过 `--` 传入。
 现有 scripts 没有独立 typecheck、coverage、E2E 或截图命令；需要类型检查时使用 `npm run build`（内含 `tsc -b`）。不要写不存在的 `npm run typecheck` / `test:render`。
@@ -22,7 +22,7 @@ Last verified: 2026-09-26；补充默认 Quick Study 与音频控制测试边界
 | T-CAMERA · navigation/follow/fit | musical-presentation 测宽/窄视口投影角点，visual 测 home state；真实 pointer/follow 仍需浏览器 | `npm run test -- tests/visual.test.ts tests/musical-presentation.test.ts`；`npm run lint`；`npm run build` | 相机之外的核心 contract 改变时 T-GLOBAL | zoom/pan/fit、view 切换和中等窗口；比对 world/plan/playback 保持不变 |
 | T-VISIBILITY · focus/path/stream | visual 测窗口分类；musical-presentation 测显示预算、生命周期/和弦/seek；engine 测 evaluator | `npm run test -- tests/visual.test.ts tests/musical-presentation.test.ts tests/engine.test.ts`；`npm run lint`；`npm run build` | 修改事件、世界或轨迹数据语义时 T-GLOBAL | 时间0/末尾、前后seek、pause、overview/focus/path/stream；密集测试曲 |
 | T-UI · layout/title/buttons | 无 UI 自动测试；动作相关时使用对应核心 suite | `npm run lint`；`npm run build`；行为变化追加所属模块的 targeted test | UI 接线改变跨模块控制流时 T-GLOBAL | 控件、焦点、错误提示、标题长度、常用窗口尺寸；纯布局不冒充引擎变更 |
-| T-STATE · score/session/seed/preset composition | [session.test.ts](../tests/session.test.ts)：缓存引用、切曲偏好、删除、seed、加载归零与 late unlock；engine 的 `Independent extension points` | `npm run test -- tests/session.test.ts tests/engine.test.ts` | compiled/score 生命周期或模块装配改变时 T-GLOBAL | 导入归零、regenerate 保持进度、preset 不重编译 |
+| T-STATE · score/session/seed/preset composition | [session.test.ts](../tests/session.test.ts)：缓存引用、切曲偏好、删除、seed、保存记录恢复后重新编译并延续唯一 ID、加载归零与 late unlock；engine 的 `Independent extension points` | `npm run test -- tests/session.test.ts tests/engine.test.ts` | compiled/score 生命周期或模块装配改变时 T-GLOBAL | 导入归零、刷新后曲库/选中曲/偏好/暂停位置恢复，删除后不复活；regenerate 保持进度、preset 不重编译 |
 | T-DEMO · procedural example | [quick-study.test.ts](../tests/quick-study.test.ts) 验证默认曲目时长、分层加入、和弦变化与默认会话；engine/playback 使用旧短句的具体音符和时刻 | `npm run test -- tests/quick-study.test.ts tests/engine.test.ts tests/playback.test.ts` | 若 normalize/契约也改则 T-GLOBAL | 开页默认世界、标题/数量描述与实际一致；第一次点击播放、导入入口及说明的浏览器检查 |
 | T-GLOBAL · cross-module / domain / shared semantics | 全部现有测试 + 静态约束 + 生产编译 | `npm run test`；`npm run lint`；`npm run build` | public contract、≥3 责任层或无法局部隔离的集成变化必做 | 按受影响行为补浏览器 smoke；全量单测不能替代它 |
 | T-DOC · documentation only | Markdown 路径、符号、命令、metadata 与 diff；无专门文档测试脚本 | `git diff --check`；`git diff --name-only`；若已暂存再加 `git diff --cached --check` / `--name-only`；`git status --short` | 需要确认 baseline 或文档引用检查结果时可运行 T-GLOBAL；不为文档修产品失败 | 路由演练：zoom、InkTheme、Spiral；相对链接和 anchors 可达；用户已有文件保持不变 |
@@ -49,5 +49,6 @@ Last verified: 2026-09-26；补充默认 Quick Study 与音频控制测试边界
 6. 检查修改涉及的画面/相机/显示模式以及浏览器 console；需要证明听感时进行真人试听或实际音频输出测量。
 7. 多选导入、切曲停止归零、删除当前/非当前曲目、最后一曲回退；模式/形态/效果/跟随偏好保留。缓存引用复用由 session 单测证明，界面切回本身不能证明没重编译。
 8. pointer 操作前后截帧，等待一次 UI 更新后确认缩放/平移仍保持；Fit 恢复。不能把“发出了 wheel/drag”当成结果已生效。抽屉 Escape/焦点返回、不同宽度与 reduced-motion 样式另做人工检查。
+9. Continuity：导入至少两曲、调整 View/音量并 seek，刷新或重新打开后核对标题/曲目数/偏好/暂停位置；删除测试曲后再刷新，确认记录消失。一键启动器另检查关闭窗口后服务端口释放且专用 profile 保留。
 
 本清单是未来验证方法，不表示本轮全部重跑。已有浏览器结果的日期和范围见 [VERIFICATION](VERIFICATION.md)。

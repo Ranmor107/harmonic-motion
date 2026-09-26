@@ -3,7 +3,7 @@
 Purpose: 项目说明、启动及用户操作入口。
 Authority: 快速使用指南；现状、架构和维护规范分别链接到 canonical 文档。
 Update when: 启动方式、用户操作或导航入口变化。
-Last verified: 2026-09-26；补充首次聆听入口、Quick Study 与声音控制。
+Last verified: 2026-09-27；补充本机曲库恢复与跟随镜头缩放。
 
 **Music Geometry Engine — a score-to-world generative engine.**
 
@@ -15,7 +15,7 @@ The score is compiling a world.
 
 ## 启动
 
-Windows 用户可直接双击仓库根目录的 `start-harmonic-motion.cmd`。它会启动本地服务并打开一个独立的 Harmonic Motion 浏览器窗口；关闭这个独立窗口后，启动器会自动停止自己启动的 Vite 进程并删除临时浏览器配置。普通浏览器标签页不属于这个关闭信号。
+Windows 用户可直接双击仓库根目录的 `start-harmonic-motion.cmd`。它会启动本地服务并打开一个独立的 Harmonic Motion 浏览器窗口；关闭这个独立窗口后，启动器会自动停止自己启动的浏览器和 Vite 进程，并保留应用专用浏览器资料供下次恢复曲库。普通浏览器标签页不属于这个关闭信号，其曲库也与独立窗口分开保存。
 
 推荐 Node.js 24 LTS（开发验证使用 24.18.0）。在项目目录运行：
 
@@ -35,11 +35,11 @@ npm run dev
 | Listen to a study / Open my MIDI | 首次进入时直接试听内置原创短曲，或打开本地 MIDI 文件选择器；视觉说明可关闭并重新打开 |
 | Play / Pause | 启动或冻结统一音乐时间，暂停立即停止声音 |
 | Mute / Unmute | 底栏一键静音或恢复；静音期间仍保持歌曲时间 |
-| Controls → Sound → Volume | 调整本次会话的音量；暂停、跳转或切曲不会重置 |
+| Controls → Sound → Volume | 调整音量；暂停、跳转、切曲或重新打开后保留 |
 | Restart | 从头重新演奏 |
 | 时间滑杆 | 播放或暂停时均可跳转，对既有轨迹求位置，恢复节点和效果状态；播放中恢复仍在延续的音符 |
-| Add MIDI / Library + Add | 一次选择多份 `.mid` / `.midi`；本地解析与编译后加入会话曲库。批次中有效文件正常加入，错误文件逐个提示；全部失败时保留原曲和时间 |
-| Library / 上一曲 / 下一曲 | 切换停止并归零；复用缓存 score/world/plan，保留视图、形态、效果和跟随偏好。移除最后一曲时回到内置示例；刷新页面清空会话 |
+| Add MIDI / Library + Add | 一次选择多份 `.mid` / `.midi`；本地解析与编译后加入曲库，并保存在当前浏览器。批次中有效文件正常加入，错误文件逐个提示；全部失败时保留原曲和时间 |
+| Library / 上一曲 / 下一曲 | 切换停止并归零；会话内复用缓存 score/world/plan，保留视图、效果和跟随偏好。移除曲目会删除本地保存副本；移除最后一曲时回到内置示例 |
 | Controls | 打开右侧控制抽屉；默认关闭，Escape 关闭并返回入口焦点 |
 | Regenerate | seed 加一，重新生成世界和轨迹，保持乐谱、音乐时序与当前播放进度 |
 | Effects on/off | 只切换视觉反馈，不重新编译世界或演奏计划 |
@@ -47,7 +47,9 @@ npm run dev
 | Overview / Focus / Current path | 显示全世界、时间相关局部或最精简当前路径；Stream 自带局部时间窗 |
 | 滚轮 / 拖拽 | 在 3D 场景内受限缩放和平移，不中断播放 |
 | Fit world / Fit stage / Reset | 按投影范围恢复取景；Stream 在当前演奏位置取景 |
-| Follow performer | Constellation 跟随现有 Performer；Stream 稳定水平前移；Ensemble 保持舞台稳定。手动缩放/平移会关闭跟随，可重新开启 |
+| Follow performer | Constellation 跟随现有 Performer；Stream 稳定水平前移；Ensemble 保持舞台稳定。跟随时可用滚轮调整倍率；手动平移会关闭跟随，可重新开启 |
+
+导入曲目、最近选择、视图、效果、音量及上次时间位置保存在当前浏览器的本机存储中；再次打开时恢复为暂停，不自动播放。音频和 MIDI 不上传。清除站点数据、使用隐私模式或更换浏览器会失去该浏览器内的曲库；保存失败时界面会提示。
 
 主线在 0.22 秒短窗内按力度、时长、音区和连续性选择显著音，属于可配置展示启发式，不是真正旋律提取。其余音符按轨道、休止间隔和长度上限组成短组；不改变音频或正式编舞。完整边界见 [ADR-0001](docs/decisions/ADR-0001-musical-presentation.md)。
 
@@ -61,7 +63,7 @@ npm run lint
 npm run build
 ```
 
-定向测试与覆盖边界见 [TEST_MATRIX](docs/TEST_MATRIX.md)；最近实际结果见 [VERIFICATION](docs/VERIFICATION.md#listening-quality-2026-09-26)。
+定向测试与覆盖边界见 [TEST_MATRIX](docs/TEST_MATRIX.md)；最近实际结果见 [VERIFICATION](docs/VERIFICATION.md#continuity-follow-zoom-2026-09-27)。
 
 `npm run preview` 可预览生产构建。浏览器交互验收记录见 [docs/VERIFICATION.md](docs/VERIFICATION.md)。
 

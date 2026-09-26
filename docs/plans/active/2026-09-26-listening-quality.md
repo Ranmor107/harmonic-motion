@@ -3,7 +3,7 @@
 Purpose: 本轮听感基础能力的范围、取舍与验证记录。
 Authority: 本轮实施计划；产品优先级见 [ROADMAP](../../ROADMAP.md)。
 Update when: 范围、验证或完成状态改变。
-Last verified: 2026-09-26。
+Last verified: 2026-09-27；补充用户音色反馈和切曲控制验证。
 
 Status: Active
 Source baseline: `34f55a0`；未跟踪的用户 `midi/` 与产品计划 `.docx` 均不修改、不提交。
@@ -82,3 +82,5 @@ First Experience 已有约 31 秒 Quick Study 和明确播放入口，但所有�
 ## Execution notes and completion evidence
 
 2026-09-26：从 `34f55a0` 实施默认谐波合成、持久 master gain、Volume/Mute UI；定向 11 测试、全量 77 测试、lint 和含类型检查的 build 均通过。详细数值见 [验证记录](../../VERIFICATION.md#listening-quality-2026-09-26)。浏览器控制连接初次失败；重启本地服务后恢复，默认曲的播放、静音、音量、seek、暂停、重播、视图切换与 390×844 布局已检查。文件选择器在本轮自动化中未打开，切曲仍需验证；本环境也无真人声卡试听证据。Plan 保持 Active。下一步：用仓库测试 MIDI 核对切曲，再由实际听众试听 Quick Study 和熟悉的合法 MIDI，记录设备、浏览器与具体问题段落。
+
+2026-09-27：用户明确反馈“音色我觉得现在的都可以接受”，因此继续下一轮 Continuity。新增切换不同乐谱后的主增益/旧声部 mock 回归，浏览器导入测试谱和用户授权的卡农 MIDI，并往返切曲确认 Volume 40% 不重置。没有声卡信号采集或设备/浏览器试听参数记录，完成标准中的真实输出仍保持待验证，不把主观接受扩写为客观音质认证。
