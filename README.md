@@ -3,7 +3,7 @@
 Purpose: 项目说明、启动及用户操作入口。
 Authority: 快速使用指南；现状、架构和维护规范分别链接到 canonical 文档。
 Update when: 启动方式、用户操作或导航入口变化。
-Last verified: 2026-09-22；补充 Windows 一键启动与独立窗口关闭清理。
+Last verified: 2026-09-26；补充首次聆听入口与 Quick Study。
 
 **Music Geometry Engine — a score-to-world generative engine.**
 
@@ -24,7 +24,7 @@ npm install
 npm run dev
 ```
 
-打开终端显示的本地地址。默认加载原创 C 大调短句。浏览器要求第一次点击 **Play** 后才启用音频。
+打开终端显示的本地地址。默认展示约 31 秒的原创 Quick Study；点击 **Listen to a study** 开始，或点 **Open my MIDI** 选择自己的文件。浏览器要求首次点击播放后才启用音频。
 
 已安装过依赖的干净检出可用 `npm ci` 严格按锁文件恢复。
 
@@ -32,6 +32,7 @@ npm run dev
 
 | 操作 | 行为 |
 | --- | --- |
+| Listen to a study / Open my MIDI | 首次进入时直接试听内置原创短曲，或打开本地 MIDI 文件选择器；视觉说明可关闭并重新打开 |
 | Play / Pause | 启动或冻结统一音乐时间，暂停立即停止声音 |
 | Restart | 从头重新演奏 |
 | 时间滑杆 | 播放或暂停时均可跳转，对既有轨迹求位置，恢复节点和效果状态；播放中恢复仍在延续的音符 |

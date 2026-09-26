@@ -3,7 +3,7 @@
 Purpose: 保留已提出方向、状态和待验证设计，不将探索写成开发承诺。
 Authority: 未来方向与工作状态的主要记录；现状只看 [CURRENT_STATE](CURRENT_STATE.md)。
 Update when: 方向被选择、明确排期、开始实施、完成验证、延期或被替代。
-Last verified: 2026-09-18；本轮展示与曲库状态已更新，其他候选没有新增排期。
+Last verified: 2026-09-26；按产品迭代计划选择 First Experience，记录本轮实现与待外部验证。
 
 ## 状态约定
 
@@ -19,6 +19,21 @@ Last verified: 2026-09-18；本轮展示与曲库状态已更新，其他候选�
 没有计划文件或明确选择时，不把 Candidate 自动晋升 Planned。模板存在不等于已有实施计划。
 
 ## Now
+
+### Product milestones
+
+用户提供的《Harmonic Motion 产品迭代计划》以用户问题而非功能数量排序：First Experience → Listening Quality → Continuity → Musical Understanding → Long-session Comfort → Capture & Share。本表只记录当前证据；详细方向仍以该产品计划为准。
+
+| 目标 | 状态 | 当前证据 / 剩余问题 |
+| --- | --- | --- |
+| A · First Experience | Partially completed · Needs external user validation | [本轮计划](plans/active/2026-09-26-first-experience.md)：原创约 31 秒 Quick Study、首屏试听/导入入口、可关闭视觉解释与 View 用途已实现；开发者浏览器验证通过。尚无陌生用户的首次使用观察，也未筛选 Full Studies |
+| B · Listening Quality | Candidate | 仍为统一 sine Synth，无音量/静音；需真实听感验证后实施 |
+| C · Continuity | Candidate | 曲库、进度和偏好只在当前页面内存保留；刷新后不能恢复 |
+| D · Musical Understanding | Candidate | 已有基本视图解释和启发式主线；未有手动 track/voice 高亮与旋律轨选择 |
+| E · Long-session Comfort | Candidate | 尚无长曲舒适度与稳定性系统验证 |
+| F · Capture & Share | Deferred | 先证明首次进入、听感和回访体验 |
+
+本轮从 Planned → Active → 实现完成并待外部用户验证；不将整个 Milestone A 标记为 Completed。后续重评优先级时以真人观察和当前用户问题为依据。
 
 | 项目 | 状态 | 证据 / 边界 |
 | --- | --- | --- |

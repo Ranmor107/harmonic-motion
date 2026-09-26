@@ -38,10 +38,20 @@ h1 { margin: 20px 0 27px; font: 400 33px/1.08 'Iowan Old Style', Baskerville, Ge
 .artwork-data dt { color: var(--muted); font-size: 9px; letter-spacing: .13em; text-transform: uppercase; }
 .artwork-data dd { margin: 5px 0 0; font-size: 13px; color: #c9d0d5; font-variant-numeric: tabular-nums; }
 .artwork-data .tempo { grid-column: 1 / -1; }.artwork-data small { font-size: 9px; letter-spacing: .1em; }
+.world-stage.is-intro .artwork-data { display: none; }
 .score-quote { position: absolute; z-index: 3; left: 32px; bottom: 39px; width: 190px; margin: 0; }
 .score-quote p { font: italic 17px/1.55 'Iowan Old Style', Georgia, serif; color: #b9b5ac; margin: 0 0 17px; text-wrap: balance; }
 .score-quote cite { display: block; font: 9px/1.5 Aptos, 'Segoe UI', sans-serif; letter-spacing: .15em; text-transform: uppercase; }
 .score-quote a { color: var(--muted); text-decoration: none; }.score-quote a:hover { color: var(--brass); }
+.first-experience, .reading-guide { position: absolute; z-index: 4; left: 32px; bottom: 20px; width: 282px; background: #111923e8; border: 1px solid #d6b88745; backdrop-filter: blur(16px); padding: 19px 20px; }
+.first-experience-copy { margin: 11px 0 19px; font: 19px/1.35 'Iowan Old Style', Georgia, serif; color: var(--paper); text-wrap: balance; }
+.study-action, .midi-action { width: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left; }
+.study-action { padding: 11px 13px; gap: 8px; background: var(--brass); color: #151c23; font-size: 12px; font-weight: 600; }
+.study-action:hover { background: #e6c99a; }.study-action svg { width: 13px; height: 13px; flex: none; }.study-action span { margin-left: auto; font-size: 10px; font-weight: 400; white-space: nowrap; }
+.midi-action { padding: 13px 2px 2px; color: var(--paper); font-size: 12px; }.midi-action:hover, .guide-reopen:hover { color: var(--brass); }
+.first-experience-note { margin: 11px 0 0; font-size: 10px; line-height: 1.4; color: var(--muted); }
+.reading-guide { width: 245px; border-color: #ffffff24; }.reading-guide p:last-child { margin: 9px 0 0; color: #bfc9d0; font-size: 11px; line-height: 1.5; }
+.guide-close { position: absolute; right: 10px; top: 7px; color: var(--muted); font-size: 20px; }.guide-reopen { padding: 0; color: #c6d0d6; font-size: 11px; }.guide-reopen span { padding-left: 5px; }
 .live-reading { position: absolute; right: 32px; bottom: 40px; z-index: 3; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: none; max-width: 45%; }
 .pitch-reading { font: 24px/1.2 'Iowan Old Style', Georgia, serif; color: #607080; letter-spacing: .02em; text-align: right; }
 .pitch-reading.sounding { color: var(--brass); text-shadow: 0 0 25px #d6b88742; }
@@ -95,6 +105,9 @@ h1 { margin: 20px 0 27px; font: 400 33px/1.08 'Iowan Old Style', Baskerville, Ge
   .live-reading { right: 22px; bottom: 28px; gap: 9px; }.legend { gap: 10px; font-size: 8px; }.pitch-reading { font-size: 19px; }.live-reading .eyebrow { font-size: 8px; }
   .navigation-hint { bottom: 5px; font-size: 8px; }.transport { padding: 19px 20px 26px; }.transport-primary { gap: 10px; }.timeline-wrap { margin-inline: 3px; }.restart-button { padding: 4px; }.import-button { padding-left: 12px; }.import-button span { display: none; }.time { font-size: 10px; }.track-step { padding: 2px; }
   .controls-drawer { top: 66px; bottom: 84px; width: min(300px, 86vw); }
+  .first-experience, .reading-guide { left: 22px; bottom: 66px; width: min(282px, calc(100% - 44px)); padding: 15px 17px; }
+  .world-stage.is-intro .live-reading { display: none; }
+  .world-stage.has-guide .reading-guide { bottom: 110px; width: min(245px, calc(100% - 44px)); }
 }
 @media (max-height: 720px) and (min-width: 701px) {
   .score-card { top: 15px; }.score-card::before { margin-bottom: 18px; }h1 { margin: 16px 0; font-size: 28px; }

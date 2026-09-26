@@ -3,7 +3,7 @@
 Purpose: 按真实模块定位 ownership、输入输出、公共入口与最小修改邻域。
 Authority: 模块归属的主要记录；契约语义以 [ARCHITECTURE](ARCHITECTURE.md) 为准。
 Update when: 入口、依赖、公共符号、模块职责或测试归属发生变化。
-Last verified: 2026-09-18；本轮仅重新核对 visual/render/state/UI 与相关测试入口；其他模块保留 Foundation 记录。
+Last verified: 2026-09-26；更新 Demo 默认入口与测试归属，其他模块保留既有核对记录。
 
 下面“允许/禁止”是维护边界，不声称全由工具强制。实际 lint 仅对 domain/engine/playback 禁止列出的框架、视觉模块导入及 `Math.random`；不覆盖全部跨层规则，也没有禁止全局 DOM API。具体见 [eslint.config.js](../eslint.config.js)。
 
@@ -173,12 +173,12 @@ Last verified: 2026-09-18；本轮仅重新核对 visual/render/state/UI 与相�
 <a id="demo"></a>
 ## Demo
 
-- **Primary path / entry point**：[src/demo/score.ts](../src/demo/score.ts) `createDemoScore`。
-- **Responsibility / owns**：默认原创程序化乐句。
+- **Primary path / entry point**：[src/demo/score.ts](../src/demo/score.ts) `createQuickStudyScore`；`createDemoScore` 保留为旧引擎回归素材。
+- **Responsibility / owns**：默认原创 Quick Study 与旧回归短句。
 - **Consumes → produces**：显式 notes/time/duration/velocity → normalizeScore → NormalizedScore。
-- **Public contracts / symbols**：`createDemoScore()`；无二进制素材依赖。
+- **Public contracts / symbols**：`createQuickStudyScore()`、`createDemoScore()`；无二进制素材依赖。
 - **Allowed dependencies**：midi 的纯 normalizeScore。**Forbidden / undesirable**：Tone、Three、store、商业曲目或网络资源。
-- **Related tests**：[engine.test.ts](../tests/engine.test.ts)、[playback.test.ts](../tests/playback.test.ts) 直接使用 demo 并包含具体时刻/数量断言。
+- **Related tests**：[quick-study.test.ts](../tests/quick-study.test.ts) 验证默认内容；[engine.test.ts](../tests/engine.test.ts)、[playback.test.ts](../tests/playback.test.ts) 使用旧短句并包含具体时刻/数量断言。
 - **Safe local changes**：明确要求时调整示例内容；须同步依赖该示例的断言，不能用改 demo 掩盖算法错误。
 - **Adjacent scope**：App 的 demo 描述和固定 notes/chord 文案；默认注入点在 store。
 - **Must NOT decide**：几何或视觉风格、播放规则。

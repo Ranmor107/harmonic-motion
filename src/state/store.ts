@@ -4,7 +4,7 @@ import type { ViewMode, VisibilityMode, VisualPreset } from '../domain/visual'
 import { compileScore, type CompiledScore } from '../engine/compile'
 import { ConstellationGeometryStrategy } from '../engine/music-geometry/strategies/constellation'
 import type { GeometryStrategy } from '../engine/music-geometry/GeometryStrategy'
-import { createDemoScore } from '../demo/score'
+import { createQuickStudyScore } from '../demo/score'
 import { DefaultPreset } from '../visual/presets/defaultPreset'
 
 export interface ScoreSession {
@@ -37,7 +37,7 @@ export function createStudioStore() {
   const seed = 107
   const strategy = ConstellationGeometryStrategy
   let nextId = 1
-  const demo = { id: 'score-0', filename: 'Original study', seed, compiled: compileScore(createDemoScore(), strategy, seed) }
+  const demo = { id: 'score-0', filename: 'Original Quick Study', seed, compiled: compileScore(createQuickStudyScore(), strategy, seed) }
   return create<StudioState>((set, get) => ({
     compiled: demo.compiled, seed, strategy, preset: DefaultPreset,
     sessions: [demo], activeSessionId: demo.id,

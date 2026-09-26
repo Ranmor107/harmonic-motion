@@ -3,7 +3,7 @@
 Purpose: 以任务为边界保存中型/跨模块工作的范围、理由、验证和完成标准。
 Authority: 实施上下文及其生命周期；长期事实归档后回到各 canonical 文档。
 Update when: plan 新建、范围或状态改变、完成归档。
-Last verified: 2026-09-20；复杂音乐可读性与性能计划进行中，MIDI 标题修复已归档。
+Last verified: 2026-09-26；登记 First Experience 实施计划。
 
 ## 使用时机
 
@@ -24,6 +24,7 @@ plan 是实施边界，不是永久架构规范。真正的架构决策另用 [A
 
 | Plan | Status | Path | Evidence / next step |
 | --- | --- | --- | --- |
+| First Experience: Quick Study and clear first entry | Active | [active plan](active/2026-09-26-first-experience.md) | 实现与开发者浏览器检查完成；整理最终验证及归档，Milestone A 仍需外部用户验证 |
 | Windows one-click launcher and process cleanup | Completed | [completed plan](completed/2026-09-22-one-click-launcher.md) | `start-harmonic-motion.cmd` + PowerShell lifecycle cleanup；[验证证据](../VERIFICATION.md#one-click-launcher-2026-09-22) |
 | Radial Stage: inner-to-outer depth emergence | Completed | [completed plan](completed/2026-09-21-radial-depth-emergence.md) | Hidden→Emerging→Approaching→Active→Fading、内外纵深与弧形展开已实现；实现提交 `1f1c891`；[验证证据](../VERIFICATION.md#radial-depth-emergence-2026-09-21) |
 | Complex music: readability, depth and rendering budgets | Completed | [completed plan](completed/2026-09-20-complex-music.md) | 关系/预算、Ribbon 与独立 Ensemble 已实现；实现提交 `2e05838`；[验证证据](../VERIFICATION.md#complex-music-2026-09-21) |

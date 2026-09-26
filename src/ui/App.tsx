@@ -32,6 +32,8 @@ export function App() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [starting, setStarting] = useState(false)
+  const [entered, setEntered] = useState(false)
+  const [guideOpen, setGuideOpen] = useState(true)
   const [fitRequest, setFitRequest] = useState(0)
   const [followViews, setFollowViews] = useState({ constellation: false, stream: true, ensemble: false })
   const importRevision = useRef(0)
@@ -86,6 +88,7 @@ export function App() {
     if (id === activeSessionId) return
     stopForSwitch()
     selectSession(id)
+    setEntered(true)
     setError('')
   }
   const deleteScore = (id: string) => {
@@ -96,7 +99,7 @@ export function App() {
     setError('')
     if (controller.clock.getState().status === 'playing') { controller.pause(); return }
     setStarting(true)
-    try { await controller.play() } catch { setError('Audio could not start. Check your browser audio settings and press Play again.') }
+    try { await controller.play(); setEntered(true) } catch { setError('Audio could not start. Check your browser audio settings and press Play again.') }
     finally { setStarting(false) }
   }
 
@@ -117,7 +120,7 @@ export function App() {
     }
     if (revision !== importRevision.current) return
     try {
-      if (imported.length) { stopForSwitch(); addScores(imported) }
+      if (imported.length) { stopForSwitch(); addScores(imported); setEntered(true) }
       setError(failures.join(' · '))
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not prepare this score.') }
     finally { setBusy(false) }
@@ -145,6 +148,8 @@ export function App() {
   const tempoMin = tempos.length ? Math.round(Math.min(...tempos)) : undefined
   const tempoMax = tempos.length ? Math.round(Math.max(...tempos)) : undefined
   const sessionIndex = sessions.findIndex(session => session.id === activeSessionId)
+  const firstVisit = !entered && activeSessionId === 'score-0'
+  const showGuide = entered && activeSessionId === 'score-0'
 
   return <main className="studio">
     <header className="topbar">
@@ -163,10 +168,10 @@ export function App() {
       <button ref={drawerTrigger} className="drawer-trigger" aria-controls="controls-drawer" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(open => !open)}>View <span aria-hidden="true">☷</span></button>
     </header>
 
-    <section className="world-stage" aria-label="Music world">
+    <section className={`world-stage ${firstVisit ? 'is-intro' : ''} ${showGuide ? 'has-guide' : ''}`} aria-label="Music world">
       <Scene score={score} world={world} plan={plan} preset={preset} playback={snapshot} cameraController={StaticCamera} viewMode={viewMode} visibilityMode={visibilityMode} fitRequest={fitRequest} follow={follow} onNavigate={() => setFollow(false)} />
       <div className="score-card">
-        <p className="eyebrow">Opus {String(sessionIndex + 1).padStart(2, '0')} / {score.metadata.source === 'demo' ? 'Original study' : 'Local score'}</p>
+        <p className="eyebrow">Opus {String(sessionIndex + 1).padStart(2, '0')} / {score.metadata.source === 'demo' ? 'Quick Study' : 'Local score'}</p>
         <h1>{score.metadata.title}</h1>
         <dl className="artwork-data">
           <div><dt>Duration</dt><dd>{timeLabel(score.duration)}</dd></div>
@@ -176,7 +181,15 @@ export function App() {
           {tempoMin !== undefined && <div className="tempo"><dt>Tempo</dt><dd>{tempoMin === tempoMax ? tempoMin : `${tempoMin}–${tempoMax}`} <small>BPM</small></dd></div>}
         </dl>
       </div>
-      <blockquote className="score-quote"><p>“{branding.quote.text}”</p><cite><a href={branding.quote.source} target="_blank" rel="noreferrer">{branding.quote.author}</a></cite></blockquote>
+      {firstVisit ? <div className="first-experience">
+        <p className="eyebrow">Begin here · Quick Study</p>
+        <p className="first-experience-copy">Hear a melody gather bass and harmony as the music becomes a space.</p>
+        <button className="study-action" onClick={() => void togglePlayback()} disabled={busy || starting}><Icon name="play" />Listen to a study <span>~30 sec</span></button>
+        <button className="midi-action" onClick={() => input.current?.click()} disabled={busy}>Open my MIDI <span aria-hidden="true">↗</span></button>
+        <p className="first-experience-note">Your MIDI is processed locally in this browser.</p>
+      </div> : showGuide ? <div className="reading-guide">
+        {guideOpen ? <><button className="guide-close" aria-label="Close visual guide" onClick={() => setGuideOpen(false)}>×</button><p className="eyebrow">What am I seeing?</p><p>Follow the warm lead. Cool strands show accompanying voices; notes brighten as they sound.</p></> : <button className="guide-reopen" onClick={() => setGuideOpen(true)}>What am I seeing? <span aria-hidden="true">↗</span></button>}
+      </div> : <blockquote className="score-quote"><p>“{branding.quote.text}”</p><cite><a href={branding.quote.source} target="_blank" rel="noreferrer">{branding.quote.author}</a></cite></blockquote>}
       <div className="live-reading" aria-label="Current music">
         <span className="eyebrow">{viewMode} / {viewMode === 'stream' ? 'ribbon' : viewMode === 'ensemble' ? 'voices' : visibilityMode}</span>
         <span className={`pitch-reading ${sounding.length ? 'sounding' : ''}`}>{pitches.length ? pitches.map(note => pitchLabel(note.midi)).join(' · ') : '—'}</span>
@@ -190,7 +203,7 @@ export function App() {
       <section className="control-section"><h2>View</h2><div className="segmented">
         {(['constellation', 'stream', 'ensemble'] as const).map(mode => <button key={mode} aria-pressed={viewMode === mode} onClick={() => setViewMode(mode)}>{mode[0]!.toUpperCase() + mode.slice(1)}</button>)}
       </div>
-      {viewMode === 'ensemble' && <p className="control-note">Stable voice arcs. Fewer marks in dense passages; the score is unchanged.</p>}
+      <p className="control-note">{viewMode === 'constellation' ? 'See how notes and voices connect.' : viewMode === 'stream' ? 'Follow the music as it unfolds in time.' : 'See voices gather around the circular stage.'}</p>
       </section>
       <section className="control-section"><h2>Visibility</h2><div className="segmented">
         {(['overview', 'focus', 'path'] as const).map(mode => <button key={mode} aria-pressed={visibilityMode === mode} onClick={() => setVisibilityMode(mode)} disabled={viewMode !== 'constellation'}>{mode === 'path' ? 'Current path' : mode[0]!.toUpperCase() + mode.slice(1)}</button>)}

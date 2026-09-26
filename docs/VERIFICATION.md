@@ -3,7 +3,7 @@
 Purpose: 保留带日期、baseline 和适用边界的实际检查证据。
 Authority: 已发生验证的记录；不能作为未来提交自动通过的保证。
 Update when: 新一轮检查产生结果，或旧证据被确认需更正。
-Last verified: 2026-09-20；最新证据见 MIDI text encoding compatibility，早期记录保留其日期和适用边界。
+Last verified: 2026-09-26；最新证据见 First Experience，早期记录保留其日期和适用边界。
 
 日期：2026-09-17。环境：Windows、Node.js 24.18.0、Codex 内置 Chromium 浏览器，1280 × 720。
 
@@ -185,3 +185,19 @@ Ensemble 保持各轨道的稳定弧区，按发声状态、主线显著性、�
 | 浏览器 | 1280×720 开发服务检查 700、2000 和起始深处状态；中心深层小音符、弧形向外丝线、外层活跃结构均可见，5 draw calls，700 样本约 103 实例，console error 为空 |
 
 阶段是纯 songTime 求值：预备音符从内层小尺度/低亮度/负 z 深度进入，接近时沿带弧度路径向外展开，活跃时在声部弧区共鸣，结束后短暂松开并淡出。没有固定判定圈、命中线、评分或输入玩法；完整音频和音乐数据不受显示省略影响。截图和帧间隔只说明本地开发环境表现，不构成跨设备 FPS 或音画延迟承诺。
+
+<a id="first-experience-2026-09-26"></a>
+## First Experience · Quick Study and first entry · 2026-09-26
+
+日期：2026-09-26。产品起点：`835459a`。默认乐谱使用仓库内原创音符序列，无外部 MIDI、采样、字体或新增依赖；用户未跟踪的 `midi/` 与产品计划 `.docx` 未修改。
+
+| 检查 | 结果 |
+| --- | --- |
+| 定向测试 | PASS，`quick-study`、`session`、`engine`、`playback` 共 4 文件 / 30 测试；Quick Study 覆盖时长、三轨依次加入、和弦变化、重复生成及默认会话 |
+| `npm run test` | PASS，11 文件 / 76 测试 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS，含 `tsc -b`；最终 JS 1,429.66 kB / gzip 388.64 kB，CSS 12.18 kB / gzip 3.56 kB；既有 >500 kB 包体积提示仍在 |
+| 浏览器 | 内置 Chromium 开发服务：默认标题、30.825 秒、3 轨 / 72 notes / 18 chords 与代码一致；首次入口与文件选择可用；Play 后 Performing 且时间推进；Pause 冻结，seek 到结尾显示 Complete；Stream 与 Ensemble 可切换，说明可关闭/重新打开 |
+| 版面 | 1280×800、390×844 视口检查作品信息、首次入口和窄屏说明；初次宽屏检查发现入口与元信息重叠，已在首次状态收起次要元信息并复核两者间距约 166 px。WebGL 场景可见 |
+
+`Open my MIDI` 已确认打开浏览器文件选择器；本轮未上传用户 MIDI，也未重新验证所有导入内容。开发者浏览器测试不能证明首次用户真的理解音乐，且没有真人试听或声卡录音；听感仍受现有 sine Synth 限制。**Needs external user validation**：邀请 5–8 位陌生用户不经解释直接打开，记录首次播放用时、能否找到导入、能否指出焦点、是否听完整段及继续使用意愿。Milestone A 暂为部分完成。
