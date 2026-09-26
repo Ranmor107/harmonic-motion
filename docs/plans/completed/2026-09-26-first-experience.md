@@ -5,7 +5,7 @@ Authority: 本轮实施计划；产品方向以用户提供的《Harmonic Motion
 Update when: 范围、方案或验证状态改变。
 Last verified: 2026-09-26。
 
-Status: Active
+Status: Completed（本轮实现；Milestone A 仍需外部用户验证）
 Source baseline: `835459a`；用户未跟踪的 `midi/` 和产品路线图 `.docx` 保留、不修改或提交。
 Related roadmap item: Milestone A · First Experience。
 Related ADR: none；本轮不改变架构契约。
@@ -68,12 +68,14 @@ Needs external user validation：给 5–8 名未参与项目的人直接打开�
 
 ## Completion criteria
 
-- [ ] 原创 Quick Study、明确入口及非侵入式解释形成一条可用的首次体验链。
-- [ ] score/world/plan 和播放/音频契约保持不变，切 View、seek、导入仍工作。
-- [ ] 定向与全量 test/lint/build 通过；浏览器多尺寸与实际交互已检查。
-- [ ] 记录尚需真人验证的内容，不以开发者判断冒充产品验收。
-- [ ] 仅修改本轮必要文件，保留用户未跟踪素材；更新事实文档并归档。
+- [x] 原创 Quick Study、明确入口及非侵入式解释形成一条可用的首次体验链。
+- [x] score/world/plan 和播放/音频契约保持不变，切 View、seek、导入入口仍工作。
+- [x] 定向与全量 test/lint/build 通过；浏览器多尺寸与实际交互已检查。
+- [x] 记录尚需真人验证的内容，不以开发者判断冒充产品验收。
+- [x] 仅修改本轮必要文件，保留用户未跟踪素材；更新事实文档并归档。
 
 ## Execution notes and completion evidence
 
-2026-09-26：选择 Milestone A；开始实施。完成证据待验证后填写。
+2026-09-26：选择 Milestone A；实现提交 `c80b6c5`。原创 30.825 秒 / 3 轨 / 72 音符 Quick Study 通过既有 normalize/compile 管线进入默认会话。首屏两个动作与简短视觉说明已在宽/窄屏浏览器中验证；首次状态收起次要作品数字以避免重叠。文件选择器可打开，未上传用户 MIDI；浏览器中 Performing 时间推进、Pause、seek 结束、Stream/Ensemble 切换、说明关闭与重开均可见。
+
+定向 30 测试、全量 76 测试、lint、strict TypeScript/生产构建通过；详见[验证记录](../../VERIFICATION.md#first-experience-2026-09-26)。构建体积提示为既有限制。未进行真人听感或陌生用户测试；Milestone A 保持 Partially completed · Needs external user validation，不把本轮代码完成等同于整阶段产品验收。用户 `midi/` 和 `.docx` 仍未跟踪、未暂存。
