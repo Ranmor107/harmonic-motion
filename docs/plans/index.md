@@ -3,7 +3,7 @@
 Purpose: 以任务为边界保存中型/跨模块工作的范围、理由、验证和完成标准。
 Authority: 实施上下文及其生命周期；长期事实归档后回到各 canonical 文档。
 Update when: plan 新建、范围或状态改变、完成归档。
-Last verified: 2026-09-26；登记 First Experience 实施计划。
+Last verified: 2026-09-26；登记 Listening Quality 实施与待验证状态。
 
 ## 使用时机
 
@@ -24,6 +24,7 @@ plan 是实施边界，不是永久架构规范。真正的架构决策另用 [A
 
 | Plan | Status | Path | Evidence / next step |
 | --- | --- | --- | --- |
+| Listening Quality: default piano-like synthesis and sound controls | Active · validation pending | [active plan](active/2026-09-26-listening-quality.md) | 实施、自动检查与默认曲浏览器交互已部分验证；[验证证据](../VERIFICATION.md#listening-quality-2026-09-26)。切曲与真人试听待验证 |
 | First Experience: Quick Study and clear first entry | Completed | [completed plan](completed/2026-09-26-first-experience.md) | `c80b6c5`；[验证证据](../VERIFICATION.md#first-experience-2026-09-26)。本轮实现完成，Milestone A 仍需外部用户验证 |
 | Windows one-click launcher and process cleanup | Completed | [completed plan](completed/2026-09-22-one-click-launcher.md) | `start-harmonic-motion.cmd` + PowerShell lifecycle cleanup；[验证证据](../VERIFICATION.md#one-click-launcher-2026-09-22) |
 | Radial Stage: inner-to-outer depth emergence | Completed | [completed plan](completed/2026-09-21-radial-depth-emergence.md) | Hidden→Emerging→Approaching→Active→Fading、内外纵深与弧形展开已实现；实现提交 `1f1c891`；[验证证据](../VERIFICATION.md#radial-depth-emergence-2026-09-21) |

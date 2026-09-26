@@ -107,9 +107,9 @@ Last verified: 2026-09-26；更新 Demo 默认入口与测试归属，其他模�
 ## Audio
 
 - **Primary paths / entry points**：[AudioEngine.ts](../src/audio/AudioEngine.ts)、[ToneAudioEngine.ts](../src/audio/ToneAudioEngine.ts)、[scheduler.ts](../src/audio/scheduler.ts)。
-- **Responsibility / owns**：音频解锁、音符调度、独立声部复用/销毁与输出；scheduler 仅是事件游标。
+- **Responsibility / owns**：音频解锁、音符调度、独立声部复用/销毁、持续主增益与输出；scheduler 仅是事件游标。
 - **Consumes → produces**：NormalizedScore + clock → Web Audio 声音；notes + time → `ScheduledNote[]`。
-- **Public contracts / symbols**：`AudioEngine`、`ToneAudioEngine`、`audioNow`、`NoteScheduler.reset/takeUntil`、`ScheduledNote`。
+- **Public contracts / symbols**：`AudioEngine`、`ToneAudioEngine.setVolume/setMuted`、`audioNow`、`NoteScheduler.reset/takeUntil`、`ScheduledNote`。音量/静音只在具体适配器与 App 装配层，不改变 `AudioEngine` 接口。
 - **Allowed dependencies**：Tone、score 类型、clock、utils、定时器。**Forbidden / undesirable**：renderer、visual preset、WorldModel、自己推进歌曲时间。
 - **Related tests**：[playback.test.ts](../tests/playback.test.ts) 的 `Audio event scheduling`；[audio.test.ts](../tests/audio.test.ts)。
 - **Safe local changes**：相同 AudioEngine/clock 契约下换音色适配器、修正声部分配或调度。

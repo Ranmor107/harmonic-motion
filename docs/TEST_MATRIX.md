@@ -3,7 +3,7 @@
 Purpose: 按改动选择真实存在的检查，区分纯函数、mock 与浏览器证据。
 Authority: 验证映射与覆盖缺口的主要记录；实际运行结果见 [VERIFICATION](VERIFICATION.md)。
 Update when: scripts、测试文件/suite、覆盖范围或验证要求改变。
-Last verified: 2026-09-26；补充默认 Quick Study 的定向测试与首次体验浏览器检查。
+Last verified: 2026-09-26；补充默认 Quick Study 与音频控制测试边界。
 
 所有命令在仓库根目录运行。`npm run test` 是 `vitest run`，额外文件和 `-t` 参数通过 `--` 传入。
 现有 scripts 没有独立 typecheck、coverage、E2E 或截图命令；需要类型检查时使用 `npm run build`（内含 `tsc -b`）。不要写不存在的 `npm run typecheck` / `test:render`。
@@ -17,7 +17,7 @@ Last verified: 2026-09-26；补充默认 Quick Study 的定向测试与首次体
 | T-GEOMETRY · geometry / seed / world | [engine.test.ts](../tests/engine.test.ts)：`Music Geometry Engine`；另读 `Independent extension points` | `npm run test -- tests/engine.test.ts` | WorldModel、compile 输出或共享 utils 改变时 T-GLOBAL | 同 seed 同世界；变 seed 后音乐时序不变；bounds/连接可读性 |
 | T-CHOREOGRAPHY · curves / plan / seek | [engine.test.ts](../tests/engine.test.ts)：`Choreography and random access`，空谱/单节点在另一 suite | `npm run test -- tests/engine.test.ts` | PerformancePlan/curve/event 联合类型改变时 T-GLOBAL | 起音端点、前跳后跳、暂停冻结、首尾状态 |
 | T-PLAYBACK · clock / coordination | [playback.test.ts](../tests/playback.test.ts)：clock + coordination；[audio.test.ts](../tests/audio.test.ts) 检查联动 | `npm run test -- tests/playback.test.ts tests/audio.test.ts` | 时间源、状态集合、seek/loop 语义跨层改变时 T-GLOBAL | Play/Pause/Restart、播放中与暂停中 seek、结束重播、音频解锁 |
-| T-AUDIO · scheduler / voice management | playback 的 `Audio event scheduling` + audio 的 `Tone audio adapter` | `npm run test -- tests/playback.test.ts tests/audio.test.ts` | AudioEngine 接口、clock/sourceTimeFor 或 score 表达变化时 T-GLOBAL | 真人试听；同音重叠、和弦、seek 延音、暂停后无残留；明确设备与浏览器 |
+| T-AUDIO · scheduler / voice management | playback 的 `Audio event scheduling` + audio 的 `Tone audio adapter`；audio mock 还检查合成参数、主增益及音量/静音跨 seek/pause/load 的保持 | `npm run test -- tests/playback.test.ts tests/audio.test.ts` | AudioEngine 接口、clock/sourceTimeFor 或 score 表达变化时 T-GLOBAL | 浏览器调整音量/静音并检查时间；真人试听同音重叠、和弦、seek 延音、暂停后无残留；明确设备与浏览器 |
 | T-VISUAL · theme/presentation/effects/appearance | [visual.test.ts](../tests/visual.test.ts) 测窗口/预算；[musical-presentation.test.ts](../tests/musical-presentation.test.ts) 测显著性、短组、长音、随机 seek、和弦、投影 fit；[ensemble-presentation.test.ts](../tests/ensemble-presentation.test.ts) 测声部弧区、密集选音、预算与绝对时间运动；engine 测 compiled 不变 | `npm run test -- tests/visual.test.ts tests/musical-presentation.test.ts tests/ensemble-presentation.test.ts tests/engine.test.ts`；`npm run lint`；`npm run build` | 引入计划/世界新语义时 T-GLOBAL；普通配色不要求全量核心测试 | 修改前后截图、可读性、seek/暂停、view 切换不改变播放/音乐 |
 | T-CAMERA · navigation/follow/fit | musical-presentation 测宽/窄视口投影角点，visual 测 home state；真实 pointer/follow 仍需浏览器 | `npm run test -- tests/visual.test.ts tests/musical-presentation.test.ts`；`npm run lint`；`npm run build` | 相机之外的核心 contract 改变时 T-GLOBAL | zoom/pan/fit、view 切换和中等窗口；比对 world/plan/playback 保持不变 |
 | T-VISIBILITY · focus/path/stream | visual 测窗口分类；musical-presentation 测显示预算、生命周期/和弦/seek；engine 测 evaluator | `npm run test -- tests/visual.test.ts tests/musical-presentation.test.ts tests/engine.test.ts`；`npm run lint`；`npm run build` | 修改事件、世界或轨迹数据语义时 T-GLOBAL | 时间0/末尾、前后seek、pause、overview/focus/path/stream；密集测试曲 |
@@ -32,7 +32,7 @@ Last verified: 2026-09-26；补充默认 Quick Study 的定向测试与首次体
 ## 现有测试不能证明的事情
 
 - Vitest 运行在 Node，未安装浏览器组件/截图测试框架。纯 presentation/camera 测试不能自动证明 Canvas 外观、pointer 交互或排版质量。
-- audio mock 验证调用、独立声部及取消；不产生真实声卡信号，也不测输出延迟。
+- audio mock 验证调用、合成配置、主增益、独立声部及取消；不产生真实声卡信号，也不测音色或输出延迟。
 - geometry 的替换测试把现有 constellation 结果包装为另一个 strategy ID，并没有实现/测量另一种真实空间布局。新增策略需要自己的位置、连接、bounds 和可抵达性断言。
 - seek 一致性测试比较同一个纯求值器在直接与逐次调用后的结果，证明不积累状态；不等同于真实逐帧音画同步测试。
 - 已有相机投影 fit 数学测试；尚无 pointer/React/WebGL 自动测试、64 声部溢出压力、20,000 音符性能、真实 MIDI corpus 或可访问性自动测试。

@@ -27,7 +27,7 @@ Last verified: 2026-09-26；按产品迭代计划选择 First Experience，记�
 | 目标 | 状态 | 当前证据 / 剩余问题 |
 | --- | --- | --- |
 | A · First Experience | Partially completed · Needs external user validation | [本轮计划](plans/completed/2026-09-26-first-experience.md)：原创约 31 秒 Quick Study、首屏试听/导入入口、可关闭视觉解释与 View 用途已实现；开发者浏览器验证通过。尚无陌生用户的首次使用观察，也未筛选 Full Studies |
-| B · Listening Quality | Candidate | 仍为统一 sine Synth，无音量/静音；需真实听感验证后实施 |
+| B · Listening Quality | Active · implementation ready, validation pending | [本轮计划](plans/active/2026-09-26-listening-quality.md)：已加入默认合成音色与 Volume/Mute，自动检查和默认曲浏览器交互部分通过；切曲与真人试听待验证，不承诺音色质量 |
 | C · Continuity | Candidate | 曲库、进度和偏好只在当前页面内存保留；刷新后不能恢复 |
 | D · Musical Understanding | Candidate | 已有基本视图解释和启发式主线；未有手动 track/voice 高亮与旋律轨选择 |
 | E · Long-session Comfort | Candidate | 尚无长曲舒适度与稳定性系统验证 |

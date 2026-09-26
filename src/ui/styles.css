@@ -73,6 +73,8 @@ h1 { margin: 20px 0 27px; font: 400 33px/1.08 'Iowan Old Style', Baskerville, Ge
 .camera-actions svg, .quiet-action svg { width: 13px; height: 13px; }
 .setting-toggle { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 12px; color: #bdc5cc; }
 .setting-toggle span { color: var(--muted); font-size: 10px; }.setting-toggle[aria-pressed=true] span { color: var(--brass); }
+.volume-label { display: flex; justify-content: space-between; color: #bdc5cc; font-size: 12px; }.volume-label span { color: var(--brass); font-variant-numeric: tabular-nums; }
+.volume-range { width: 100%; margin: 16px 0 3px; accent-color: var(--brass); cursor: pointer; }
 .quiet-action { margin-top: 17px; color: var(--muted); font-size: 11px; }
 .library-heading { display: flex; justify-content: space-between; align-items: baseline; }.library-heading h2 { margin: 0; }.library-heading h2 span { color: var(--brass); margin-left: 6px; }.library-heading button { font-size: 12px; color: var(--brass); }
 .library ol { padding: 0; margin: 17px 0 0; list-style: none; }.library li { display: flex; border-bottom: 1px solid #ffffff0d; }
@@ -88,6 +90,7 @@ h1 { margin: 20px 0 27px; font: 400 33px/1.08 'Iowan Old Style', Baskerville, Ge
 .timeline::-moz-range-thumb { width: 8px; height: 8px; border: 0; border-radius: 50%; background: var(--brass); }
 .timeline-ticks { position: absolute; left: 4px; right: 4px; top: 23px; pointer-events: none; }.timeline-ticks span { position: absolute; transform: translateX(-50%); font-size: 8px; font-variant-numeric: tabular-nums; color: #788591; padding-top: 6px; }.timeline-ticks span::before { content: ''; position: absolute; height: 3px; width: 1px; background: #526171; left: 50%; top: 0; }
 .restart-button { padding: 8px; color: var(--muted); }.restart-button svg, .import-button svg { width: 15px; height: 15px; }
+.mute-button { display: grid; place-items: center; flex: none; padding: 8px 0 8px 13px; color: #bbc5ce; border-left: 1px solid var(--line); }.mute-button svg { width: 17px; height: 17px; }.mute-button[aria-pressed=true] { color: var(--muted); }
 .import-button { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #bbc5ce; border-left: 1px solid var(--line); padding: 8px 0 8px 18px; white-space: nowrap; }
 .error-message { position: absolute; left: 32px; right: 32px; bottom: calc(100% + 12px); background: #34272a; border: 1px solid #7e5258; color: #f5d6d6; padding: 13px 15px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; max-height: 180px; overflow: auto; }.error-message button { font-size: 23px; padding-left: 16px; }
 .scene-fallback { position: absolute; inset: 0; display: grid; place-content: center; padding: 30px; color: var(--brass); font-size: 13px; text-align: center; }
@@ -97,13 +100,13 @@ h1 { margin: 20px 0 27px; font: 400 33px/1.08 'Iowan Old Style', Baskerville, Ge
 }
 @media (max-width: 700px) {
   .studio { grid-template-rows: 66px minmax(0, 1fr) 84px; min-height: 650px; }.topbar { padding-inline: 20px; gap: 14px; }
-  .brand span { font-size: 27px; }.brand-motif { width: 39px; }.brand { gap: 9px; }.status { font-size: 9px; }.drawer-trigger { padding-left: 13px; font-size: 11px; gap: 8px; }
+  .brand span { font-size: 25px; }.brand-motif { width: 39px; }.brand { gap: 9px; }.status { font-size: 9px; }.drawer-trigger { padding-left: 8px; font-size: 10px; gap: 6px; }
   .scene-canvas { inset: 135px 0 60px; }.scene-canvas::after { background: none; }
   .score-card { top: 17px; left: 22px; width: calc(100% - 44px); }.score-card::before { display: none; }
   h1 { font-size: 27px; margin: 10px 0 15px; max-width: 100%; }.artwork-data { display: flex; padding-top: 0; border: 0; gap: 22px; }.artwork-data dd { font-size: 11px; }.artwork-data dt { font-size: 8px; }
   .score-quote { left: 22px; bottom: 28px; width: 160px; }.score-quote p { font-size: 12px; margin-bottom: 8px; }.score-quote cite { font-size: 8px; }
   .live-reading { right: 22px; bottom: 28px; gap: 9px; }.legend { gap: 10px; font-size: 8px; }.pitch-reading { font-size: 19px; }.live-reading .eyebrow { font-size: 8px; }
-  .navigation-hint { bottom: 5px; font-size: 8px; }.transport { padding: 19px 20px 26px; }.transport-primary { gap: 10px; }.timeline-wrap { margin-inline: 3px; }.restart-button { padding: 4px; }.import-button { padding-left: 12px; }.import-button span { display: none; }.time { font-size: 10px; }.track-step { padding: 2px; }
+  .navigation-hint { bottom: 5px; font-size: 8px; }.transport { padding: 19px 20px 26px; }.transport-primary { gap: 7px; }.timeline-wrap { margin-inline: 3px; }.restart-button { padding: 4px; }.mute-button { padding: 4px 0 4px 7px; }.import-button { padding-left: 8px; }.import-button span { display: none; }.time { font-size: 10px; }.track-step { padding: 2px; }
   .controls-drawer { top: 66px; bottom: 84px; width: min(300px, 86vw); }
   .first-experience, .reading-guide { left: 22px; bottom: 66px; width: min(282px, calc(100% - 44px)); padding: 15px 17px; }
   .world-stage.is-intro .live-reading { display: none; }

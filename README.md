@@ -3,7 +3,7 @@
 Purpose: 项目说明、启动及用户操作入口。
 Authority: 快速使用指南；现状、架构和维护规范分别链接到 canonical 文档。
 Update when: 启动方式、用户操作或导航入口变化。
-Last verified: 2026-09-26；补充首次聆听入口与 Quick Study。
+Last verified: 2026-09-26；补充首次聆听入口、Quick Study 与声音控制。
 
 **Music Geometry Engine — a score-to-world generative engine.**
 
@@ -34,11 +34,13 @@ npm run dev
 | --- | --- |
 | Listen to a study / Open my MIDI | 首次进入时直接试听内置原创短曲，或打开本地 MIDI 文件选择器；视觉说明可关闭并重新打开 |
 | Play / Pause | 启动或冻结统一音乐时间，暂停立即停止声音 |
+| Mute / Unmute | 底栏一键静音或恢复；静音期间仍保持歌曲时间 |
+| Controls → Sound → Volume | 调整本次会话的音量；暂停、跳转或切曲不会重置 |
 | Restart | 从头重新演奏 |
 | 时间滑杆 | 播放或暂停时均可跳转，对既有轨迹求位置，恢复节点和效果状态；播放中恢复仍在延续的音符 |
 | Add MIDI / Library + Add | 一次选择多份 `.mid` / `.midi`；本地解析与编译后加入会话曲库。批次中有效文件正常加入，错误文件逐个提示；全部失败时保留原曲和时间 |
 | Library / 上一曲 / 下一曲 | 切换停止并归零；复用缓存 score/world/plan，保留视图、形态、效果和跟随偏好。移除最后一曲时回到内置示例；刷新页面清空会话 |
-| View | 打开右侧控制抽屉；默认关闭，Escape 关闭并返回入口焦点 |
+| Controls | 打开右侧控制抽屉；默认关闭，Escape 关闭并返回入口焦点 |
 | Regenerate | seed 加一，重新生成世界和轨迹，保持乐谱、音乐时序与当前播放进度 |
 | Effects on/off | 只切换视觉反馈，不重新编译世界或演奏计划 |
 | Constellation / Stream / Ensemble | 在空间关系、正面 Ribbon 主线和稳定声部弧区之间切换；保持音乐时间与正式编译结果。Ensemble 在密集段减少绘制代表，但不删除音频或乐谱 |
@@ -59,7 +61,7 @@ npm run lint
 npm run build
 ```
 
-定向测试与覆盖边界见 [TEST_MATRIX](docs/TEST_MATRIX.md)；最近实际结果见 [VERIFICATION](docs/VERIFICATION.md#iteration-03)。
+定向测试与覆盖边界见 [TEST_MATRIX](docs/TEST_MATRIX.md)；最近实际结果见 [VERIFICATION](docs/VERIFICATION.md#listening-quality-2026-09-26)。
 
 `npm run preview` 可预览生产构建。浏览器交互验收记录见 [docs/VERIFICATION.md](docs/VERIFICATION.md)。
 

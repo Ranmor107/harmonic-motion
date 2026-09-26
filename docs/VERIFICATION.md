@@ -201,3 +201,19 @@ Ensemble 保持各轨道的稳定弧区，按发声状态、主线显著性、�
 | 版面 | 1280×800、390×844 视口检查作品信息、首次入口和窄屏说明；初次宽屏检查发现入口与元信息重叠，已在首次状态收起次要元信息并复核两者间距约 166 px。WebGL 场景可见 |
 
 `Open my MIDI` 已确认打开浏览器文件选择器；本轮未上传用户 MIDI，也未重新验证所有导入内容。开发者浏览器测试不能证明首次用户真的理解音乐，且没有真人试听或声卡录音；听感仍受现有 sine Synth 限制。**Needs external user validation**：邀请 5–8 位陌生用户不经解释直接打开，记录首次播放用时、能否找到导入、能否指出焦点、是否听完整段及继续使用意愿。Milestone A 暂为部分完成。
+
+<a id="listening-quality-2026-09-26"></a>
+## Listening Quality · default synthesis and sound controls · 2026-09-26
+
+日期：2026-09-26。实施基线：`34f55a0`。在既有 Tone 适配器上加入自定义谐波与短起音/衰减，以及独立于播放声部生命周期的 master gain；底栏提供静音，Controls 抽屉提供音量。未修改 score、world、plan、clock、AudioEngine 接口或用户未跟踪素材。
+
+| 检查 | 结果 |
+| --- | --- |
+| 定向 `audio` + `playback` | PASS，2 文件 / 11 测试；mock 验证合成配置、主增益、静音/音量与 seek/pause/load 后保持 |
+| `npm run test` | PASS，11 文件 / 77 测试 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS，含 `tsc -b`；JS 1,431.10 kB / gzip 389.09 kB，CSS 12.67 kB / gzip 3.66 kB；既有 >500 kB 提示仍在 |
+| 浏览器交互 | **部分通过**：本地 Chromium 在默认曲核对 Play/Pause、播放中/暂停时 seek、Restart、40% 音量、Mute/Unmute、静音时歌曲时间继续、Constellation→Stream→Ensemble→Constellation 切换后时间和控制值保持。390×844 窄屏关键按钮坐标均落在视口内；浏览器截图可见 WebGL 场景。导入第二曲的文件选择器未能在自动化环境中打开，切曲时的真实输出仍待验证 |
+| 真人试听 | **Needs human listening validation**：本环境没有可用的声卡听感证据；音色质量、爆音/残留与跨设备音量表现均未确认 |
+
+此处的 “piano-like” 仅描述合成设计方向，不代表采样钢琴或经试听证明的钢琴真实感。浏览器控制连接初次失败，重启本地开发服务后恢复；切曲自动化仍未完成。Milestone B 保持 Active；下一步用仓库测试 MIDI 核对切曲，再由实际听众记录设备、浏览器及具体段落。

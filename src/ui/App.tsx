@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useStudio } from '../state/store'
 import { PlaybackClock, type PlaybackState } from '../playback/clock'
 import { PlaybackController } from '../playback/controller'
-import { ToneAudioEngine, audioNow } from '../audio/ToneAudioEngine'
+import { ToneAudioEngine, audioNow, DEFAULT_VOLUME } from '../audio/ToneAudioEngine'
 import { parseMidi, MIDI_LIMITS } from '../midi/parser'
 import { Scene } from '../render/Scene'
 import { StaticCamera } from '../visual/camera/staticCamera'
@@ -19,9 +19,10 @@ export function App() {
     addScores, selectSession, removeSession, regenerate, setPreset, setViewMode, setVisibilityMode,
   } = useStudio()
   const { score, world, plan } = compiled
-  const [controller] = useState(() => {
+  const [{ controller, audio }] = useState(() => {
     const clock = new PlaybackClock(0, audioNow)
-    return new PlaybackController(clock, new ToneAudioEngine(clock))
+    const audio = new ToneAudioEngine(clock)
+    return { controller: new PlaybackController(clock, audio), audio }
   })
   const [playback, setPlayback] = useState<PlaybackState>({ status: 'stopped', time: 0, duration: score.duration })
   const snapshot = useRef(playback)
@@ -32,6 +33,8 @@ export function App() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [starting, setStarting] = useState(false)
+  const [volume, setVolume] = useState(DEFAULT_VOLUME)
+  const [muted, setMuted] = useState(false)
   const [entered, setEntered] = useState(false)
   const [guideOpen, setGuideOpen] = useState(true)
   const [fitRequest, setFitRequest] = useState(0)
@@ -133,6 +136,18 @@ export function App() {
       trail: { ...preset.effects.trail, enabled }, particles: { ...preset.effects.particles, enabled },
     } })
   }
+  const toggleMute = () => {
+    if (muted || volume === 0) {
+      const restored = volume || DEFAULT_VOLUME
+      setVolume(restored)
+      audio.setVolume(restored)
+      setMuted(false)
+      audio.setMuted(false)
+    } else {
+      setMuted(true)
+      audio.setMuted(true)
+    }
+  }
   const fit = () => {
     setFollow(viewMode === 'stream')
     setFitRequest(value => value + 1)
@@ -150,6 +165,7 @@ export function App() {
   const sessionIndex = sessions.findIndex(session => session.id === activeSessionId)
   const firstVisit = !entered && activeSessionId === 'score-0'
   const showGuide = entered && activeSessionId === 'score-0'
+  const effectivelyMuted = muted || volume === 0
 
   return <main className="studio">
     <header className="topbar">
@@ -165,7 +181,7 @@ export function App() {
       </a>
       <span className="brand-descriptor">{branding.descriptor}</span>
       <span className={`status ${playing ? 'is-playing' : ''}`}><i />{playing ? 'Performing' : playback.status === 'ended' ? 'Complete' : playback.status === 'paused' ? 'Paused' : 'Ready'}</span>
-      <button ref={drawerTrigger} className="drawer-trigger" aria-controls="controls-drawer" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(open => !open)}>View <span aria-hidden="true">☷</span></button>
+      <button ref={drawerTrigger} className="drawer-trigger" aria-controls="controls-drawer" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(open => !open)}>Controls <span aria-hidden="true">☷</span></button>
     </header>
 
     <section className={`world-stage ${firstVisit ? 'is-intro' : ''} ${showGuide ? 'has-guide' : ''}`} aria-label="Music world">
@@ -213,6 +229,12 @@ export function App() {
         <button onClick={() => { setFollow(false); setFitRequest(value => value + 1) }}>Reset</button>
       </div>{viewMode !== 'ensemble' && <button className="setting-toggle" onClick={() => { setFollow(!follow); if (!follow) setFitRequest(value => value + 1) }} aria-pressed={follow}>Follow performer <span>{follow ? 'On' : 'Off'}</span></button>}</section>
       <section className="control-section"><h2>Visual</h2><button className="setting-toggle" onClick={toggleEffects} aria-pressed={preset.effects.hit.enabled}>Performance effects <span>{preset.effects.hit.enabled ? 'On' : 'Off'}</span></button><button className="quiet-action" onClick={regenerate} disabled={busy}><Icon name="regenerate" />Regenerate constellation</button></section>
+      <section className="control-section"><h2>Sound</h2><label className="volume-label" htmlFor="master-volume">Volume <span>{Math.round(volume * 100)}%</span></label><input id="master-volume" className="volume-range" type="range" min="0" max="100" value={Math.round(volume * 100)} aria-valuetext={`${Math.round(volume * 100)} percent`} onChange={event => {
+        const next = Number(event.target.value) / 100
+        setVolume(next)
+        audio.setVolume(next)
+        if (muted) { setMuted(false); audio.setMuted(false) }
+      }} /></section>
       <section className="control-section library"><div className="library-heading"><h2>Library <span>{sessions.length}</span></h2><button onClick={() => input.current?.click()} disabled={busy}>+ Add</button></div>
         <p className="control-note">Local scores · kept for this session</p>
         <ol>{sessions.map((session, index) => <li key={session.id} className={session.id === activeSessionId ? 'is-current' : ''}>
@@ -238,6 +260,7 @@ export function App() {
         </div>
         <span className="time total-time">{timeLabel(score.duration)}</span>
         <button className="restart-button" aria-label="Restart" onClick={() => { setError(''); void controller.restart().catch(() => setError('Audio could not start. Press Play to try again.')) }} disabled={busy || starting}><Icon name="restart" /></button>
+        <button className="mute-button" aria-label={effectivelyMuted ? 'Unmute audio' : 'Mute audio'} aria-pressed={effectivelyMuted} title={effectivelyMuted ? 'Unmute audio' : 'Mute audio'} onClick={toggleMute}><Icon name={effectivelyMuted ? 'muted' : 'volume'} /></button>
         <button className="import-button" aria-label="Add MIDI" onClick={() => input.current?.click()} disabled={busy}><Icon name="upload" /><span>{busy ? 'Reading…' : 'Add MIDI'}</span></button>
         <input ref={input} type="file" multiple accept=".mid,.midi,audio/midi,audio/x-midi" hidden onChange={event => void onLoad(event)} />
       </div>
