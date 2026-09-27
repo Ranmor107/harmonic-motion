@@ -31,6 +31,19 @@ describe('musical presentation', () => {
     expect(polyphonic).toEqual(before)
   })
 
+  it('uses an explicitly chosen track for the display lead while retaining every other note as context', () => {
+    const polyphonic = makeScore()
+    const before = structuredClone(polyphonic)
+    const harmonyId = polyphonic.tracks[1]!.id
+    const focused = createMusicalPresentation(polyphonic, config, harmonyId)
+    expect(focused.lead.map(point => point.note.trackId)).toEqual(Array(4).fill(harmonyId))
+    expect(focused.notes).toHaveLength(polyphonic.notes.length)
+    expect(focused.positions.size).toBe(polyphonic.notes.length)
+    expect(visibleStreamNotes(focused, 1, config.stream).some(note => note.trackId !== harmonyId)).toBe(true)
+    expect(selectSalientNotes(polyphonic, config.salience, 'missing')).toEqual(selectSalientNotes(polyphonic, config.salience))
+    expect(polyphonic).toEqual(before)
+  })
+
   it('arrives exactly at every selected onset, holds endpoints and reconstructs backward seeks', () => {
     for (const point of model.lead) expect(evaluateLead(model, point.note.startTime)).toEqual(point.position)
     expect(evaluateLead(model, -2)).toEqual(model.lead[0]!.position)

@@ -45,8 +45,12 @@ export function App() {
   const [guideOpen, setGuideOpen] = useState(true)
   const [fitRequest, setFitRequest] = useState(0)
   const [followViews, setFollowViews] = useState({ constellation: false, stream: true, ensemble: false })
+  const [melodyTracks, setMelodyTracks] = useState<Record<string, string>>({})
   const importRevision = useRef(0)
   const noteById = useMemo(() => new Map(score.notes.map(note => [note.id, note])), [score])
+  const focusTrackIndex = score.tracks.findIndex(track => track.id === melodyTracks[activeSessionId] && track.notes.length > 0)
+  const focusTrack = score.tracks[focusTrackIndex]
+  const focusTrackId = focusTrack?.id
   const follow = followViews[viewMode]
   const setFollow = (value: boolean) => setFollowViews(current => ({ ...current, [viewMode]: value }))
   const storageFailed = useCallback(() => {
@@ -56,8 +60,8 @@ export function App() {
   const currentPreferences = useCallback((): SavedPreferences => ({
     version: 1, activeSessionId, position: controller.clock.getState().time,
     viewMode, visibilityMode, effectsEnabled: preset.effects.hit.enabled,
-    volume, muted, followViews,
-  }), [activeSessionId, controller, viewMode, visibilityMode, preset.effects.hit.enabled, volume, muted, followViews])
+    volume, muted, followViews, melodyTracks,
+  }), [activeSessionId, controller, viewMode, visibilityMode, preset.effects.hit.enabled, volume, muted, followViews, melodyTracks])
   const persistNow = useCallback(() => {
     if (!storageReady) return
     const preferences = currentPreferences()
@@ -90,6 +94,13 @@ export function App() {
         setMuted(preferences.muted)
         audio.setMuted(preferences.muted)
         setFollowViews(preferences.followViews)
+        const savedTracks = preferences.melodyTracks
+        if (savedTracks && typeof savedTracks === 'object' && !Array.isArray(savedTracks)) {
+          const library = useStudio.getState().sessions
+          setMelodyTracks(Object.fromEntries(Object.entries(savedTracks).filter(([id, trackId]) =>
+            typeof trackId === 'string' && library.some(session => session.id === id &&
+              session.compiled.score.tracks.some(track => track.id === trackId && track.notes.length > 0)))))
+        }
         restorePosition.current = preferences.position
         setEntered(true)
       } else if (saved.length) setEntered(true)
@@ -178,6 +189,11 @@ export function App() {
   const deleteScore = (id: string) => {
     if (id === activeSessionId) stopForSwitch()
     removeSession(id)
+    setMelodyTracks(current => {
+      const next = { ...current }
+      delete next[id]
+      return next
+    })
   }
   const togglePlayback = async () => {
     setError('')
@@ -268,7 +284,7 @@ export function App() {
     </header>
 
     <section className={`world-stage ${firstVisit ? 'is-intro' : ''} ${showGuide ? 'has-guide' : ''}`} aria-label="Music world">
-      <Scene score={score} world={world} plan={plan} preset={preset} playback={snapshot} cameraController={StaticCamera} viewMode={viewMode} visibilityMode={visibilityMode} fitRequest={fitRequest} follow={follow} onNavigate={() => setFollow(false)} />
+      <Scene score={score} world={world} plan={plan} preset={preset} playback={snapshot} cameraController={StaticCamera} viewMode={viewMode} visibilityMode={visibilityMode} focusTrackId={focusTrackId} fitRequest={fitRequest} follow={follow} onNavigate={() => setFollow(false)} />
       <div className="score-card">
         <p className="eyebrow">Opus {String(sessionIndex + 1).padStart(2, '0')} / {score.metadata.source === 'demo' ? 'Quick Study' : 'Local score'}</p>
         <h1>{score.metadata.title}</h1>
@@ -287,12 +303,13 @@ export function App() {
         <button className="midi-action" onClick={() => input.current?.click()} disabled={busy}>Open my MIDI <span aria-hidden="true">↗</span></button>
         <p className="first-experience-note">Processed on this device. Saved in this browser; no files are uploaded.</p>
       </div> : showGuide ? <div className="reading-guide">
-        {guideOpen ? <><button className="guide-close" aria-label="Close visual guide" onClick={() => setGuideOpen(false)}>×</button><p className="eyebrow">What am I seeing?</p><p>Follow the warm lead. Cool strands show accompanying voices; notes brighten as they sound.</p></> : <button className="guide-reopen" onClick={() => setGuideOpen(true)}>What am I seeing? <span aria-hidden="true">↗</span></button>}
+        {guideOpen ? <><button className="guide-close" aria-label="Close visual guide" onClick={() => setGuideOpen(false)}>×</button><p className="eyebrow">What am I seeing?</p><p>Follow the warm {focusTrack ? 'focused part' : 'lead'}. Cool strands show accompanying voices; notes brighten as they sound.</p></> : <button className="guide-reopen" onClick={() => setGuideOpen(true)}>What am I seeing? <span aria-hidden="true">↗</span></button>}
       </div> : <blockquote className="score-quote"><p>“{branding.quote.text}”</p><cite><a href={branding.quote.source} target="_blank" rel="noreferrer">{branding.quote.author}</a></cite></blockquote>}
       <div className="live-reading" aria-label="Current music">
         <span className="eyebrow">{viewMode} / {viewMode === 'stream' ? 'ribbon' : viewMode === 'ensemble' ? 'voices' : visibilityMode}</span>
+        {focusTrack && <span className="focus-reading" title={focusTrack.name}>Focus · {String(focusTrackIndex + 1).padStart(2, '0')} {focusTrack.name || `Track ${focusTrackIndex + 1}`}</span>}
         <span className={`pitch-reading ${sounding.length ? 'sounding' : ''}`}>{pitches.length ? pitches.map(note => pitchLabel(note.midi)).join(' · ') : '—'}</span>
-        <div className="legend"><span><i className="lead-dot" />Lead</span><span><i className="voice-dot" />Voices</span><span><i className="performer-dot" />{viewMode === 'ensemble' ? 'Harmony' : 'Performer'}</span></div>
+        <div className="legend"><span><i className="lead-dot" />{focusTrack ? 'Focus' : 'Lead'}</span><span><i className="voice-dot" />Voices</span><span><i className="performer-dot" />{viewMode === 'ensemble' ? 'Harmony' : 'Performer'}</span></div>
       </div>
       <span className="navigation-hint">Scroll to zoom · drag to explore</span>
     </section>
@@ -303,6 +320,19 @@ export function App() {
         {(['constellation', 'stream', 'ensemble'] as const).map(mode => <button key={mode} aria-pressed={viewMode === mode} onClick={() => setViewMode(mode)}>{mode[0]!.toUpperCase() + mode.slice(1)}</button>)}
       </div>
       <p className="control-note">{viewMode === 'constellation' ? 'See how notes and voices connect.' : viewMode === 'stream' ? 'Follow the music as it unfolds in time.' : 'See voices gather around the circular stage.'}</p>
+      </section>
+      <section className="control-section"><h2>Part focus</h2>
+        <label className="part-label" htmlFor="melody-track">Follow a MIDI track</label>
+        <select id="melody-track" className="part-select" value={focusTrackId ?? ''} onChange={event => setMelodyTracks(current => {
+          const next = { ...current }
+          if (event.target.value) next[activeSessionId] = event.target.value
+          else delete next[activeSessionId]
+          return next
+        })}>
+          <option value="">Auto lead</option>
+          {score.tracks.map((track, index) => track.notes.length > 0 && <option key={track.id} value={track.id}>{String(index + 1).padStart(2, '0')} · {track.name || `Track ${index + 1}`}</option>)}
+        </select>
+        <p className="control-note">Follow one source track across views. Other tracks stay visible and audible.</p>
       </section>
       <section className="control-section"><h2>Visibility</h2><div className="segmented">
         {(['overview', 'focus', 'path'] as const).map(mode => <button key={mode} aria-pressed={visibilityMode === mode} onClick={() => setVisibilityMode(mode)} disabled={viewMode !== 'constellation'}>{mode === 'path' ? 'Current path' : mode[0]!.toUpperCase() + mode.slice(1)}</button>)}

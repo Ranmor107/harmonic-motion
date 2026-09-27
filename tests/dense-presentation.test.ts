@@ -65,6 +65,18 @@ describe('complex music presentation', () => {
     expect(JSON.stringify(compiled)).toBe(before)
   })
 
+  it('reserves local display capacity for a chosen track without removing other tracks', () => {
+    const trackIds = new Set(score.tracks[0]!.notes.map(note => note.id))
+    const focusNodes = index.nodes.filter(node => node.noteIds.some(id => trackIds.has(id)))
+    const selected = selectDisplayNodes(index, 40, 'focus', config.visibility, 1, focusNodes)
+    const reserved = nearestNodes(focusNodes, 40, config.visibility.contextPast, config.visibility.contextFuture,
+      Math.ceil(config.visibility.focusMaxNodes * 0.6))
+    expect(selected.length).toBeLessThanOrEqual(config.visibility.focusMaxNodes)
+    expect(reserved.every(node => selected.includes(node))).toBe(true)
+    expect(selected.some(node => !focusNodes.includes(node))).toBe(true)
+    expect(selectDisplayNodes(index, 40, 'focus', config.visibility, 1, focusNodes)).toEqual(selected)
+  })
+
   it('matches nearest-window selection without scanning or sorting all nodes', () => {
     for (const time of [0, 0.72, 40, score.duration]) {
       const expected = index.nodes.filter(n => n.time >= time - 5 && n.time <= time + 8)

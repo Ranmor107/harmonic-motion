@@ -19,8 +19,9 @@ export interface MusicalPresentation {
 }
 
 // A deterministic display heuristic, not melody extraction. Equal scores use stable IDs.
-export function selectSalientNotes(score: NormalizedScore, weights: PresentationConfig['salience']): NoteEvent[] {
-  const ordered = [...score.notes].sort((a, b) => a.startTime - b.startTime || a.id.localeCompare(b.id))
+export function selectSalientNotes(score: NormalizedScore, weights: PresentationConfig['salience'], trackId?: string): NoteEvent[] {
+  const track = score.tracks.find(item => item.id === trackId)
+  const ordered = [...(track?.notes.length ? track.notes : score.notes)].sort((a, b) => a.startTime - b.startTime || a.id.localeCompare(b.id))
   const windows: NoteEvent[][] = []
   for (const note of ordered) {
     const window = windows.at(-1)
@@ -38,9 +39,9 @@ export function selectSalientNotes(score: NormalizedScore, weights: Presentation
   })
 }
 
-export function createMusicalPresentation(score: NormalizedScore, config: PresentationConfig): MusicalPresentation {
+export function createMusicalPresentation(score: NormalizedScore, config: PresentationConfig, trackId?: string): MusicalPresentation {
   const notes = [...score.notes].sort((a, b) => a.startTime - b.startTime || a.id.localeCompare(b.id))
-  const selected = selectSalientNotes(score, config.salience)
+  const selected = selectSalientNotes(score, config.salience, trackId)
   const { stream } = config
   const minPitch = notes.reduce((min, n) => Math.min(min, n.midi), 127)
   const maxPitch = notes.reduce((max, n) => Math.max(max, n.midi), 0)

@@ -3,7 +3,7 @@
 Purpose: 项目说明、启动及用户操作入口。
 Authority: 快速使用指南；现状、架构和维护规范分别链接到 canonical 文档。
 Update when: 启动方式、用户操作或导航入口变化。
-Last verified: 2026-09-27；补充本机曲库恢复与跟随镜头缩放。
+Last verified: 2026-09-27；补充逐曲轨道聚焦。
 
 **Music Geometry Engine — a score-to-world generative engine.**
 
@@ -44,12 +44,13 @@ npm run dev
 | Regenerate | seed 加一，重新生成世界和轨迹，保持乐谱、音乐时序与当前播放进度 |
 | Effects on/off | 只切换视觉反馈，不重新编译世界或演奏计划 |
 | Constellation / Stream / Ensemble | 在空间关系、正面 Ribbon 主线和稳定声部弧区之间切换；保持音乐时间与正式编译结果。Ensemble 在密集段减少绘制代表，但不删除音频或乐谱 |
+| Controls → Part focus | Auto lead 沿用自动显著性主线；也可指定一条有音符的 MIDI 轨道，使它在三种视图中更突出，Stream 主线随之改变。其他轨道仍可见、仍发声；选择按曲目保存在当前浏览器。MIDI 轨道不一定等于独立声部或真正旋律 |
 | Overview / Focus / Current path | 显示全世界、时间相关局部或最精简当前路径；Stream 自带局部时间窗 |
 | 滚轮 / 拖拽 | 在 3D 场景内受限缩放和平移，不中断播放 |
 | Fit world / Fit stage / Reset | 按投影范围恢复取景；Stream 在当前演奏位置取景 |
 | Follow performer | Constellation 跟随现有 Performer；Stream 稳定水平前移；Ensemble 保持舞台稳定。跟随时可用滚轮调整倍率；手动平移会关闭跟随，可重新开启 |
 
-导入曲目、最近选择、视图、效果、音量及上次时间位置保存在当前浏览器的本机存储中；再次打开时恢复为暂停，不自动播放。音频和 MIDI 不上传。清除站点数据、使用隐私模式或更换浏览器会失去该浏览器内的曲库；保存失败时界面会提示。
+导入曲目、最近选择、逐曲轨道焦点、视图、效果、音量及上次时间位置保存在当前浏览器的本机存储中；再次打开时恢复为暂停，不自动播放。音频和 MIDI 不上传。清除站点数据、使用隐私模式或更换浏览器会失去该浏览器内的曲库；保存失败时界面会提示。
 
 主线在 0.22 秒短窗内按力度、时长、音区和连续性选择显著音，属于可配置展示启发式，不是真正旋律提取。其余音符按轨道、休止间隔和长度上限组成短组；不改变音频或正式编舞。完整边界见 [ADR-0001](docs/decisions/ADR-0001-musical-presentation.md)。
 
@@ -63,7 +64,7 @@ npm run lint
 npm run build
 ```
 
-定向测试与覆盖边界见 [TEST_MATRIX](docs/TEST_MATRIX.md)；最近实际结果见 [VERIFICATION](docs/VERIFICATION.md#continuity-follow-zoom-2026-09-27)。
+定向测试与覆盖边界见 [TEST_MATRIX](docs/TEST_MATRIX.md)；最近实际结果见 [VERIFICATION](docs/VERIFICATION.md#musical-legibility-2026-09-27)。
 
 `npm run preview` 可预览生产构建。浏览器交互验收记录见 [docs/VERIFICATION.md](docs/VERIFICATION.md)。
 

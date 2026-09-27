@@ -28,12 +28,12 @@ class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean
   }
 }
 
-export function Scene({ score, world, plan, preset, playback, cameraController, viewMode, visibilityMode, fitRequest, follow, onNavigate }: {
+export function Scene({ score, world, plan, preset, playback, cameraController, viewMode, visibilityMode, fitRequest, follow, onNavigate, focusTrackId }: {
   score: NormalizedScore; world: WorldModel; plan: PerformancePlan; preset: VisualPreset; playback: PlaybackSnapshot
   cameraController: CameraController; viewMode: ViewMode; visibilityMode: VisibilityMode; fitRequest: number
-  follow: boolean; onNavigate: () => void
+  follow: boolean; onNavigate: () => void; focusTrackId?: string
 }) {
-  const model = useMemo(() => createMusicalPresentation(score, preset.presentation), [score, preset.presentation])
+  const model = useMemo(() => createMusicalPresentation(score, preset.presentation, focusTrackId), [score, preset.presentation, focusTrackId])
   const ensemble = useMemo(() => createEnsemblePresentation(score, model), [score, model])
   const followPosition = useMemo(() => viewMode === 'stream'
     ? (time: number) => streamCameraTarget(model, time)
@@ -55,14 +55,14 @@ export function Scene({ score, world, plan, preset, playback, cameraController, 
         <CameraRig bounds={cameraBounds} config={cameraConfig} controller={cameraController} fitRequest={fitRequest} follow={viewMode !== 'ensemble' && follow} travel={viewMode === 'stream'} followPosition={followPosition} playback={playback} onNavigate={onNavigate} />
         <EnvironmentRenderer config={environment} bounds={world.bounds} />
         {viewMode === 'constellation' ? <>
-          <WorldRenderer world={world} score={score} model={model} theme={preset.theme} playback={playback} visibilityMode={visibilityMode} presentation={preset.presentation} />
+          <WorldRenderer world={world} score={score} model={model} theme={preset.theme} playback={playback} visibilityMode={visibilityMode} presentation={preset.presentation} focusTrackId={focusTrackId} />
           {plan.performers.map(performer => <group key={performer.id}>
             <TrajectoryRenderer performer={performer} theme={preset.theme} visibilityMode={visibilityMode} playback={playback} />
             <PerformerRenderer performer={performer} theme={preset.theme} effects={preset.effects} playback={playback} />
           </group>)}
           <EffectsRenderer world={world} plan={plan} effects={preset.effects} theme={preset.theme} playback={playback} />
-        </> : viewMode === 'stream' ? <StreamRenderer model={model} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} />
-          : <EnsembleRenderer model={ensemble} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} />}
+        </> : viewMode === 'stream' ? <StreamRenderer model={model} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} focusTrackId={focusTrackId} />
+          : <EnsembleRenderer model={ensemble} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} focusTrackId={focusTrackId} />}
       </Canvas>
     </SceneBoundary>
   </div>

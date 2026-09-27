@@ -10,8 +10,8 @@ import type { PlaybackSnapshot } from './types'
 const LINE_VERTICES = ENSEMBLE_BUDGET * 48
 const pointOnArc = (angle: number, radius: number, z = 0): Vec3 => ({ x: Math.cos(angle) * radius, y: Math.sin(angle) * radius, z })
 
-export function EnsembleRenderer({ model, theme, effects, presentation, playback }: {
-  model: EnsemblePresentation; theme: VisualTheme; effects: EffectProfile; presentation: PresentationConfig; playback: PlaybackSnapshot
+export function EnsembleRenderer({ model, theme, effects, presentation, playback, focusTrackId }: {
+  model: EnsemblePresentation; theme: VisualTheme; effects: EffectProfile; presentation: PresentationConfig; playback: PlaybackSnapshot; focusTrackId?: string
 }) {
   const stage = useRef<Group>(null)
   const notes = useRef<InstancedMesh>(null)
@@ -66,20 +66,21 @@ export function EnsembleRenderer({ model, theme, effects, presentation, playback
       points.set(note.id, point)
       const state = states.get(note.id)!
       const lead = model.source.leadIds.has(note.id)
-      drawPath(ensemblePath(model, note, time), lead ? theme.palette.chord : theme.palette.note, state.opacity * (lead ? 0.24 : 0.16))
-      const radius = theme.nodeStyle.radius * (lead ? 0.9 : 0.7) * state.scale * (0.7 + note.velocity * 0.35)
+      const focus = !focusTrackId || note.trackId === focusTrackId ? 1 : 0.4
+      drawPath(ensemblePath(model, note, time), lead ? theme.palette.chord : theme.palette.note, state.opacity * (lead ? 0.24 : 0.16) * focus)
+      const radius = theme.nodeStyle.radius * (lead ? 0.9 : 0.7) * state.scale * (0.7 + note.velocity * 0.35) * (focusTrackId && focus === 1 ? 1.18 : 1)
       scratch.object.position.set(point.x, point.y, point.z)
       scratch.object.scale.setScalar(radius)
       scratch.object.updateMatrix()
       notes.current!.setMatrixAt(i, scratch.object.matrix)
-      scratch.color.set(lead ? theme.palette.chord : theme.palette.note).multiplyScalar(state.opacity)
+      scratch.color.set(lead ? theme.palette.chord : theme.palette.note).multiplyScalar(state.opacity * focus)
       notes.current!.setColorAt(i, scratch.color)
       const age = time - note.startTime
       if (effects.hit.enabled && age >= 0 && age < effects.hit.lifetime && accentCount < 16) {
         scratch.object.scale.setScalar(radius * (1.5 + age / effects.hit.lifetime * 2))
         scratch.object.updateMatrix()
         accents.current!.setMatrixAt(accentCount, scratch.object.matrix)
-        scratch.color.set(lead ? theme.palette.chord : theme.palette.note).multiplyScalar(1 - age / effects.hit.lifetime)
+        scratch.color.set(lead ? theme.palette.chord : theme.palette.note).multiplyScalar((1 - age / effects.hit.lifetime) * focus)
         accents.current!.setColorAt(accentCount++, scratch.color)
       }
     })
@@ -101,7 +102,7 @@ export function EnsembleRenderer({ model, theme, effects, presentation, playback
         const length = Math.hypot(point.x - a.x, point.y - a.y) || 1
         const midpoint = { x: (a.x + point.x) * 0.54 - (point.y - a.y) / length * 0.16,
           y: (a.y + point.y) * 0.54 + (point.x - a.x) / length * 0.16, z: (a.z + point.z) * 0.5 - 0.02 }
-        drawPath([a, midpoint, point], theme.palette.note, opacity * 0.28)
+        drawPath([a, midpoint, point], theme.palette.note, opacity * 0.28 * (focusTrackId && note.trackId !== focusTrackId ? 0.4 : 1))
       }
       lastByVoice.set(note.trackId, note)
       const remaining = Math.max(0, note.startTime + note.duration - Math.max(time, note.startTime))
@@ -109,7 +110,8 @@ export function EnsembleRenderer({ model, theme, effects, presentation, playback
         const radius = Math.hypot(point.x, point.y)
         const length = Math.min(remaining, 3) * 0.13
         for (let i = 0; i < 8; i++) draw(pointOnArc(placement.angle + length * i / 8, radius, point.z),
-          pointOnArc(placement.angle + length * (i + 1) / 8, radius, point.z), theme.palette.chord, opacity * 0.65)
+          pointOnArc(placement.angle + length * (i + 1) / 8, radius, point.z), theme.palette.chord,
+          opacity * 0.65 * (focusTrackId && note.trackId !== focusTrackId ? 0.4 : 1))
       }
       const chord = model.chordByNote.get(note.id)
       if (chord && Math.abs(note.startTime - time) < 1.5) {
@@ -123,7 +125,8 @@ export function EnsembleRenderer({ model, theme, effects, presentation, playback
       const members = [...chord].sort((a, b) => model.placements.get(a.id)!.angle - model.placements.get(b.id)!.angle)
       for (let i = 1; i < Math.min(members.length, 5); i++) {
         const a = members[i - 1]!, b = members[i]!
-        draw(points.get(a.id)!, points.get(b.id)!, theme.palette.chord, Math.min(states.get(a.id)!.opacity, states.get(b.id)!.opacity) * 0.32)
+        draw(points.get(a.id)!, points.get(b.id)!, theme.palette.chord,
+          Math.min(states.get(a.id)!.opacity, states.get(b.id)!.opacity) * 0.32 * (focusTrackId && a.trackId !== focusTrackId && b.trackId !== focusTrackId ? 0.4 : 1))
       }
     }
     lines.current.setDrawRange(0, vertex)

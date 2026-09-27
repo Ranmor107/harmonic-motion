@@ -46,9 +46,13 @@ export function createDisplayIndex(world: WorldModel) {
 }
 
 export function selectDisplayNodes(index: ReturnType<typeof createDisplayIndex>, time: number, mode: VisibilityMode,
-  config: PresentationConfig['visibility'], detail: number) {
-  const local = nearestNodes(index.nodes, time, mode === 'path' ? config.activePast : config.contextPast,
-    mode === 'path' ? config.activeFuture : config.contextFuture, mode === 'path' ? config.pathMaxNodes : config.focusMaxNodes)
+  config: PresentationConfig['visibility'], detail: number, focusNodes: readonly MusicNode[] = []) {
+  const past = mode === 'path' ? config.activePast : config.contextPast
+  const future = mode === 'path' ? config.activeFuture : config.contextFuture
+  const localLimit = mode === 'path' ? config.pathMaxNodes : config.focusMaxNodes
+  const prioritized = focusNodes.length ? nearestNodes(focusNodes, time, past, future, Math.ceil(localLimit * 0.6)) : []
+  const local = [...new Map([...prioritized, ...nearestNodes(index.nodes, time, past, future, localLimit)]
+    .map(node => [node.id, node])).values()].slice(0, localLimit)
   if (mode !== 'overview') return local
   const limit = complexityPolicy(index.nodes.length, detail).overviewNodes
   if (index.nodes.length <= limit) return index.nodes

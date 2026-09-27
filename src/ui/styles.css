@@ -7,10 +7,10 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 360px; overflow: hidden; }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 button { cursor: pointer; color: inherit; transition: color 160ms, background 160ms, border-color 160ms; }
 button:disabled { opacity: .35; cursor: default; }
-button:focus-visible, a:focus-visible, input:focus-visible { outline: 1px solid var(--brass); outline-offset: 4px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 1px solid var(--brass); outline-offset: 4px; }
 button { border: 0; background: transparent; }
 .studio { height: 100dvh; min-height: 520px; display: grid; grid-template-rows: 78px minmax(0, 1fr) 87px; background: var(--ink); }
 .studio.restoring { place-items: center; color: var(--muted); font-size: 13px; }
@@ -54,6 +54,7 @@ h1 { margin: 20px 0 27px; font: 400 33px/1.08 'Iowan Old Style', Baskerville, Ge
 .reading-guide { width: 245px; border-color: #ffffff24; }.reading-guide p:last-child { margin: 9px 0 0; color: #bfc9d0; font-size: 11px; line-height: 1.5; }
 .guide-close { position: absolute; right: 10px; top: 7px; color: var(--muted); font-size: 20px; }.guide-reopen { padding: 0; color: #c6d0d6; font-size: 11px; }.guide-reopen span { padding-left: 5px; }
 .live-reading { position: absolute; right: 32px; bottom: 40px; z-index: 3; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: none; max-width: 45%; }
+.focus-reading { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--brass); font-size: 10px; letter-spacing: .08em; }
 .pitch-reading { font: 24px/1.2 'Iowan Old Style', Georgia, serif; color: #607080; letter-spacing: .02em; text-align: right; }
 .pitch-reading.sounding { color: var(--brass); text-shadow: 0 0 25px #d6b88742; }
 .legend { display: flex; gap: 18px; color: var(--muted); font-size: 10px; }.legend span { display: flex; align-items: center; gap: 7px; }.legend i { width: 5px; height: 5px; border-radius: 50%; }
@@ -69,6 +70,8 @@ h1 { margin: 20px 0 27px; font: 400 33px/1.08 'Iowan Old Style', Baskerville, Ge
 .segmented button { flex: 1; border-bottom: 1px solid transparent; margin-bottom: -1px; padding: 9px 2px; color: #98a5b1; font-size: 11px; white-space: nowrap; }
 .segmented button:hover { color: var(--paper); }.segmented button[aria-pressed=true] { color: var(--brass); border-bottom-color: var(--brass); }
 .control-note { font-size: 11px; line-height: 1.5; color: var(--muted); margin: 13px 0 0; }
+.part-label { display: block; margin-bottom: 9px; color: #bdc5cc; font-size: 12px; }
+.part-select { width: 100%; min-width: 0; padding: 10px 11px; border: 1px solid #ffffff2b; background: #0c1118; color: var(--paper); font-size: 12px; }
 .camera-actions { display: flex; gap: 27px; margin-bottom: 17px; }
 .camera-actions button, .quiet-action { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 0; color: #bdc5cc; }
 .camera-actions svg, .quiet-action svg { width: 13px; height: 13px; }

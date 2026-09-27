@@ -3,7 +3,7 @@
 Purpose: 保留带日期、baseline 和适用边界的实际检查证据。
 Authority: 已发生验证的记录；不能作为未来提交自动通过的保证。
 Update when: 新一轮检查产生结果，或旧证据被确认需更正。
-Last verified: 2026-09-27；最新证据见 Continuity 与跟随镜头缩放，早期记录保留其日期和适用边界。
+Last verified: 2026-09-27；最新证据见逐曲轨道聚焦，早期记录保留其日期和适用边界。
 
 日期：2026-09-17。环境：Windows、Node.js 24.18.0、Codex 内置 Chromium 浏览器，1280 × 720。
 
@@ -234,3 +234,20 @@ Ensemble 保持各轨道的稳定弧区，按发声状态、主线显著性、�
 | 启动器 | PowerShell 语法检查及 `-NoBrowser` 启动/清理通过；专用 Edge 窗口两次启动并关闭后脚本均正常退出，5176 端口释放，`%LOCALAPPDATA%\HarmonicMotion\Profiles\msedge` 目录保留，锁文件消失，第二次能复用该目录 |
 
 验证边界：内置浏览器完成了真正的导入、刷新恢复和删除回归；外部 Edge 启动后浏览器自动化连接中断，因此没有逐项核对它第二次打开后的页面曲库内容，也没有本轮 390 px 新截图。启动器的稳定目录和进程生命周期已实测。用户反馈当前音色可接受，但本轮没有声卡信号采集、跨设备试听或端到端延迟测量；不将主观反馈视作音质认证。
+
+<a id="musical-legibility-2026-09-27"></a>
+## Musical legibility · choose a part to follow · 2026-09-27
+
+实施基线 `07a4f38`。轨道选择只进入只读 presentation、三种 renderer 和 App 的逐曲本机偏好；没有修改 MIDI、domain score、geometry、choreography、playback 或 audio。用户授权的《帕赫贝尔D大调卡农》在浏览器已保存曲库中只读使用，`midi/` 源文件未修改或提交。
+
+| 检查 | 结果 |
+| --- | --- |
+| 先写失败测试 | 指定轨道主线及密集显示预算的新增断言在实现前失败，完成后通过 |
+| `npm run test` | PASS，11 文件 / 80 测试；包括 Auto 回归、无效轨回退、指定轨主线、其他轨保留和密集段预算 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS，含 `tsc -b`；JS 1,437.43 kB / gzip 391.17 kB，CSS 13.12 kB / gzip 3.76 kB；既有 >500 kB 提示仍在 |
+| `git diff --check` | PASS；未跟踪的 `midi/` 与产品计划 `.docx` 保持排除 |
+| 浏览器交互 | 三轨 Quick Study 的 Auto→Bass→Harmony→Melody，Constellation/Stream/Ensemble 切换、12 秒 seek、播放中改焦点、暂停与刷新均正常；焦点按曲目隔离，切到单轨卡农为 Auto，返回示例仍记得选择。播放中时间从约 17.6 秒继续到 21.1 秒，没有归零；卡农中文标题正常 |
+| 浏览器画面 | 1280×720 截图确认三视图真实绘制：Stream 暖色主线与低对比伴随组、Constellation 焦点关系与背景节点、Ensemble 焦点音符与其他声部弧区均可见；初次背景过暗后将上下文亮度提高并复看。390×844 的抽屉/选择器完整可见且可滚动；浏览器 error 日志为空 |
+
+上述交互说明焦点切换没有重置浏览器歌曲时间；代码检查确认 App 不改变 compiled score/world/plan 引用，音频加载 effect 只依赖 score。它不等同于真实声卡听音或对任意多轨作品的语义判断。浏览器可访问性树列出 Canvas fallback 文案，但同次截图实际有 3D 绘制，因此以截图判断画面；外部 Edge 自动化连接失败，视觉检查使用内置浏览器。测试后已恢复原曲《帕赫贝尔D大调卡农》、Auto、Stream、原 Follow Off 和 00:00。未上传 GitHub，等待用户验收后决定。

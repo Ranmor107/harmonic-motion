@@ -3,7 +3,7 @@
 Purpose: 以任务为边界保存中型/跨模块工作的范围、理由、验证和完成标准。
 Authority: 实施上下文及其生命周期；长期事实归档后回到各 canonical 文档。
 Update when: plan 新建、范围或状态改变、完成归档。
-Last verified: 2026-09-27；归档 Continuity 实施并补声音验证状态。
+Last verified: 2026-09-27；归档 Musical legibility 本地实施并保留用户验收边界。
 
 ## 使用时机
 
@@ -24,6 +24,7 @@ plan 是实施边界，不是永久架构规范。真正的架构决策另用 [A
 
 | Plan | Status | Path | Evidence / next step |
 | --- | --- | --- | --- |
+| Musical legibility: choose a part to follow | Completed · local review ready | [completed plan](completed/2026-09-27-musical-legibility.md) | Auto / 指定轨道主线、三视图焦点与逐曲选择恢复；[本机验证](../VERIFICATION.md#musical-legibility-2026-09-27)通过，GitHub 上传待用户决定 |
 | Continuity foundation and follow-camera zoom | Completed | [completed plan](completed/2026-09-27-continuity-and-follow-zoom.md) | 本机曲库与暂停恢复、独立启动窗口资料保留及跟随缩放；[验证证据](../VERIFICATION.md#continuity-follow-zoom-2026-09-27) |
 | Listening Quality: default piano-like synthesis and sound controls | Active · measurement pending | [active plan](active/2026-09-26-listening-quality.md) | 用户接受当前音色；切曲 mock 与浏览器控制已验证；仍无真实输出/跨设备测量，见 [验证证据](../VERIFICATION.md#continuity-follow-zoom-2026-09-27) |
 | First Experience: Quick Study and clear first entry | Completed | [completed plan](completed/2026-09-26-first-experience.md) | `c80b6c5`；[验证证据](../VERIFICATION.md#first-experience-2026-09-26)。本轮实现完成，Milestone A 仍需外部用户验证 |

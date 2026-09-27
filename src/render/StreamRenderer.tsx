@@ -7,8 +7,8 @@ import { evaluateLead, noteLifecycle, visiblePhrases, visibleStreamNotes, type M
 import { upperBound } from '../utils/math'
 import type { PlaybackSnapshot } from './types'
 
-export function StreamRenderer({ model, theme, effects, presentation, playback }: {
-  model: MusicalPresentation; theme: VisualTheme; effects: EffectProfile; presentation: PresentationConfig; playback: PlaybackSnapshot
+export function StreamRenderer({ model, theme, effects, presentation, playback, focusTrackId }: {
+  model: MusicalPresentation; theme: VisualTheme; effects: EffectProfile; presentation: PresentationConfig; playback: PlaybackSnapshot; focusTrackId?: string
 }) {
   const notes = useRef<InstancedMesh>(null)
   const performer = useRef<Group>(null)
@@ -36,10 +36,12 @@ export function StreamRenderer({ model, theme, effects, presentation, playback }
       const point = model.positions.get(note.id)!
       scratch.object.position.set(point.x, point.y, point.z)
       const foreground = point.z > lead.z
-      scratch.object.scale.setScalar(theme.nodeStyle.radius * state.scale * (0.7 + note.velocity * 0.7) * (foreground ? 1 : 0.8))
+      const focused = !focusTrackId || note.trackId === focusTrackId
+      scratch.object.scale.setScalar(theme.nodeStyle.radius * state.scale * (0.7 + note.velocity * 0.7) * (foreground ? 1 : 0.8) * (focusTrackId && focused ? 1.18 : 1))
       scratch.object.updateMatrix()
       notes.current!.setMatrixAt(index, scratch.object.matrix)
-      scratch.color.set(model.leadIds.has(note.id) || state.phase === 'hit' || state.phase === 'active' ? theme.palette.chord : theme.palette.note).multiplyScalar(state.opacity * (foreground ? 1 : 0.62))
+      scratch.color.set(model.leadIds.has(note.id) || state.phase === 'hit' || state.phase === 'active' ? theme.palette.chord : theme.palette.note)
+        .multiplyScalar(state.opacity * (foreground ? 1 : 0.62) * (focused ? 1 : 0.4))
       notes.current!.setColorAt(index, scratch.color)
     })
     notes.current.count = visible.length
@@ -84,14 +86,15 @@ export function StreamRenderer({ model, theme, effects, presentation, playback }
       active.forEach(note => {
         const state = noteLifecycle(note, time, presentation.stream)
         const point = model.positions.get(note.id)!
-        draw(model.supportPaths.get(note.id)!, theme.palette.note, state.opacity * (point.z > lead.z ? 0.58 : 0.25))
+        draw(model.supportPaths.get(note.id)!, theme.palette.note, state.opacity * (point.z > lead.z ? 0.58 : 0.25) * (focusTrackId && note.trackId !== focusTrackId ? 0.4 : 1))
       })
     }
     // Sustained notes have short time-directed strokes instead of disappearing after the hit.
     for (const note of visible) {
       const point = model.positions.get(note.id)!
       const length = Math.min(note.duration, presentation.stream.leadInTime) * presentation.stream.timeScale
-      draw([point, { ...point, x: point.x + length }], model.leadIds.has(note.id) ? theme.palette.chord : theme.palette.note, noteLifecycle(note, time, presentation.stream).opacity * 0.22)
+      draw([point, { ...point, x: point.x + length }], model.leadIds.has(note.id) ? theme.palette.chord : theme.palette.note,
+        noteLifecycle(note, time, presentation.stream).opacity * 0.22 * (focusTrackId && note.trackId !== focusTrackId ? 0.4 : 1))
     }
     lines.current?.setDrawRange(0, vertex)
     ribbon.current?.setDrawRange(0, ribbonVertex / 3)

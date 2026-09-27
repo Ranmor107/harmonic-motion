@@ -18,6 +18,7 @@ export interface SavedPreferences {
   volume: number
   muted: boolean
   followViews: { constellation: boolean; stream: boolean; ensemble: boolean }
+  melodyTracks?: Record<string, string>
 }
 
 const DATABASE = 'harmonic-motion'

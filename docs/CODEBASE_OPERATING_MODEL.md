@@ -3,7 +3,7 @@
 Purpose: 按真实模块定位 ownership、输入输出、公共入口与最小修改邻域。
 Authority: 模块归属的主要记录；契约语义以 [ARCHITECTURE](ARCHITECTURE.md) 为准。
 Update when: 入口、依赖、公共符号、模块职责或测试归属发生变化。
-Last verified: 2026-09-26；更新 Demo 默认入口与测试归属，其他模块保留既有核对记录。
+Last verified: 2026-09-27；更新 Scene 的可选轨道焦点传递，其他模块保留既有核对记录。
 
 下面“允许/禁止”是维护边界，不声称全由工具强制。实际 lint 仅对 domain/engine/playback 禁止列出的框架、视觉模块导入及 `Math.random`；不覆盖全部跨层规则，也没有禁止全局 DOM API。具体见 [eslint.config.js](../eslint.config.js)。
 
@@ -142,7 +142,7 @@ Last verified: 2026-09-26；更新 Demo 默认入口与测试归属，其他模�
 - **Safe local changes**：材质解释、显示层过滤、既有参数的效果表现；保持绝对时间求值。
 - **Adjacent scope**：显示模式先看 visual 类型；交互操作再看 App；新增计划语义才需 domain/performance，不能从视觉需求直接倒推重写 planner。
 - **Must NOT decide**：音符时序、几何生成或编舞路线。
-- **关键连接**：Scene memoize musical presentation，传给两种 renderer；Constellation 正式 Performer/Trajectory 仍消费 PerformancePlan。WorldRenderer 只显示筛选后的关系曲线与和弦成员，不移动 WorldModel 节点。StreamRenderer 消费独立显示主线/伴随组；CameraRig 在实际宽高/fit 请求变化时取景，按 playback snapshot 跟随；用户平移 target 才退出跟随，滚轮改变距离保持跟随。
+- **关键连接**：Scene memoize musical presentation，按可选 MIDI 轨道焦点派生主线并传给三种 renderer；Constellation 正式 Performer/Trajectory 仍消费 PerformancePlan。WorldRenderer 只显示筛选后的关系曲线与和弦成员，不移动 WorldModel 节点。StreamRenderer 消费独立显示主线/伴随组；CameraRig 在实际宽高/fit 请求变化时取景，按 playback snapshot 跟随；用户平移 target 才退出跟随，滚轮改变距离保持跟随。
 
 <a id="state"></a>
 ## State / application composition
