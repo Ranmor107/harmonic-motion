@@ -5,7 +5,7 @@ Authority: 本轮实施计划；优先级见 [ROADMAP](../../ROADMAP.md)。
 Update when: 范围、方案、验证或完成状态变化。
 Last verified: 2026-09-28。
 
-Status: Active
+Status: Completed · local verified
 Source baseline: `9763f48`；用户未跟踪的 `midi/` 与产品计划 `.docx` 保持原样。本轮完成后可直接推送 GitHub。
 Related request / roadmap item: E · Long-session Comfort；用户授权继续开发并上传。2026-09-28 追加 Stream 的 Helix 细曲线恢复。
 Related ADR: none；复用现有播放时间和浏览器全屏契约。
@@ -78,7 +78,7 @@ README 记录操作和快捷键；CURRENT_STATE/ROADMAP 更新能力与状态；
 - [x] 全屏、快捷键、最近片段重听可用，控件焦点不被劫持。
 - [x] 时间和音频在 seek/重听/全屏切换时一致，世界/计划不变；音频调用由 mock/代码验证，真实声卡同步未测量。
 - [x] 自动检查和长曲浏览器验证通过，视觉舒适度问题有实际观察；真人疲劳评价仍待用户。
-- [ ] 文档与提交范围核对；用户素材保持原样，推送后确认远端提交。
+- [x] 文档与提交范围核对；用户素材保持原样，推送后确认远端提交。
 
 ## Execution notes and completion evidence
 
@@ -92,4 +92,6 @@ README 记录操作和快捷键；CURRENT_STATE/ROADMAP 更新能力与状态；
 
 责任层追加 render，presentation/camera 只读核对；不变更公开契约、score/world/plan/audio。此项是用户明确的新范围，不是舒适度观察引出的推测性重构。完成后重跑全量 test/lint/build，截图核对 Helix 细曲线与播放/seek；共用的模式切换与窄屏控制已通过本轮验证。
 
-本轮 11 文件 / 81 测试、lint、build 均通过；卡农从 0 连续播放 302 秒结束，后台返回与全屏/三视图期间进度连续。最后的 Helix 线条截图和 R 回放另行复测。完整证据见 [VERIFICATION](../../VERIFICATION.md#long-session-comfort-2026-09-27)。等待提交与远端确认后归档。
+本轮 11 文件 / 81 测试、lint、build 均通过；卡农从 0 连续播放 302 秒结束，后台返回与全屏/三视图期间进度连续。最后的 Helix 线条截图和 R 回放另行复测。完整证据见 [VERIFICATION](../../VERIFICATION.md#long-session-comfort-2026-09-27)。
+
+实现提交 `09f21c5` 已按用户授权推送；2026-09-28 通过 GitHub API 确认远端 main、本地 HEAD 与 origin/main 均为 `09f21c586de1ae8aeb5e0c8cebd05b7f65fe5bda`。本轮控制与验证范围完成并归档，Milestone E 的真人疲劳/舒适度评价仍待外部反馈。
