@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { BufferAttribute, BufferGeometry, Color, DoubleSide, Group, InstancedMesh, Mesh, MeshBasicMaterial, Object3D } from 'three'
+import { BufferAttribute, BufferGeometry, Color, Group, InstancedMesh, Mesh, MeshBasicMaterial, Object3D } from 'three'
 import type { EffectProfile, PresentationConfig, VisualTheme } from '../domain/visual'
 import type { Vec3 } from '../domain/world'
 import { evaluateLead, noteLifecycle, visiblePhrases, visibleStreamNotes, type MusicalPresentation } from '../visual/presentation/musicalPresentation'
@@ -17,12 +17,10 @@ export function StreamRenderer({ model, theme, effects, presentation, playback, 
   const positions = useRef<BufferAttribute>(null)
   const colors = useRef<BufferAttribute>(null)
   const lines = useRef<BufferGeometry>(null)
-  const ribbon = useRef<BufferGeometry>(null)
   const scratch = useMemo(() => ({ object: new Object3D(), color: new Color() }), [])
   const samples = presentation.relations.samples
   const capacity = (presentation.stream.maxVisibleNotes * 4 + 2) * samples * 2
   const buffers = useMemo(() => ({ positions: new Float32Array(capacity * 3), colors: new Float32Array(capacity * 4) }), [capacity])
-  const ribbonVertices = useMemo(() => new Float32Array(presentation.stream.maxVisibleNotes * samples * 6 * 3), [presentation.stream.maxVisibleNotes, samples])
   useFrame(({ camera }) => {
     const time = playback.current.time
     const lead = evaluateLead(model, time)
@@ -48,7 +46,6 @@ export function StreamRenderer({ model, theme, effects, presentation, playback, 
     notes.current.instanceMatrix.needsUpdate = true
     if (notes.current.instanceColor) notes.current.instanceColor.needsUpdate = true
     let vertex = 0
-    let ribbonVertex = 0
     const draw = (points: Vec3[], color: string, opacity: number) => {
       scratch.color.set(color)
       for (let i = 1; i < points.length && vertex + 2 <= capacity; i++) for (const p of [points[i - 1]!, points[i]!]) {
@@ -66,20 +63,6 @@ export function StreamRenderer({ model, theme, effects, presentation, playback, 
       if (start > end) continue
       const points = Array.from({ length: samples + 1 }, (_, step) => evaluateLead(model, start + (end - start) * step / samples))
       draw(points, theme.palette.chord, 0.52 + b.note.velocity * 0.42)
-      // A narrow, twisting surface gives perspective a readable width without post effects.
-      for (let j = 1; j < points.length && ribbonVertex + 18 <= ribbonVertices.length; j++) {
-        const p = points[j - 1]!, q = points[j]!
-        const dy = q.y - p.y, dz = q.z - p.z
-        const length = Math.hypot(dy, dz)
-        const width = 0.07 + b.note.velocity * 0.06
-        const wy = length > 0.0001 ? -dz / length * width : width
-        const wz = length > 0.0001 ? dy / length * width : 0
-        for (const [point, side] of [[p, -1], [p, 1], [q, 1], [p, -1], [q, 1], [q, -1]] as const) {
-          ribbonVertices[ribbonVertex++] = point.x
-          ribbonVertices[ribbonVertex++] = point.y + wy * side
-          ribbonVertices[ribbonVertex++] = point.z + wz * side
-        }
-      }
     }
     for (const phrase of visiblePhrases(model, visible)) {
       const active = phrase.notes.filter(note => visibleIds.has(note.id))
@@ -97,9 +80,6 @@ export function StreamRenderer({ model, theme, effects, presentation, playback, 
         noteLifecycle(note, time, presentation.stream).opacity * 0.22 * (focusTrackId && note.trackId !== focusTrackId ? 0.4 : 1))
     }
     lines.current?.setDrawRange(0, vertex)
-    ribbon.current?.setDrawRange(0, ribbonVertex / 3)
-    const ribbonAttribute = ribbon.current?.getAttribute('position')
-    if (ribbonAttribute) ribbonAttribute.needsUpdate = true
     positions.current.needsUpdate = true
     colors.current.needsUpdate = true
     if (hit.current) {
@@ -127,10 +107,6 @@ export function StreamRenderer({ model, theme, effects, presentation, playback, 
   })
   const style = theme.performerStyle
   return <group>
-    <mesh frustumCulled={false}>
-      <bufferGeometry ref={ribbon}><bufferAttribute attach="attributes-position" args={[ribbonVertices, 3]} /></bufferGeometry>
-      <meshBasicMaterial color={theme.palette.chord} side={DoubleSide} transparent opacity={0.24} depthWrite={false} />
-    </mesh>
     <lineSegments frustumCulled={false}>
       <bufferGeometry ref={lines}><bufferAttribute ref={positions} attach="attributes-position" args={[buffers.positions, 3]} /><bufferAttribute ref={colors} attach="attributes-color" args={[buffers.colors, 4]} /></bufferGeometry>
       <lineBasicMaterial vertexColors transparent opacity={0.95} depthWrite={false} />

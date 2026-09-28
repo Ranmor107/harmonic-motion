@@ -1,8 +1,10 @@
-export function Icon({ name }: { name: 'play' | 'pause' | 'restart' | 'upload' | 'regenerate' | 'fit' | 'volume' | 'muted' }) {
+export function Icon({ name }: { name: 'play' | 'pause' | 'restart' | 'replay' | 'fullscreen' | 'upload' | 'regenerate' | 'fit' | 'volume' | 'muted' }) {
   const paths = {
     play: 'm8 5 11 7-11 7Z',
     pause: 'M8 5v14M16 5v14',
     restart: 'M3 10a9 9 0 1 1 2 8M3 4v6h6',
+    replay: 'M4 10a8 8 0 1 1 2 7M4 5v5h5M12 8v5l3 2',
+    fullscreen: 'M8 3H3v5m13-5h5v5M8 21H3v-5m13 5h5v-5',
     upload: 'M12 16V3m-5 5 5-5 5 5M4 15v6h16v-6',
     regenerate: 'M20 7h-5l5-5v5a9 9 0 0 0-15 1M4 17h5l-5 5v-5a9 9 0 0 0 15-1',
     fit: 'M8 3H3v5m13-5h5v5M8 21H3v-5m13 5h5v-5',

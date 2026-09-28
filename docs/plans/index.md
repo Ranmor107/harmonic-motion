@@ -24,6 +24,7 @@ plan 是实施边界，不是永久架构规范。真正的架构决策另用 [A
 
 | Plan | Status | Path | Evidence / next step |
 | --- | --- | --- | --- |
+| Long-session comfort: viewing controls and reliability | Active | [active plan](active/2026-09-27-long-session-comfort.md) | 全屏、键盘播放/跳转、最近片段重听及长曲实测；本轮可上传 GitHub |
 | Musical legibility: choose a part to follow | Completed · local review ready | [completed plan](completed/2026-09-27-musical-legibility.md) | `7383b9f`；Auto / 指定轨道主线、三视图焦点与逐曲选择恢复；[本机验证](../VERIFICATION.md#musical-legibility-2026-09-27)通过，GitHub 上传待用户决定 |
 | Continuity foundation and follow-camera zoom | Completed | [completed plan](completed/2026-09-27-continuity-and-follow-zoom.md) | 本机曲库与暂停恢复、独立启动窗口资料保留及跟随缩放；[验证证据](../VERIFICATION.md#continuity-follow-zoom-2026-09-27) |
 | Listening Quality: default piano-like synthesis and sound controls | Active · measurement pending | [active plan](active/2026-09-26-listening-quality.md) | 用户接受当前音色；切曲 mock 与浏览器控制已验证；仍无真实输出/跨设备测量，见 [验证证据](../VERIFICATION.md#continuity-follow-zoom-2026-09-27) |

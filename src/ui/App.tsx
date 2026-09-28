@@ -28,6 +28,7 @@ export function App() {
   const [playback, setPlayback] = useState<PlaybackState>({ status: 'stopped', time: 0, duration: score.duration })
   const snapshot = useRef(playback)
   const input = useRef<HTMLInputElement>(null)
+  const studio = useRef<HTMLElement>(null)
   const drawerTrigger = useRef<HTMLButtonElement>(null)
   const drawerClose = useRef<HTMLButtonElement>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -44,6 +45,7 @@ export function App() {
   const [entered, setEntered] = useState(false)
   const [guideOpen, setGuideOpen] = useState(true)
   const [fitRequest, setFitRequest] = useState(0)
+  const [fullscreen, setFullscreen] = useState(false)
   const [followViews, setFollowViews] = useState({ constellation: false, stream: true, ensemble: false })
   const [melodyTracks, setMelodyTracks] = useState<Record<string, string>>({})
   const importRevision = useRef(0)
@@ -71,6 +73,12 @@ export function App() {
 
   useEffect(() => {
     document.title = `${branding.name} — ${branding.descriptor}`
+  }, [])
+
+  useEffect(() => {
+    const syncFullscreen = () => setFullscreen(document.fullscreenElement === studio.current)
+    document.addEventListener('fullscreenchange', syncFullscreen)
+    return () => document.removeEventListener('fullscreenchange', syncFullscreen)
   }, [])
 
   useEffect(() => {
@@ -195,13 +203,61 @@ export function App() {
       return next
     })
   }
-  const togglePlayback = async () => {
+  const togglePlayback = useCallback(async () => {
     setError('')
     if (controller.clock.getState().status === 'playing') { controller.pause(); persistNow(); return }
     setStarting(true)
     try { await controller.play(); setEntered(true) } catch { setError('Audio could not start. Check your browser audio settings and press Play again.') }
     finally { setStarting(false) }
-  }
+  }, [controller, persistNow])
+
+  const seekBy = useCallback((seconds: number) => {
+    controller.seek(controller.clock.getCurrentTime() + seconds)
+    snapshot.current = controller.clock.getState()
+    setPlayback(snapshot.current)
+    persistNow()
+  }, [controller, persistNow])
+
+  const replayRecent = useCallback(() => {
+    const state = controller.clock.getState()
+    controller.seek(Math.max(0, state.time - 10))
+    snapshot.current = controller.clock.getState()
+    setPlayback(snapshot.current)
+    persistNow()
+    if (state.status !== 'playing') void togglePlayback()
+  }, [controller, persistNow, togglePlayback])
+
+  const toggleFullscreen = useCallback(async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen()
+      else await studio.current?.requestFullscreen()
+    } catch { setError('Fullscreen is unavailable in this browser. You can still use the windowed view.') }
+  }, [])
+
+  useEffect(() => {
+    if (!ready) return
+    const shortcut = (event: KeyboardEvent) => {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing || busy || starting) return
+      if (event.key === 'Escape' && fullscreen) {
+        event.preventDefault()
+        void document.exitFullscreen()
+        return
+      }
+      const target = event.target
+      if (target instanceof Element && (target.closest('button, a, input, select, textarea, [role="button"]') ||
+        (target instanceof HTMLElement && target.isContentEditable))) return
+      if (!['Space', 'ArrowLeft', 'ArrowRight', 'KeyR', 'KeyF'].includes(event.code)) return
+      event.preventDefault()
+      if (event.repeat) return
+      if (event.code === 'Space') void togglePlayback()
+      else if (event.code === 'ArrowLeft') seekBy(-5)
+      else if (event.code === 'ArrowRight') seekBy(5)
+      else if (event.code === 'KeyR') replayRecent()
+      else void toggleFullscreen()
+    }
+    window.addEventListener('keydown', shortcut)
+    return () => window.removeEventListener('keydown', shortcut)
+  }, [ready, busy, starting, fullscreen, togglePlayback, seekBy, replayRecent, toggleFullscreen])
 
   const onLoad = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
@@ -266,7 +322,7 @@ export function App() {
 
   if (!ready) return <main className="studio restoring">Restoring your local library…</main>
 
-  return <main className="studio">
+  return <main ref={studio} className="studio">
     <header className="topbar">
       <a className="brand" href="./" aria-label={`${branding.name} home`}>
         <svg className="brand-motif" viewBox="0 0 62 36" aria-hidden="true">
@@ -283,7 +339,9 @@ export function App() {
       <button ref={drawerTrigger} className="drawer-trigger" aria-controls="controls-drawer" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(open => !open)}>Controls <span aria-hidden="true">☷</span></button>
     </header>
 
-    <section className={`world-stage ${firstVisit ? 'is-intro' : ''} ${showGuide ? 'has-guide' : ''}`} aria-label="Music world">
+    <section className={`world-stage ${firstVisit ? 'is-intro' : ''} ${showGuide ? 'has-guide' : ''}`} aria-label="Music world" tabIndex={0} onPointerDown={event => {
+      if (event.target instanceof Element && !event.target.closest('button, a, input, select, textarea')) event.currentTarget.focus({ preventScroll: true })
+    }}>
       <Scene score={score} world={world} plan={plan} preset={preset} playback={snapshot} cameraController={StaticCamera} viewMode={viewMode} visibilityMode={visibilityMode} focusTrackId={focusTrackId} fitRequest={fitRequest} follow={follow} onNavigate={() => setFollow(false)} />
       <div className="score-card">
         <p className="eyebrow">Opus {String(sessionIndex + 1).padStart(2, '0')} / {score.metadata.source === 'demo' ? 'Quick Study' : 'Local score'}</p>
@@ -340,7 +398,9 @@ export function App() {
       <section className="control-section"><h2>Camera</h2><div className="camera-actions">
         <button onClick={fit}><Icon name="fit" />Fit {viewMode !== 'constellation' ? 'stage' : 'world'}</button>
         <button onClick={() => { setFollow(false); setFitRequest(value => value + 1) }}>Reset</button>
-      </div>{viewMode !== 'ensemble' && <button className="setting-toggle" onClick={() => { setFollow(!follow); if (!follow) setFitRequest(value => value + 1) }} aria-pressed={follow}>Follow performer <span>{follow ? 'On' : 'Off'}</span></button>}</section>
+        <button onClick={() => void toggleFullscreen()} aria-pressed={fullscreen} aria-keyshortcuts="F"><Icon name="fullscreen" />{fullscreen ? 'Exit full' : 'Fullscreen'}</button>
+      </div>{viewMode !== 'ensemble' && <button className="setting-toggle" onClick={() => { setFollow(!follow); if (!follow) setFitRequest(value => value + 1) }} aria-pressed={follow}>Follow performer <span>{follow ? 'On' : 'Off'}</span></button>}
+      <p className="control-note">Stage shortcuts: Space play/pause · ←/→ 5s · R replay 10s · F fullscreen. Esc exits fullscreen.</p></section>
       <section className="control-section"><h2>Visual</h2><button className="setting-toggle" onClick={toggleEffects} aria-pressed={preset.effects.hit.enabled}>Performance effects <span>{preset.effects.hit.enabled ? 'On' : 'Off'}</span></button><button className="quiet-action" onClick={regenerate} disabled={busy}><Icon name="regenerate" />Regenerate constellation</button></section>
       <section className="control-section"><h2>Sound</h2><label className="volume-label" htmlFor="master-volume">Volume <span>{Math.round(volume * 100)}%</span></label><input id="master-volume" className="volume-range" type="range" min="0" max="100" value={Math.round(volume * 100)} aria-valuetext={`${Math.round(volume * 100)} percent`} onChange={event => {
         const next = Number(event.target.value) / 100
@@ -359,12 +419,14 @@ export function App() {
 
     <footer className="transport">
       <div className="transport-primary">
-        <button className="play-button" onClick={() => void togglePlayback()} disabled={busy || starting} aria-label={playing ? 'Pause' : 'Play'}><Icon name={playing ? 'pause' : 'play'} /></button>
+        <button className="play-button" onClick={() => void togglePlayback()} disabled={busy || starting} aria-label={playing ? 'Pause' : 'Play'} aria-keyshortcuts="Space"><Icon name={playing ? 'pause' : 'play'} /></button>
         <button className="track-step" aria-label="Previous score" disabled={sessionIndex <= 0 || busy || starting} onClick={() => switchScore(sessions[sessionIndex - 1]!.id)}>‹</button>
         <button className="track-step" aria-label="Next score" disabled={sessionIndex >= sessions.length - 1 || busy || starting} onClick={() => switchScore(sessions[sessionIndex + 1]!.id)}>›</button>
         <span className="time current-time">{timeLabel(playback.time)}</span>
         <div className="timeline-wrap">
-          <input className="timeline" type="range" aria-label="Song position" min={0} max={score.duration} step={0.001} value={playback.time} style={{ background: `linear-gradient(to right, var(--brass) ${progress}%, var(--line) ${progress}%)` }} onChange={event => {
+          <input className="timeline" type="range" aria-label="Song position" min={0} max={score.duration} step={0.001} value={playback.time} style={{ background: `linear-gradient(to right, var(--brass) ${progress}%, var(--line) ${progress}%)` }} onKeyDown={event => {
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); if (!event.repeat) seekBy(event.key === 'ArrowLeft' ? -5 : 5) }
+          }} onChange={event => {
             controller.seek(Number(event.target.value))
             snapshot.current = controller.clock.getState()
             setPlayback(snapshot.current)
@@ -373,6 +435,7 @@ export function App() {
           <div className="timeline-ticks" aria-hidden="true">{[0, 0.25, 0.5, 0.75, 1].map(fraction => <span key={fraction} style={{ left: `${fraction * 100}%` }}>{timeLabel(fraction * score.duration)}</span>)}</div>
         </div>
         <span className="time total-time">{timeLabel(score.duration)}</span>
+        <button className="replay-button" aria-label="Replay last 10 seconds" title="Replay last 10 seconds (R)" aria-keyshortcuts="R" onClick={replayRecent} disabled={busy || starting || score.duration === 0}><Icon name="replay" /></button>
         <button className="restart-button" aria-label="Restart" onClick={() => { setError(''); void controller.restart().catch(() => setError('Audio could not start. Press Play to try again.')) }} disabled={busy || starting}><Icon name="restart" /></button>
         <button className="mute-button" aria-label={effectivelyMuted ? 'Unmute audio' : 'Mute audio'} aria-pressed={effectivelyMuted} title={effectivelyMuted ? 'Unmute audio' : 'Mute audio'} onClick={toggleMute}><Icon name={effectivelyMuted ? 'muted' : 'volume'} /></button>
         <button className="import-button" aria-label="Add MIDI" onClick={() => input.current?.click()} disabled={busy}><Icon name="upload" /><span>{busy ? 'Reading…' : 'Add MIDI'}</span></button>

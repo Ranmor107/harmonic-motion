@@ -3,7 +3,7 @@
 Purpose: 保留带日期、baseline 和适用边界的实际检查证据。
 Authority: 已发生验证的记录；不能作为未来提交自动通过的保证。
 Update when: 新一轮检查产生结果，或旧证据被确认需更正。
-Last verified: 2026-09-27；最新证据见逐曲轨道聚焦，早期记录保留其日期和适用边界。
+Last verified: 2026-09-28；最新证据见长时间观看控制，早期记录保留其日期和适用边界。
 
 日期：2026-09-17。环境：Windows、Node.js 24.18.0、Codex 内置 Chromium 浏览器，1280 × 720。
 
@@ -251,3 +251,23 @@ Ensemble 保持各轨道的稳定弧区，按发声状态、主线显著性、�
 | 浏览器画面 | 1280×720 截图确认三视图真实绘制：Stream 暖色主线与低对比伴随组、Constellation 焦点关系与背景节点、Ensemble 焦点音符与其他声部弧区均可见；初次背景过暗后将上下文亮度提高并复看。390×844 的抽屉/选择器完整可见且可滚动；浏览器 error 日志为空 |
 
 上述交互说明焦点切换没有重置浏览器歌曲时间；代码检查确认 App 不改变 compiled score/world/plan 引用，音频加载 effect 只依赖 score。它不等同于真实声卡听音或对任意多轨作品的语义判断。浏览器可访问性树列出 Canvas fallback 文案，但同次截图实际有 3D 绘制，因此以截图判断画面；外部 Edge 自动化连接失败，视觉检查使用内置浏览器。测试后已恢复原曲《帕赫贝尔D大调卡农》、Auto、Stream、原 Follow Off 和 00:00。未上传 GitHub，等待用户验收后决定。
+
+<a id="long-session-comfort-2026-09-27"></a>
+## Long-session Comfort · viewing controls · 2026-09-27–28
+
+实施基线 `9763f48`。新增 UI 的全屏、少量键盘操作及最近 10 秒重听；按用户后续纠正将 Stream 恢复为 Helix 细曲线，去掉宽带面。复用既有 controller，不修改音乐核心、相机或显示模型。用户素材和产品计划 `.docx` 保持未跟踪，不进入提交。
+
+| 检查 | 结果 |
+| --- | --- |
+| 定向 playback + audio | PASS，2 文件 / 12 测试；最近片段回退在播放中保持 playing，暂停时退至 0 后可恢复，音频只加载一次 |
+| `npm run test` | PASS，11 文件 / 81 测试 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS，含 `tsc -b`；最终 JS 1,439.08 kB / gzip 391.70 kB，CSS 13.28 kB / gzip 3.78 kB；既有 >500 kB 提示保留 |
+| 文档与差异 | PASS，本轮 7 份 Markdown 的 116 条本地文件链接均可解析，`git diff --check` 通过。全仓扫描另发现旧 launcher plan 的 `../TEST_MATRIX.md` 链接失效，基线已存在，未在本轮修复 |
+| 浏览器控制 | 内置 Chromium：舞台 Space 播放/暂停、←/→ 5 秒、R 重听、底栏重听按钮在暂停/结束时从回退点播放；Quick Study 的 5 秒回退正确钳制到 0；时间滑杆 ArrowRight 从 0 到 5 秒。音量滑杆方向键只把 40% 调至 41% 再回 40%，没有触发歌曲 seek |
+| 全屏 | 按钮与 F 可进入/退出；内置浏览器的原生 Escape 未自动退出，故 UI 明确调用退出，复测成功。连续播放中 2:23→2:48 的全屏进出没有归零 |
+| 长曲连续性 | 2026-09-28：卡农 1,956 notes / 302 秒，从 Restart 后 0 连续运行至 05:02 / Complete，中途没有 seek 或 pause。Stream Follow On 的中段画面可见；后台空白标签约 51 秒返回时从 1:24 推进至 2:15；Stream→Ensemble→Constellation→Stream 期间 3:06→4:08 时间连续 |
+| 画面与窄屏 | 390×844 的 transport 无横向溢出；时间轴刻度标签因拥挤而隐藏，当前位置、总时长和滑杆保留。桌面与全屏截图确认 WebGL 和当前结构实际绘制；浏览器 error 日志为空，Three.Clock 既有弃用警告仍在 |
+| Stream 最终线形 | 参照历史 Helix 的细曲线，仅删除宽带面 mesh 与生成缓冲；保留既有曲线采样、支持线、时长线、节点和焦点。卡农 20 秒截图可见主线/伴随线，未出现水平引导线；Play 从 20 到约 26 秒，R 回退到约 16 秒继续，再暂停到约 22 秒。最终 error 日志为空 |
+
+2026-09-27 初次长曲检查约 1:32 曾出现空画面；代码与偏好复核表明当时 Follow Off，固定镜头不会追踪持续前移的 Stream。Fit stage 开启 Follow 后恢复；2026-09-28 在 Follow On 下完成整曲，不将该观察误记为跟随计算故障，也没有为此修改 camera。整曲验证在最后删除宽带面之前完成；删除后单独复测了截图、播放/重听，并重跑全量 test/lint/build，没有声称再跑一遍完整长曲。自动检查与浏览器控制不能证明真实声卡输出或长期观看疲劳；尚无真人舒适度评价，未据此新增 Calm/Normal 或循环播放。

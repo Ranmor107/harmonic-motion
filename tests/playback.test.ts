@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { PlaybackClock } from '../src/playback/clock'
 import { PlaybackController } from '../src/playback/controller'
 import { NoteScheduler } from '../src/audio/scheduler'
-import { createDemoScore } from '../src/demo/score'
+import { createDemoScore, createQuickStudyScore } from '../src/demo/score'
 
 function setup(duration = 100) {
   let now = 10
@@ -121,6 +121,27 @@ describe('Playback coordination', () => {
     expect(audio.pause).toHaveBeenCalled()
     controller.dispose()
     expect(audio.dispose).toHaveBeenCalled()
+  })
+
+  it('replays a recent interval through the existing clock without reloading the score', async () => {
+    const { clock, advance } = setup()
+    const audio = audioMock()
+    const controller = new PlaybackController(clock, audio)
+    await controller.load(createQuickStudyScore())
+    await controller.play()
+    advance(18)
+    const target = Math.max(0, clock.getCurrentTime() - 10)
+    controller.seek(target)
+    expect(clock.getState().status).toBe('playing')
+    expect(clock.getCurrentTime()).toBeCloseTo(target)
+    expect(audio.seek).toHaveBeenLastCalledWith(target)
+    controller.pause()
+    controller.seek(Math.max(0, clock.getCurrentTime() - 10))
+    expect(clock.getState()).toMatchObject({ status: 'paused', time: 0 })
+    await controller.play()
+    expect(clock.getState().status).toBe('playing')
+    expect(audio.load).toHaveBeenCalledTimes(1)
+    controller.dispose()
   })
 
   it('does not start a late audio-unlock promise after pause', async () => {
