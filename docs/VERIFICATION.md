@@ -3,7 +3,7 @@
 Purpose: 保留带日期、baseline 和适用边界的实际检查证据。
 Authority: 已发生验证的记录；不能作为未来提交自动通过的保证。
 Update when: 新一轮检查产生结果，或旧证据被确认需更正。
-Last verified: 2026-09-28；最新证据见 Stream 线条撤销，早期记录保留其日期和适用边界。
+Last verified: 2026-09-28；最新证据见 Ink Stream，早期记录保留其日期和适用边界。
 
 日期：2026-09-17。环境：Windows、Node.js 24.18.0、Codex 内置 Chromium 浏览器，1280 × 720。
 
@@ -288,3 +288,40 @@ Ensemble 保持各轨道的稳定弧区，按发声状态、主线显著性、�
 | 用户状态 | 核对后恢复 Ensemble、原暂停位置、Auto、40% 音量及关闭的 Controls；未导入或删除曲目，未触碰用户未跟踪素材 |
 
 本次为局部撤销，没有重跑此前 302 秒整曲或真人试听；回退只影响绘制外观。产品路线图的下一阶段仍是 Capture & Share，仓库保留 Deferred 状态；本次说明下一轮候选，不据此启动新功能开发。
+
+<a id="ink-stream-2026-09-28"></a>
+## Ink Stream and coordinated UI · 2026-09-28
+
+实施基线 `1861bc4`，执行用户已认可的水墨 Stream 计划。新增纯视觉类型、Ink preset、独立批量 renderer、本地纸面淡景 SVG、绝对时间墨迹和一份本机风格偏好。Original / Ink 同步切换舞台与外围界面，仅在 Stream 生效。没有修改 MIDI、分析、geometry、choreography、playback、audio、CameraRig 或 musicalPresentation；用户素材未改写或提交。
+
+| 检查 | 结果 |
+| --- | --- |
+| 原版保留 | `StreamRenderer.tsx` blob 仍为 `d911059af053415c68c3f8b0d2853d2fe2849a42`，与撤销线条试改后的基线完全相同 |
+| 定向检查 | Ink / visual / session / engine 共 31 项先通过；追加资源缓存/失败重试后 Ink suite 8 项通过 |
+| `npm run test` | PASS，12 文件 / 89 测试；包括同 compiled/world/plan、共享 camera/presentation、效果关闭保留、密集预算、随机 seek 与生命周期边界、version 1 风格缺失/未知值局部回退、资源缓存/重试 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS，含 `tsc -b`；JS 1,452.12 kB / gzip 396.05 kB，CSS 18.03 kB / gzip 4.51 kB；既有 >500 kB 提示保留 |
+| 舞台与 UI | 1280×720 对照原版与 Ink：纸面、边缘淡景、墨心、叶形辅助笔触、主笔势和朱色运笔主角实际绘制；页头、中文标题/作品数据、Controls/曲库、transport 与焦点框同步换肤，无旧黑色遮罩。三轨 Quick Study 可选择 Harmony，其他声部仍可见；卡农中文标题正常 |
+| 实曲密集段 | 只读使用已授权卡农（1,956 notes / 302 秒）与《土耳其进行曲》（8 tracks / 2,833 notes / 789 同时起音组 / 203.64 秒）。后者最高 2 秒窗口为 42 notes，检查 179.2 秒：主线、和弦墨心、辅助关系和长音方向仍可读，没有大片扩散团遮盖结构；加入当前浏览器曲库，源 MIDI 保留未跟踪 |
+| 时间与资源 | 卡农从 0 连续演奏至 186.045 秒，随后三视图往返、暂停至 200.696 秒；水墨连续段超过 3 分钟，没有 seek/pause。播放中 Original / Ink 往返 20 次，时间继续推进，水墨恢复 4 geometries / 0 GPU textures，资源未随次数增长 |
+| 音频与相机 | 临时观察记录显示 20 次换肤期间没有新增 `controller.load` 调用；切曲/刷新才出现对应加载。缩放后 Original 与 Ink 的相机 position/quaternion 完全相同，距离从原取景约 17.7556 改为约 17.1118 后保留。观察代码已删除，最终版本不含调试 API |
+| 手动平移与最终恢复 | 手动平移后 Original→Ink 的前后完整截图 SHA-256 相同，取景未重置。最终版本刷新恢复卡农、Ink、126.009 秒暂停、Auto、40% 音量与 Effects On；静音恢复为 Off，Controls 关闭，error 日志为空 |
+| 暂停 / seek | 土耳其进行曲暂停 179.2 秒的两次完整截图 SHA-256 相同，未累积墨迹；12 秒→179.2 秒前后 seek 可重建同一音乐结构，纯求值断言通过。seek 截图不宣称逐像素相同，时间滑杆焦点框会变化 |
+| 关闭装饰 | Performance effects Off→Original→Ink 后仍为 Off，核心墨心与笔势保留，余韵/尾迹停用。reduced motion 使用既有挂载检查关闭相同标志，CSS 去除过渡；本轮没有改动操作系统偏好 |
+| 窄屏 / 键盘 / 全屏 | 390×844 的风格入口位于 View 下方，两个按钮高度均为 44px，文档 scrollWidth/clientWidth 同为 390；抽屉可滚动。Enter/Space 切换不触发播放；既有 Fullscreen 按钮显示 Exit full，退出回到窗口布局 |
+| 加载回退 | 测试期延迟本地 Image 完成：Ink 显示 Preparing ink，舞台/UI 保持 Original；立即改回 Original，过期完成不覆盖选择。测试期给第一张 Image 无效 SVG：保留 Original 与 12 秒暂停位置，显示重试提示；再次选择 Ink 成功且提示清除。延迟/故障注入已全部删除，资源缓存与失败重试另有单测 |
+
+同浏览器、1280×720、土耳其进行曲暂停 179.2 秒、相同镜头/效果的热状态 `?benchmark` 对照（各最近 120 个绘制样本）：
+
+| 指标 | Original | Ink |
+| --- | ---: | ---: |
+| frame median / P95 ms | 6.0 / 12.0 | 5.6 / 12.9 |
+| draw calls | 8 | 4 |
+| triangles / lines | 19,132 / 1,286 | 2,660 / 0 |
+| geometries / GPU textures | 7 / 0 | 4 / 0 |
+| 活跃 instances / 容量 | 120 / 142 | 125 / 257 |
+| CPU buffers bytes | 458,352 | 1,269,296 |
+
+Ink 的 P95 在这次有限样本中增加 7.5%，median 下降约 6.7%，符合计划中约 20% 的热状态退化阈值。额外实例容量来自有限的墨团与笔锋，CPU 缓冲约增加 0.81 MB；不会随歌曲时长增加。此前后台/隐藏窗口样本约 1,000ms，受浏览器节流影响，不混入这个对照。这些数据不是 GPU 计时或跨设备 FPS 保证，未进行声卡测量、真实压缩视频录制或真人长期舒适度评价。
+
+本地截图和性能 JSON 保存于忽略的 `artifacts/ink-stream/`，不将用户音乐或测试临时观察代码上传。最终偏好恢复和文档链接检查见实施计划的完成记录。

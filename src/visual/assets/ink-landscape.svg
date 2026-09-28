@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency=".16 .29" numOctaves="3" seed="107"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".055"/></feComponentTransfer><feBlend in="SourceGraphic" mode="multiply"/></filter>
+    <filter id="wash"><feGaussianBlur stdDeviation="9"/></filter>
+    <linearGradient id="mist" x2="0" y2="1"><stop stop-color="#819487" stop-opacity=".12"/><stop offset="1" stop-color="#819487" stop-opacity="0"/></linearGradient>
+    <linearGradient id="hill" x2="0" y2="1"><stop stop-color="#667f70" stop-opacity=".15"/><stop offset="1" stop-color="#667f70" stop-opacity=".02"/></linearGradient>
+  </defs>
+  <path fill="#f1ebdd" filter="url(#paper)" d="M0 0h1600v1000H0z"/>
+  <g filter="url(#wash)" fill="url(#mist)">
+    <path d="M650 1000V854q102-12 172-63 42-30 76-33 43-24 86-89 28-45 60-28 65 71 104 50 90-70 120-95 52-41 87 21l100 118 95 11v354z"/>
+    <path d="M0 1000V896q91-50 146-36 106-100 149-122 42-34 74 4 63 41 88 132 64 34 201 26v100z"/>
+  </g>
+  <path fill="url(#hill)" d="M920 1000V911q43-16 93-47l58-57 43 18 78-59 71 46 53-76 58 44 39-7 37 76 84-30 66 71v110z"/>
+  <g stroke="#597363" fill="none" stroke-linecap="round" opacity=".12">
+    <path stroke-width="3" d="M1495 1014q-45-158-53-333M1462 878l-15-2m-6-92-12-2M1567 1010q-45-204-16-352M1542 884l14 2m-14-91 17 1"/>
+    <path stroke-width="1.5" d="M1442 713q-43-42-81-48m80 91q66-62 111-64m-107 129q-62-49-106-43m207-45q38-61 82-69m-81 130q-40-60-79-82"/>
+  </g>
+  <g fill="#526e5a" opacity=".14">
+    <path d="M1413 706q-54-8-69-47 47 9 69 47M1391 687q-49 18-77-4 48-13 77 4M1480 727q10-48 43-61-3 38-43 61M1514 707q49-6 65-29-44-7-65 29M1460 745q-2-41 22-67 4 37-22 67M1414 805q-39-38-80-28 24 27 80 28M1549 801q-7-47-35-71-8 38 35 71M1571 755q32-5 49-39-32 4-49 39"/>
+  </g>
+</svg>

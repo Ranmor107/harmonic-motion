@@ -10,14 +10,29 @@ import { StaticCamera } from '../visual/camera/staticCamera'
 import { Icon } from './Icons'
 import { upperBound } from '../utils/math'
 import { branding } from '../branding/config'
+import type { StreamStyleId } from '../domain/visual'
+import { resolveStreamPreset } from '../visual/presets/inkStream'
+import { prepareInkAssets } from './inkAssets'
 
 const timeLabel = (time: number) => `${String(Math.floor(time / 60)).padStart(2, '0')}:${String(Math.floor(time % 60)).padStart(2, '0')}`
 const pitchLabel = (midi: number) => `${['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'][midi % 12]}${Math.floor(midi / 12) - 1}`
 
+function StreamStyleButtons({ style, preparing, onSelect, mobile = false }: {
+  style: StreamStyleId; preparing: boolean; onSelect: (style: StreamStyleId) => void; mobile?: boolean
+}) {
+  return <div className={`stream-style ${mobile ? 'stream-style-mobile' : 'stream-style-desktop'}`}>
+    <span className="style-label">Style</span>
+    <div className="style-buttons" role="group" aria-label="Stream style">
+      {(['original', 'ink'] as const).map(id => <button key={id} aria-pressed={style === id} onClick={() => onSelect(id)}>{id === 'original' ? 'Original' : 'Ink'}</button>)}
+    </div>
+    <span className="style-feedback" role="status">{preparing ? 'Preparing ink…' : ''}</span>
+  </div>
+}
+
 export function App() {
   const {
-    compiled, preset, viewMode, visibilityMode, sessions, activeSessionId,
-    addScores, restoreSessions, selectSession, removeSession, regenerate, setPreset, setViewMode, setVisibilityMode,
+    compiled, preset, viewMode, visibilityMode, streamStyleId, sessions, activeSessionId,
+    addScores, restoreSessions, selectSession, removeSession, regenerate, setPreset, setViewMode, setVisibilityMode, setStreamStyleId,
   } = useStudio()
   const { score, world, plan } = compiled
   const [{ controller, audio }] = useState(() => {
@@ -32,6 +47,8 @@ export function App() {
   const drawerTrigger = useRef<HTMLButtonElement>(null)
   const drawerClose = useRef<HTMLButtonElement>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [preparingInk, setPreparingInk] = useState(false)
+  const styleRequest = useRef(0)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [starting, setStarting] = useState(false)
@@ -54,6 +71,26 @@ export function App() {
   const focusTrack = score.tracks[focusTrackIndex]
   const focusTrackId = focusTrack?.id
   const follow = followViews[viewMode]
+  const effectivePreset = useMemo(() => resolveStreamPreset(preset, viewMode, streamStyleId), [preset, viewMode, streamStyleId])
+  const ink = effectivePreset.streamStyle === 'ink'
+  const selectStreamStyle = useCallback(async (style: StreamStyleId) => {
+    const request = ++styleRequest.current
+    setPreparingInk(false)
+    if (style === 'original') { setStreamStyleId(style); return }
+    if (useStudio.getState().streamStyleId === style) return
+    setPreparingInk(true)
+    try {
+      await prepareInkAssets()
+      if (request === styleRequest.current) {
+        setStreamStyleId(style)
+        setError(current => current === 'Ink background could not load. Select Ink to retry.' ? '' : current)
+      }
+    } catch {
+      if (request === styleRequest.current) setError('Ink background could not load. Select Ink to retry.')
+    } finally {
+      if (request === styleRequest.current) setPreparingInk(false)
+    }
+  }, [setStreamStyleId])
   const setFollow = (value: boolean) => setFollowViews(current => ({ ...current, [viewMode]: value }))
   const storageFailed = useCallback(() => {
     setStorageReady(false)
@@ -61,9 +98,9 @@ export function App() {
   }, [])
   const currentPreferences = useCallback((): SavedPreferences => ({
     version: 1, activeSessionId, position: controller.clock.getState().time,
-    viewMode, visibilityMode, effectsEnabled: preset.effects.hit.enabled,
+    viewMode, visibilityMode, streamStyleId, effectsEnabled: preset.effects.hit.enabled,
     volume, muted, followViews, melodyTracks,
-  }), [activeSessionId, controller, viewMode, visibilityMode, preset.effects.hit.enabled, volume, muted, followViews, melodyTracks])
+  }), [activeSessionId, controller, viewMode, visibilityMode, streamStyleId, preset.effects.hit.enabled, volume, muted, followViews, melodyTracks])
   const persistNow = useCallback(() => {
     if (!storageReady) return
     const preferences = currentPreferences()
@@ -83,12 +120,14 @@ export function App() {
 
   useEffect(() => {
     let active = true
+    const pendingRequest = styleRequest
     void loadSavedState().then(({ sessions: saved, preferences }) => {
       if (!active) return
       const restored = restoreSessions(saved, preferences?.activeSessionId ?? 'score-0')
       if (restored < saved.length) setError('Some saved scores could not be restored.')
       if (preferences) {
         setViewMode(preferences.viewMode)
+        void selectStreamStyle(preferences.streamStyleId ?? 'original')
         setVisibilityMode(preferences.visibilityMode)
         const current = useStudio.getState().preset
         setPreset({ ...current, effects: {
@@ -114,8 +153,8 @@ export function App() {
       } else if (saved.length) setEntered(true)
       setStorageReady(true)
     }).catch(() => { if (active) storageFailed() }).finally(() => { if (active) setReadReady(true) })
-    return () => { active = false }
-  }, [audio, restoreSessions, setPreset, setViewMode, setVisibilityMode, storageFailed])
+    return () => { active = false; pendingRequest.current++ }
+  }, [audio, restoreSessions, setPreset, setViewMode, setVisibilityMode, storageFailed, selectStreamStyle])
 
   useEffect(() => {
     if (!readReady) return
@@ -322,7 +361,7 @@ export function App() {
 
   if (!ready) return <main className="studio restoring">Restoring your local library…</main>
 
-  return <main ref={studio} className="studio">
+  return <main ref={studio} className="studio" data-appearance={ink ? 'ink' : 'original'}>
     <header className="topbar">
       <a className="brand" href="./" aria-label={`${branding.name} home`}>
         <svg className="brand-motif" viewBox="0 0 62 36" aria-hidden="true">
@@ -335,6 +374,7 @@ export function App() {
         <span>{branding.name}</span>
       </a>
       <span className="brand-descriptor">{branding.descriptor}</span>
+      {viewMode === 'stream' && <StreamStyleButtons style={streamStyleId} preparing={preparingInk} onSelect={style => void selectStreamStyle(style)} />}
       <span className={`status ${playing ? 'is-playing' : ''}`}><i />{playing ? 'Performing' : playback.status === 'ended' ? 'Complete' : playback.status === 'paused' ? 'Paused' : 'Ready'}</span>
       <button ref={drawerTrigger} className="drawer-trigger" aria-controls="controls-drawer" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(open => !open)}>Controls <span aria-hidden="true">☷</span></button>
     </header>
@@ -342,7 +382,7 @@ export function App() {
     <section className={`world-stage ${firstVisit ? 'is-intro' : ''} ${showGuide ? 'has-guide' : ''}`} aria-label="Music world" tabIndex={0} onPointerDown={event => {
       if (event.target instanceof Element && !event.target.closest('button, a, input, select, textarea')) event.currentTarget.focus({ preventScroll: true })
     }}>
-      <Scene score={score} world={world} plan={plan} preset={preset} playback={snapshot} cameraController={StaticCamera} viewMode={viewMode} visibilityMode={visibilityMode} focusTrackId={focusTrackId} fitRequest={fitRequest} follow={follow} onNavigate={() => setFollow(false)} />
+      <Scene score={score} world={world} plan={plan} preset={effectivePreset} playback={snapshot} cameraController={StaticCamera} viewMode={viewMode} visibilityMode={visibilityMode} focusTrackId={focusTrackId} fitRequest={fitRequest} follow={follow} onNavigate={() => setFollow(false)} />
       <div className="score-card">
         <p className="eyebrow">Opus {String(sessionIndex + 1).padStart(2, '0')} / {score.metadata.source === 'demo' ? 'Quick Study' : 'Local score'}</p>
         <h1>{score.metadata.title}</h1>
@@ -361,10 +401,10 @@ export function App() {
         <button className="midi-action" onClick={() => input.current?.click()} disabled={busy}>Open my MIDI <span aria-hidden="true">↗</span></button>
         <p className="first-experience-note">Processed on this device. Saved in this browser; no files are uploaded.</p>
       </div> : showGuide ? <div className="reading-guide">
-        {guideOpen ? <><button className="guide-close" aria-label="Close visual guide" onClick={() => setGuideOpen(false)}>×</button><p className="eyebrow">What am I seeing?</p><p>Follow the warm {focusTrack ? 'focused part' : 'lead'}. Cool strands show accompanying voices; notes brighten as they sound.</p></> : <button className="guide-reopen" onClick={() => setGuideOpen(true)}>What am I seeing? <span aria-hidden="true">↗</span></button>}
+        {guideOpen ? <><button className="guide-close" aria-label="Close visual guide" onClick={() => setGuideOpen(false)}>×</button><p className="eyebrow">What am I seeing?</p><p>{ink ? 'Follow the dark ink melody and the red brush. Lighter strands carry accompanying voices; ink opens as notes sound.' : `Follow the warm ${focusTrack ? 'focused part' : 'lead'}. Cool strands show accompanying voices; notes brighten as they sound.`}</p></> : <button className="guide-reopen" onClick={() => setGuideOpen(true)}>What am I seeing? <span aria-hidden="true">↗</span></button>}
       </div> : <blockquote className="score-quote"><p>“{branding.quote.text}”</p><cite><a href={branding.quote.source} target="_blank" rel="noreferrer">{branding.quote.author}</a></cite></blockquote>}
       <div className="live-reading" aria-label="Current music">
-        <span className="eyebrow">{viewMode} / {viewMode === 'stream' ? 'ribbon' : viewMode === 'ensemble' ? 'voices' : visibilityMode}</span>
+        <span className="eyebrow">{viewMode} / {viewMode === 'stream' ? ink ? 'ink' : 'ribbon' : viewMode === 'ensemble' ? 'voices' : visibilityMode}</span>
         {focusTrack && <span className="focus-reading" title={focusTrack.name}>Focus · {String(focusTrackIndex + 1).padStart(2, '0')} {focusTrack.name || `Track ${focusTrackIndex + 1}`}</span>}
         <span className={`pitch-reading ${sounding.length ? 'sounding' : ''}`}>{pitches.length ? pitches.map(note => pitchLabel(note.midi)).join(' · ') : '—'}</span>
         <div className="legend"><span><i className="lead-dot" />{focusTrack ? 'Focus' : 'Lead'}</span><span><i className="voice-dot" />Voices</span><span><i className="performer-dot" />{viewMode === 'ensemble' ? 'Harmony' : 'Performer'}</span></div>
@@ -377,7 +417,8 @@ export function App() {
       <section className="control-section"><h2>View</h2><div className="segmented">
         {(['constellation', 'stream', 'ensemble'] as const).map(mode => <button key={mode} aria-pressed={viewMode === mode} onClick={() => setViewMode(mode)}>{mode[0]!.toUpperCase() + mode.slice(1)}</button>)}
       </div>
-      <p className="control-note">{viewMode === 'constellation' ? 'See how notes and voices connect.' : viewMode === 'stream' ? 'Follow the music as it unfolds in time.' : 'See voices gather around the circular stage.'}</p>
+      <p className="control-note">{viewMode === 'constellation' ? 'See how notes and voices connect.' : viewMode === 'stream' ? 'Follow the music as it unfolds in time. Ink style is available in this view.' : 'See voices gather around the circular stage.'}</p>
+      {viewMode === 'stream' && <StreamStyleButtons mobile style={streamStyleId} preparing={preparingInk} onSelect={style => void selectStreamStyle(style)} />}
       </section>
       <section className="control-section"><h2>Part focus</h2>
         <label className="part-label" htmlFor="melody-track">Follow a MIDI track</label>

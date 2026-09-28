@@ -3,7 +3,7 @@
 Purpose: 定义稳定架构、音乐时间语义和不可破坏原则。
 Authority: 架构事实与契约的主要记录；当前支持状态不在此维护。
 Update when: 已落实的核心契约、语义、ownership 或 invariant 改变。
-Last verified: 2026-09-18；展示投影和会话缓存边界已更新；未改音乐核心契约。
+Last verified: 2026-09-28；补充本地 image 与 Stream 外观契约；未改音乐核心契约。
 
 任务定位从 [文档导航](index.md) 与 [模块地图](CODEBASE_OPERATING_MODEL.md) 开始。核心管线继续保留；Stream 的展示投影边界见 [ADR-0001](decisions/ADR-0001-musical-presentation.md)。
 
@@ -49,9 +49,9 @@ flowchart TD
 | AudioEngine | load/play/pause/stop/seek/dispose；只负责声音，不生成世界 |
 | VisualTheme | 调色板、节点、连接、Performer 外观与灯光配置 |
 | EffectProfile | hit/trail/particles 的启用、参数与生命周期；效果全部按绝对时间求值 |
-| EnvironmentConfig | 当前为 solid / gradient 判别联合；渐变可包含 seeded 星点 |
+| EnvironmentConfig | solid / gradient / image 判别联合；渐变可包含 seeded 星点，image 为本地背景与底色 |
 | CameraController | `getState(time, context)`，消费 bounds、aspect、config；不能修改世界 |
-| VisualPreset | 组合 theme、effects、environment、camera |
+| VisualPreset | 组合 theme、effects、environment、camera、presentation，可指定 Stream 外观；Ink 与原版共享 presentation/camera，不重编译音乐 |
 | Renderer | 读取 world/plan、PlaybackState、VisualPreset 与纯 musical presentation；不读取 MIDI，不修改编舞或调度音乐 |
 | Musical presentation | 只读 score 的显著性选音、短组、Ribbon/Helix 显示投影；主角沿显示曲线按绝对时间求值，不能写回正式 world/plan |
 | ScoreSession | application 维护 id/filename/seed/CompiledScore；缓存 score/analysis/world/plan，切回复用；元数据由 score 派生 |

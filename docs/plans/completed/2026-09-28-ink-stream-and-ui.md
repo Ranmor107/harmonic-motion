@@ -3,9 +3,9 @@
 Purpose: 为水墨 Stream 舞台、配套界面与原版/水墨切换建立可执行的有限实施计划。
 Authority: 本任务的设计与实施边界；当前能力仍以 CURRENT_STATE 和源码为准。
 Update when: 用户调整视觉方向、切换规则、实施范围或验证证据。
-Last verified: 2026-09-28；仅完成规划和源码核对，视觉方案尚未实现或验证。
+Last verified: 2026-09-28；实现、自动检查与浏览器验证已完成，边界见完成记录。
 
-Status: Planned · implementation not started
+Status: Completed
 Source baseline: `f9f6b7b`；用户未跟踪的 `midi/` 与产品计划 `.docx` 保持原样。
 Related request / roadmap item: 用户明确选择先规划水墨 Stream，并要求一套配套 UI，可通过按钮切换；见 [ROADMAP](../../ROADMAP.md)。
 Related ADR: 延续 [ADR-0001](../../decisions/ADR-0001-musical-presentation.md) 的纯展示原则；不改变音乐时间、世界或编舞语义，无需新增架构决策。
@@ -16,7 +16,7 @@ Related ADR: 延续 [ADR-0001](../../decisions/ADR-0001-musical-presentation.md)
 
 这是用户主动选择的视觉探索，不是已证实的可用性缺陷，也不代表更多主题会提高留存。本轮通过一套新风格与现有原版对照，验证音乐是否依然清楚、观看是否舒适。
 
-当前请求只授权形成计划；本文件的后续实施步骤及检查结果均为待执行。
+规划时只授权形成计划；2026-09-28 用户“按照计划进行设计”已授权实施以下完整交付。
 
 ## User-visible goal
 
@@ -215,15 +215,27 @@ score/world/plan、PlaybackClock 与 AudioEngine 接口保持原样。此计划�
 
 ## Completion criteria
 
-- [ ] Stream 中 Original / Ink 按钮可用，舞台与整套 UI 同步切换，响应式和键盘检查通过。
-- [ ] 水墨呈现纸面、笔触、明确墨心与有限晕染，主次声部和长音在代表片段可读。
-- [ ] Original 的现有线形和舞台保留；其他 View 的舞台正常，返回 Stream 恢复风格选择。
-- [ ] 切换保持世界/计划、音频、播放状态/时间、取景、轨道焦点和效果偏好。
-- [ ] 时间求值确定、可 seek；旧偏好兼容、资源加载失败和快速切换有实际检查。
-- [ ] test / lint / build 及浏览器、长曲、性能对照有真实证据；未做的录制/真人舒适度评价明确标注。
-- [ ] 差异只在授权范围，用户素材保留；文档与提交记录完整，完成后归档。
+- [x] Stream 中 Original / Ink 按钮可用，舞台与整套 UI 同步切换，响应式和键盘检查通过。
+- [x] 水墨呈现纸面、笔触、明确墨心与有限晕染，主次声部和长音在代表片段可读。
+- [x] Original 的现有线形和舞台保留；其他 View 的舞台正常，返回 Stream 恢复风格选择。
+- [x] 切换保持世界/计划、音频、播放状态/时间、取景、轨道焦点和效果偏好。
+- [x] 时间求值确定、可 seek；旧偏好兼容、资源加载失败和快速切换有实际检查。
+- [x] test / lint / build 及浏览器、长曲、性能对照有真实证据；未做的录制/真人舒适度评价明确标注。
+- [x] 差异只在授权范围，用户素材保留；文档与提交记录完整，完成后归档。
 
 ## Execution notes and completion evidence
+
+2026-09-28 完成：独立 Ink renderer、参数化批量笔触、本地纸面淡景、整套浅色 UI、响应式 Original / Ink 按钮与 version 1 可选风格偏好已接通。原版 StreamRenderer blob 完全保留；相机/展示配置共用引用，Canvas/CameraRig 与歌曲加载 effect 不重新挂载。test 12 文件 / 89 项、lint、build 通过。
+
+内置浏览器检查 Quick Study、卡农及八轨土耳其进行曲，覆盖 dense / chord / sustain、关闭装饰、键盘、390px、全屏、三视图往返、刷新恢复、至少 3 分钟连续水墨演奏及 20 次换肤；加载延迟/失败/取消/重试通过测试期故障注入验收，最终代码已删除注入和观察日志。缩放姿态及平移后画面保持；暂停两次截图相同。最新刷新恢复卡农、Ink、126.009 秒暂停、Auto、40% 音量、Effects On、Follow On 和静音 Off，浏览器无新增 error。
+
+1280×720、土耳其进行曲 179.2 秒热样本：Original median/P95 为 6.0/12.0ms，Ink 为 5.6/12.9ms；draw calls 8→4，geometries 7→4，GPU textures 都为 0。P95 增加 7.5%，本次达成约 20% 的目标；墨迹 CPU 缓冲约增加 0.81MB，固定预算而非随时间累积。后台约 1000ms 的节流样本排除，不能据此保证跨设备 FPS。真实压缩录制、声卡质量及真人长期舒适度仍未验证；未更改系统 reduced motion 设置。
+
+完整检查与限制见 [VERIFICATION](../../VERIFICATION.md#ink-stream-2026-09-28)。本地截图/指标在忽略的 `artifacts/ink-stream/`；只读使用的用户 MIDI 与 `.docx` 保持未跟踪，未进入提交。以下规划记录保留为历史，不代表当前未实现。
+
+完成文档检查：本轮 10 份 Markdown 的 256 条本地链接及锚点均可解析，`git diff --check` 通过。计划已移至 completed 并更新 registry/ROADMAP；产品源码、测试和本地 SVG 以本轮专用路径暂存，用户素材排除。
+
+2026-09-28 实施开工：沿用本计划边界，新增独立 InkStreamRenderer 保留原版 StreamRenderer 的完整绘制路径；本地 SVG 提供静态纸面/淡景，参数化批量笔触提供墨心、叶形与有限晕染，不引入外部依赖。共享 camera/presentation 引用、同一 Canvas 和 CameraRig；单一 Stream 风格偏好驱动 UI 与舞台。执行定向与全量检查、浏览器视觉和资源验收后归档。
 
 2026-09-28：核对 `f9f6b7b` 的视觉配置、Stream/Scene、state/persistence、UI、RenderDiagnostics 和仓库工作协议；形成上述方案。只计算候选纯色对比度，未制作视觉资源、未修改产品源码、未运行产品 test/lint/build 或浏览器验收。上述完成项全部保留未勾选。
 

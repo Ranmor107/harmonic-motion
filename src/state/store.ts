@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { NormalizedScore } from '../domain/score'
-import type { ViewMode, VisibilityMode, VisualPreset } from '../domain/visual'
+import type { StreamStyleId, ViewMode, VisibilityMode, VisualPreset } from '../domain/visual'
 import { compileScore, type CompiledScore } from '../engine/compile'
 import { ConstellationGeometryStrategy } from '../engine/music-geometry/strategies/constellation'
 import type { GeometryStrategy } from '../engine/music-geometry/GeometryStrategy'
@@ -23,6 +23,7 @@ interface StudioState {
   strategy: GeometryStrategy
   preset: VisualPreset
   viewMode: ViewMode
+  streamStyleId: StreamStyleId
   visibilityMode: VisibilityMode
   setScore(score: NormalizedScore): void
   addScores(scores: { score: NormalizedScore; filename: string }[]): void
@@ -32,6 +33,7 @@ interface StudioState {
   regenerate(): void
   setPreset(preset: VisualPreset): void
   setViewMode(viewMode: ViewMode): void
+  setStreamStyleId(style: StreamStyleId): void
   setVisibilityMode(visibilityMode: VisibilityMode): void
 }
 
@@ -43,7 +45,7 @@ export function createStudioStore() {
   return create<StudioState>((set, get) => ({
     compiled: demo.compiled, seed, strategy, preset: DefaultPreset,
     sessions: [demo], activeSessionId: demo.id,
-    viewMode: 'constellation', visibilityMode: 'overview',
+    viewMode: 'constellation', visibilityMode: 'overview', streamStyleId: 'original',
     setScore: score => get().addScores([{ score, filename: score.metadata.title }]),
     addScores: scores => {
       const state = get()
@@ -86,6 +88,7 @@ export function createStudioStore() {
     // Visual changes retain the exact same compiled objects, not just equal copies.
     setPreset: preset => set({ preset }),
     setViewMode: viewMode => set({ viewMode }),
+    setStreamStyleId: streamStyleId => { if (get().streamStyleId !== streamStyleId) set({ streamStyleId }) },
     setVisibilityMode: visibilityMode => set({ visibilityMode }),
   }))
 }

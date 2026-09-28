@@ -3,7 +3,7 @@
 Purpose: 以任务为边界保存中型/跨模块工作的范围、理由、验证和完成标准。
 Authority: 实施上下文及其生命周期；长期事实归档后回到各 canonical 文档。
 Update when: plan 新建、范围或状态改变、完成归档。
-Last verified: 2026-09-28；登记水墨 Stream、配套 UI 与按钮切换计划，尚未开始实现。
+Last verified: 2026-09-28；水墨 Stream、配套 UI 与按钮切换完成归档。
 
 ## 使用时机
 
@@ -24,7 +24,7 @@ plan 是实施边界，不是永久架构规范。真正的架构决策另用 [A
 
 | Plan | Status | Path | Evidence / next step |
 | --- | --- | --- | --- |
-| Ink Stream, coordinated UI and style buttons | Planned · implementation not started | [implementation plan](active/2026-09-28-ink-stream-and-ui.md) | 用户选择先规划水墨；Original / Ink 同步切换舞台和 UI，保留播放与取景；星空及其他 View 适配不在本轮 |
+| Ink Stream, coordinated UI and style buttons | Completed | [completed plan](completed/2026-09-28-ink-stream-and-ui.md) | Original / Ink 同步切换舞台和 UI，保留播放与取景；89 项测试、lint/build 与浏览器检查通过；[验证证据](../VERIFICATION.md#ink-stream-2026-09-28) |
 | Long-session comfort: viewing controls and reliability | Completed · local verified | [completed plan](completed/2026-09-27-long-session-comfort.md) | `09f21c5` 已推送；全屏、键盘播放/跳转、最近 10 秒重听与长曲实测；追加的线条试改已按用户要求[撤销](../VERIFICATION.md#stream-line-rollback-2026-09-28)。真人舒适度仍待反馈 |
 | Musical legibility: choose a part to follow | Completed · local review ready | [completed plan](completed/2026-09-27-musical-legibility.md) | `7383b9f`；Auto / 指定轨道主线、三视图焦点与逐曲选择恢复；[本机验证](../VERIFICATION.md#musical-legibility-2026-09-27)通过，已包含在核对后的 GitHub main 中 |
 | Continuity foundation and follow-camera zoom | Completed | [completed plan](completed/2026-09-27-continuity-and-follow-zoom.md) | 本机曲库与暂停恢复、独立启动窗口资料保留及跟随缩放；[验证证据](../VERIFICATION.md#continuity-follow-zoom-2026-09-27) |

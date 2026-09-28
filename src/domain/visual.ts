@@ -19,6 +19,7 @@ export interface EffectProfile {
 }
 
 export type ViewMode = 'constellation' | 'stream' | 'ensemble'
+export type StreamStyleId = 'original' | 'ink'
 export type VisibilityMode = 'overview' | 'focus' | 'path'
 
 export interface PresentationConfig {
@@ -53,6 +54,7 @@ export interface PresentationConfig {
 
 export type EnvironmentConfig =
   | { type: 'solid'; color: string }
+  | { type: 'image'; color: string; source: string }
   | { type: 'gradient'; top: string; bottom: string; stars: { enabled: boolean; count: number; seed: number; color: string; opacity: number; size: number } }
 
 export interface CameraConfig {
@@ -75,4 +77,5 @@ export interface VisualPreset {
   environment: EnvironmentConfig
   camera: CameraConfig
   presentation: PresentationConfig
+  streamStyle?: StreamStyleId
 }

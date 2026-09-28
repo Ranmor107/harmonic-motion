@@ -13,7 +13,7 @@ export function EnvironmentRenderer({ config, bounds }: { config: EnvironmentCon
       (random() - 0.5) * radius * 2 + [center.x, center.y, center.z][index % 3]!)
   }, [config, bounds])
   if (config.type === 'solid') return <color attach="background" args={[config.color]} />
-  if (!config.stars.enabled) return null
+  if (config.type !== 'gradient' || !config.stars.enabled) return null
   return <points>
     <bufferGeometry><bufferAttribute attach="attributes-position" args={[positions, 3]} /></bufferGeometry>
     <pointsMaterial color={config.stars.color} size={config.stars.size} transparent opacity={config.stars.opacity} depthWrite={false} />

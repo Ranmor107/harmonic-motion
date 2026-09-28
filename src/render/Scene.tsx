@@ -13,6 +13,7 @@ import { EffectsRenderer } from './EffectsRenderer'
 import { CameraRig } from './CameraRig'
 import { TrajectoryRenderer } from './TrajectoryRenderer'
 import { StreamRenderer } from './StreamRenderer'
+import { InkStreamRenderer } from './InkStreamRenderer'
 import { EnsembleRenderer } from './EnsembleRenderer'
 import { createEnsemblePresentation, ENSEMBLE_STAGE } from '../visual/presentation/ensemblePresentation'
 import { createMusicalPresentation } from '../visual/presentation/musicalPresentation'
@@ -39,7 +40,10 @@ export function Scene({ score, world, plan, preset, playback, cameraController, 
     ? (time: number) => streamCameraTarget(model, time)
     : (time: number) => plan.performers[0] ? evaluatePerformer(plan.performers[0], time) : { x: 0, y: 0, z: 0 }, [model, plan, viewMode])
   const environment = preset.environment
-  const background = environment.type === 'solid' ? environment.color : `linear-gradient(160deg, ${environment.top}, ${environment.bottom})`
+  const background = environment.type === 'solid' ? environment.color : environment.type === 'image'
+    ? `${environment.color} url("${environment.source}") center / cover no-repeat`
+    : `linear-gradient(160deg, ${environment.top}, ${environment.bottom})`
+  const Stream = preset.streamStyle === 'ink' ? InkStreamRenderer : StreamRenderer
   const stage = viewMode === 'ensemble' ? ENSEMBLE_STAGE : RIBBON_STAGE
   const cameraConfig = useMemo(() => viewMode !== 'constellation'
     ? { ...preset.camera, direction: stage.direction, padding: 1.08 }
@@ -61,7 +65,7 @@ export function Scene({ score, world, plan, preset, playback, cameraController, 
             <PerformerRenderer performer={performer} theme={preset.theme} effects={preset.effects} playback={playback} />
           </group>)}
           <EffectsRenderer world={world} plan={plan} effects={preset.effects} theme={preset.theme} playback={playback} />
-        </> : viewMode === 'stream' ? <StreamRenderer model={model} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} focusTrackId={focusTrackId} />
+        </> : viewMode === 'stream' ? <Stream model={model} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} focusTrackId={focusTrackId} />
           : <EnsembleRenderer model={ensemble} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} focusTrackId={focusTrackId} />}
       </Canvas>
     </SceneBoundary>
