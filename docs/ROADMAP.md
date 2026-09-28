@@ -3,7 +3,7 @@
 Purpose: 保留已提出方向、状态和待验证设计，不将探索写成开发承诺。
 Authority: 未来方向与工作状态的主要记录；现状只看 [CURRENT_STATE](CURRENT_STATE.md)。
 Update when: 方向被选择、明确排期、开始实施、完成验证、延期或被替代。
-Last verified: 2026-09-28；归档 Long-session Comfort 首轮控制并保留真人评价边界。
+Last verified: 2026-09-28；登记用户选择的水墨 Stream 与配套 UI 计划，实施尚未开始。
 
 ## 状态约定
 
@@ -51,6 +51,7 @@ Last verified: 2026-09-28；归档 Long-session Comfort 首轮控制并保留真
 | Focus / Current Path / trajectory emphasis | Completed | Iteration 02；配置时间窗和显示预算，不删 WorldModel 节点 | [C06](CHANGE_IMPACT_MATRIX.md#c06-visibility) |
 | 主 Performer 视觉焦点与 Stream satellites | Completed | Iteration 02 presentation；仍是一名 choreography Performer | [C09](CHANGE_IMPACT_MATRIX.md#c09-appearance) |
 | Artistic UI：作品信息、实时音乐、时间线、motif、层级 | Completed | Iteration 02；只使用现有可靠 score/playback 数据 | [C01](CHANGE_IMPACT_MATRIX.md#c01-ui) |
+| 水墨 Stream、配套 UI 与原版/水墨按钮切换 | Planned | [实施计划](plans/active/2026-09-28-ink-stream-and-ui.md)：用户明确选择的一套有限视觉探索，先落计划；水墨仅用于 Stream，按钮同步切换舞台和界面，保留原版与音乐时间 | [C01–C04](CHANGE_IMPACT_MATRIX.md#c01-ui)、[C09](CHANGE_IMPACT_MATRIX.md#c09-appearance) |
 | 新主题、效果、环境、相机样式 | Candidate | 先区分可配置字段和缺少的 Renderer 能力；参考 D-01 | [C02–C05](CHANGE_IMPACT_MATRIX.md#c02-theme) |
 
 ## Later
