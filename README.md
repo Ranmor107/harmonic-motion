@@ -3,7 +3,7 @@
 Purpose: 项目说明、启动及用户操作入口。
 Authority: 快速使用指南；现状、架构和维护规范分别链接到 canonical 文档。
 Update when: 启动方式、用户操作或导航入口变化。
-Last verified: 2026-09-28；补充长时间观看控制。
+Last verified: 2026-09-28；补充长时间观看控制，撤销 Stream 线条试改。
 
 **Music Geometry Engine — a score-to-world generative engine.**
 
@@ -44,7 +44,7 @@ npm run dev
 | Controls | 打开右侧控制抽屉；默认关闭，Escape 关闭并返回入口焦点 |
 | Regenerate | seed 加一，重新生成世界和轨迹，保持乐谱、音乐时序与当前播放进度 |
 | Effects on/off | 只切换视觉反馈，不重新编译世界或演奏计划 |
-| Constellation / Stream / Ensemble | 在空间关系、正面 Stream 的 Helix 细曲线与伴随音群、稳定声部弧区之间切换；保持音乐时间与正式编译结果。Ensemble 在密集段减少绘制代表，但不删除音频或乐谱 |
+| Constellation / Stream / Ensemble | 在空间关系、正面 Ribbon 主线和稳定声部弧区之间切换；保持音乐时间与正式编译结果。Ensemble 在密集段减少绘制代表，但不删除音频或乐谱 |
 | Controls → Part focus | Auto lead 沿用自动显著性主线；也可指定一条有音符的 MIDI 轨道，使它在三种视图中更突出，Stream 主线随之改变。其他轨道仍可见、仍发声；选择按曲目保存在当前浏览器。MIDI 轨道不一定等于独立声部或真正旋律 |
 | Overview / Focus / Current path | 显示全世界、时间相关局部或最精简当前路径；Stream 自带局部时间窗 |
 | 滚轮 / 拖拽 | 在 3D 场景内受限缩放和平移，不中断播放 |
@@ -68,7 +68,7 @@ npm run lint
 npm run build
 ```
 
-定向测试与覆盖边界见 [TEST_MATRIX](docs/TEST_MATRIX.md)；最近实际结果见 [VERIFICATION](docs/VERIFICATION.md#long-session-comfort-2026-09-27)。
+定向测试与覆盖边界见 [TEST_MATRIX](docs/TEST_MATRIX.md)；最近实际结果见 [VERIFICATION](docs/VERIFICATION.md#stream-line-rollback-2026-09-28)。
 
 `npm run preview` 可预览生产构建。浏览器交互验收记录见 [docs/VERIFICATION.md](docs/VERIFICATION.md)。
 

@@ -95,3 +95,7 @@ README 记录操作和快捷键；CURRENT_STATE/ROADMAP 更新能力与状态；
 本轮 11 文件 / 81 测试、lint、build 均通过；卡农从 0 连续播放 302 秒结束，后台返回与全屏/三视图期间进度连续。最后的 Helix 线条截图和 R 回放另行复测。完整证据见 [VERIFICATION](../../VERIFICATION.md#long-session-comfort-2026-09-27)。
 
 实现提交 `09f21c5` 已按用户授权推送；2026-09-28 通过 GitHub API 确认远端 main、本地 HEAD 与 origin/main 均为 `09f21c586de1ae8aeb5e0c8cebd05b7f65fe5bda`。本轮控制与验证范围完成并归档，Milestone E 的真人疲劳/舒适度评价仍待外部反馈。
+
+### User-directed rollback · 2026-09-28
+
+用户随后要求撤销两次 Stream 线条试改。水平引导线未进入最终提交；已提交的 Helix 试改通过将 `StreamRenderer.tsx` 完整恢复到 `9763f48` 撤销。保留本计划中的全屏、快捷键与最近 10 秒重听；以上记录保留为历史证据，当前结果见 [撤销验证](../../VERIFICATION.md#stream-line-rollback-2026-09-28)。

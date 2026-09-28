@@ -3,7 +3,7 @@
 Purpose: 保留带日期、baseline 和适用边界的实际检查证据。
 Authority: 已发生验证的记录；不能作为未来提交自动通过的保证。
 Update when: 新一轮检查产生结果，或旧证据被确认需更正。
-Last verified: 2026-09-28；最新证据见长时间观看控制，早期记录保留其日期和适用边界。
+Last verified: 2026-09-28；最新证据见 Stream 线条撤销，早期记录保留其日期和适用边界。
 
 日期：2026-09-17。环境：Windows、Node.js 24.18.0、Codex 内置 Chromium 浏览器，1280 × 720。
 
@@ -271,3 +271,20 @@ Ensemble 保持各轨道的稳定弧区，按发声状态、主线显著性、�
 | Stream 最终线形 | 参照历史 Helix 的细曲线，仅删除宽带面 mesh 与生成缓冲；保留既有曲线采样、支持线、时长线、节点和焦点。卡农 20 秒截图可见主线/伴随线，未出现水平引导线；Play 从 20 到约 26 秒，R 回退到约 16 秒继续，再暂停到约 22 秒。最终 error 日志为空 |
 
 2026-09-27 初次长曲检查约 1:32 曾出现空画面；代码与偏好复核表明当时 Follow Off，固定镜头不会追踪持续前移的 Stream。Fit stage 开启 Follow 后恢复；2026-09-28 在 Follow On 下完成整曲，不将该观察误记为跟随计算故障，也没有为此修改 camera。整曲验证在最后删除宽带面之前完成；删除后单独复测了截图、播放/重听，并重跑全量 test/lint/build，没有声称再跑一遍完整长曲。自动检查与浏览器控制不能证明真实声卡输出或长期观看疲劳；尚无真人舒适度评价，未据此新增 Calm/Normal 或循环播放。
+
+<a id="stream-line-rollback-2026-09-28"></a>
+## Stream line experiments rollback · 2026-09-28
+
+基线 `8c9cfd3`。用户要求撤销水平引导线与 Helix 细线两次试改；前者未进入最终提交，后者通过恢复 `9763f48` 的完整 `StreamRenderer.tsx` 撤销。恢复 Ribbon 主线面与线条，保持新全屏、快捷键、重听功能及现有 camera、presentation、音乐核心。旧验证和提交记录保留为历史证据。
+
+| 检查 | 结果 |
+| --- | --- |
+| 恢复精确性 | 当前文件 blob 与 `9763f48:src/render/StreamRenderer.tsx` 均为 `d911059af053415c68c3f8b0d2853d2fe2849a42`；唯一源码差异是该文件 |
+| `npm run test` | PASS，11 文件 / 81 测试 |
+| `npm run lint` | PASS，零 ESLint 警告 |
+| `npm run build` | PASS，含 `tsc -b`；JS 1,439.85 kB / gzip 391.91 kB，CSS 13.28 kB / gzip 3.78 kB；既有 >500 kB 提示仍在 |
+| 文档与差异 | PASS，本轮 5 份 Markdown 的 79 条本地文件链接可解析，`git diff --check` 通过 |
+| 浏览器 | 卡农暂停于 126.009 秒，由 Ensemble 切至 Stream 后时间保持；截图确认 Ribbon 主线面及伴随结构绘制。播放继续至约 194.635 秒，再暂停并 seek 回 126.009 秒；error 日志为空 |
+| 用户状态 | 核对后恢复 Ensemble、原暂停位置、Auto、40% 音量及关闭的 Controls；未导入或删除曲目，未触碰用户未跟踪素材 |
+
+本次为局部撤销，没有重跑此前 302 秒整曲或真人试听；回退只影响绘制外观。产品路线图的下一阶段仍是 Capture & Share，仓库保留 Deferred 状态；本次说明下一轮候选，不据此启动新功能开发。

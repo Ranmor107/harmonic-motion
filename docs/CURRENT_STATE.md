@@ -3,7 +3,7 @@
 Purpose: 区分当前可用能力、部分接通的扩展点与未实现方向。
 Authority: 当前实现状态的主要记录；架构理由见 [ARCHITECTURE](ARCHITECTURE.md)。
 Update when: 用户能力、实现覆盖或运行方式改变。
-Last verified: 2026-09-28；补充长时间观看控制。
+Last verified: 2026-09-28；补充长时间观看控制，撤销 Stream 线条试改。
 
 ## Implemented
 
@@ -17,7 +17,7 @@ Last verified: 2026-09-28；补充长时间观看控制。
 | 随机访问 | 绝对歌曲时间求位置、节点状态和瞬态事件；段查找为二分 | [evaluator](../src/engine/choreography/evaluator.ts)、[trajectory](../src/engine/choreography/trajectory.ts) |
 | 播放 | play/pause/stop/restart/seek；ended 重播；启动异步 revision 防护 | [clock](../src/playback/clock.ts)、[controller](../src/playback/controller.ts) |
 | 音频 | Tone 自定义谐波的键盘式合成音、独立声部、lookahead、held-note seek 恢复、limiter；持续 master gain 支持音量/静音 | [ToneAudioEngine](../src/audio/ToneAudioEngine.ts)、[scheduler](../src/audio/scheduler.ts) |
-| 视觉 | Constellation 主关系/顺序/声部曲线与和弦辐射结构；Overview/Focus/Current Path；Stream 使用正面 Helix 细曲线与伴随音群，保留主次和时长线，不再叠加宽带面；独立 Ensemble/Radial Stage 让音符从舞台内层深处沿弧形路径向外涌现，分为 Hidden、Emerging、Approaching、Active、Fading，并保留声部弧区、和弦展开和长音共鸣。Auto 或指定 MIDI 轨道可决定展示主线和三视图焦点；其他轨道保持可见。密集段只减少绘制代表，不删乐谱 | [musicalPresentation](../src/visual/presentation/musicalPresentation.ts)、[ensemblePresentation](../src/visual/presentation/ensemblePresentation.ts)、[Scene](../src/render/Scene.tsx) |
+| 视觉 | Constellation 主关系/顺序/声部曲线与和弦辐射结构；Overview/Focus/Current Path；Stream 使用正面 Ribbon 主线与伴随组；独立 Ensemble/Radial Stage 让音符从舞台内层深处沿弧形路径向外涌现，分为 Hidden、Emerging、Approaching、Active、Fading，并保留声部弧区、和弦展开和长音共鸣。Auto 或指定 MIDI 轨道可决定展示主线和三视图焦点；其他轨道保持可见。密集段只减少绘制代表，不删乐谱 | [musicalPresentation](../src/visual/presentation/musicalPresentation.ts)、[ensemblePresentation](../src/visual/presentation/ensemblePresentation.ts)、[Scene](../src/render/Scene.tsx) |
 | 环境 | solid 或 gradient；gradient 可带 seeded 星点；默认渐变星点 | [EnvironmentRenderer](../src/render/EnvironmentRenderer.tsx) |
 | 相机 | 投影包围盒取景、wheel zoom、pointer pan、fit/reset 与 Performer follow；跟随时可缩放，平移退出跟随；Ribbon 正面水平前移；Ensemble 使用包含深层 z 范围的正面稳定舞台，舞台只做低幅平移/旋转/倾斜/缩放 | [staticCamera](../src/visual/camera/staticCamera.ts)、[CameraRig](../src/render/CameraRig.tsx)、[ensemblePresentation](../src/visual/presentation/ensemblePresentation.ts) |
 | 应用状态 | 多 MIDI 会话曲库缓存 CompiledScore/seed；切曲复用引用、停止归零；regenerate 只更新当前曲目。IndexedDB 保存导入乐谱、最近曲、逐曲轨道焦点、视图/效果/音量与上次位置，重新打开时编译恢复并暂停 | [store](../src/state/store.ts)、[persistence](../src/state/persistence.ts) |
