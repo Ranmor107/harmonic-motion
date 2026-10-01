@@ -20,6 +20,7 @@ export interface EffectProfile {
 
 export type ViewMode = 'constellation' | 'stream' | 'ensemble'
 export type StreamStyleId = 'original' | 'ink'
+export type InkMode = 'drops' | 'veins'
 export type VisibilityMode = 'overview' | 'focus' | 'path'
 
 export interface PresentationConfig {
@@ -78,4 +79,5 @@ export interface VisualPreset {
   camera: CameraConfig
   presentation: PresentationConfig
   streamStyle?: StreamStyleId
+  inkMode?: InkMode
 }

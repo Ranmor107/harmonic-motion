@@ -129,57 +129,10 @@ h1 { margin: 20px 0 27px; font: 400 33px/1.08 'Iowan Old Style', Baskerville, Ge
 .style-buttons button { padding: 7px 12px; min-height: 30px; color: var(--muted); font-size: 11px; }
 .style-buttons button:hover { color: var(--paper); }
 .style-buttons button[aria-pressed=true] { color: var(--paper); background: #ffffff0d; box-shadow: inset 0 -1px var(--brass); }
-.style-feedback { position: absolute; top: calc(100% + 5px); right: 0; font-size: 10px; color: var(--muted); white-space: nowrap; }
 .stream-style-mobile { display: none; }
 
-.studio[data-appearance=ink] {
-  --paper: #26352f; --brass: #9c4538; --ice: #5c7066; --ink: #f1ebdd; --muted: #5c655f; --line: #b7b0a1;
-  color: var(--paper); color-scheme: light;
-}
-.studio[data-appearance=ink] .topbar { background: #f1ebdd; border-bottom: 1px solid #b7b0a140; }
-.studio[data-appearance=ink] .brand-motif path { stroke: #89968a; }
-.studio[data-appearance=ink] .brand-motif .motif-slur { stroke: var(--brass); }
-.studio[data-appearance=ink] .brand-motif .motif-stem { stroke: var(--paper); }
-.studio[data-appearance=ink] .drawer-trigger { border-color: #b7b0a160; }
-.studio[data-appearance=ink] .status i { background: #89968a; }
-.studio[data-appearance=ink] .status.is-playing i { background: var(--brass); box-shadow: none; }
-.studio[data-appearance=ink] .scene-canvas::after { background: linear-gradient(90deg, var(--ink), transparent 15%); box-shadow: none; }
-.studio[data-appearance=ink] h1 { font-family: 'Iowan Old Style', Baskerville, Georgia, 'Noto Serif CJK SC', 'Songti SC', SimSun, serif; line-height: 1.22; }
-.studio[data-appearance=ink] .score-card::before { box-shadow: 0 6px #b7b0a1, 0 12px #b7b0a150; }
-.studio[data-appearance=ink] .artwork-data { border-color: #b7b0a180; }
-.studio[data-appearance=ink] .artwork-data dd { color: var(--paper); }
-.studio[data-appearance=ink] .score-quote p { color: var(--muted); }
-.studio[data-appearance=ink] .pitch-reading { color: var(--muted); }
-.studio[data-appearance=ink] .pitch-reading.sounding { color: var(--brass); text-shadow: none; }
-.studio[data-appearance=ink] .legend .performer-dot { background: var(--brass); border-radius: 50% 25% 50% 30%; transform: rotate(-25deg); }
-.studio[data-appearance=ink] .lead-dot { background: var(--paper); }
-.studio[data-appearance=ink] .navigation-hint { color: var(--muted); }
-.studio[data-appearance=ink] .first-experience, .studio[data-appearance=ink] .reading-guide { background: #e8e1d2f2; border-color: #b7b0a1; }
-.studio[data-appearance=ink] .reading-guide p:last-child, .studio[data-appearance=ink] .guide-reopen { color: var(--muted); }
-.studio[data-appearance=ink] .study-action { color: #f1ebdd; }
-.studio[data-appearance=ink] .study-action:hover { background: #873a30; }
-.studio[data-appearance=ink] .controls-drawer { background: #e8e1d2f5; border-color: #b7b0a180; }
-.studio[data-appearance=ink] .control-section, .studio[data-appearance=ink] .segmented, .studio[data-appearance=ink] .library li { border-color: #b7b0a180; }
-.studio[data-appearance=ink] .segmented button { color: var(--muted); }
-.studio[data-appearance=ink] .segmented button:hover { color: var(--paper); }
-.studio[data-appearance=ink] .segmented button[aria-pressed=true] { color: var(--brass); }
-.studio[data-appearance=ink] .part-label, .studio[data-appearance=ink] .setting-toggle, .studio[data-appearance=ink] .volume-label,
-.studio[data-appearance=ink] .camera-actions button, .studio[data-appearance=ink] .score-select { color: var(--paper); }
-.studio[data-appearance=ink] .part-select { background: #f1ebdd; border-color: #89968a; }
-.studio[data-appearance=ink] .transport { background: #e8e1d2; border-color: #b7b0a160; }
-.studio[data-appearance=ink] .play-button { color: #f1ebdd; }
-.studio[data-appearance=ink] .play-button:hover { background: #873a30; }
-.studio[data-appearance=ink] .track-step, .studio[data-appearance=ink] .mute-button, .studio[data-appearance=ink] .import-button { color: var(--paper); }
-.studio[data-appearance=ink] .current-time { color: var(--paper); }
-.studio[data-appearance=ink] .timeline-ticks span { color: var(--muted); }
-.studio[data-appearance=ink] .timeline-ticks span::before { background: #89968a; }
-.studio[data-appearance=ink] .timeline::-webkit-slider-thumb { border-color: #e8e1d2; box-shadow: 0 0 0 5px #9c453814; }
-.studio[data-appearance=ink] .error-message { background: #eadbd0; border-color: #9c4538; color: #763328; }
-.studio[data-appearance=ink] .style-buttons button[aria-pressed=true] { color: var(--brass); background: #9c45380c; }
-.studio[data-appearance=ink] button:focus-visible, .studio[data-appearance=ink] input:focus-visible, .studio[data-appearance=ink] select:focus-visible { outline-width: 2px; }
 @media (max-width: 700px) {
   .stream-style-desktop { display: none; }
   .stream-style-mobile { display: flex; margin: 18px 0 7px; }
   .style-buttons button { min-height: 44px; padding-inline: 18px; }
-  .studio[data-appearance=ink] .scene-canvas::after { background: none; }
 }

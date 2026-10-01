@@ -1,80 +1,131 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createStudioStore } from '../src/state/store'
-import { resolveStreamPreset } from '../src/visual/presets/inkStream'
-import { inkNoteAppearance } from '../src/visual/effects/inkAppearance'
+import { normalizeInkMode, resolveStreamPreset } from '../src/visual/presets/inkStream'
 import { DefaultPreset } from '../src/visual/presets/defaultPreset'
-import { createMusicalPresentation, visibleStreamNotes } from '../src/visual/presentation/musicalPresentation'
+import { createInkPresentation, buildInkFrame, INK_LIMITS } from '../src/visual/presentation/inkPresentation'
+import { normalizeScore } from '../src/midi/normalize'
 import { syntheticScore } from './fixtures/syntheticScore'
+import { PlaybackClock } from '../src/playback/clock'
+import { PlaybackController } from '../src/playback/controller'
 
-describe('Ink Stream appearance', () => {
-  it('keeps cached music and camera/presentation identities across style, view and song switches', () => {
+const config = DefaultPreset.presentation
+const sample = () => normalizeScore({ metadata: { title: 'Ink phrases', source: 'demo' }, tracks: [
+  { name: 'Melody', channel: 0, instrument: 0, notes: [
+    { time: 1, duration: .5, midi: 67, velocity: .4 },
+    { time: 1.6, duration: .5, midi: 67, velocity: .4 },
+    { time: 2.2, duration: .5, midi: 67, velocity: .4 },
+    { time: 4, duration: 2, midi: 72, velocity: .9 },
+    { time: 8, duration: .5, midi: 64, velocity: .5 },
+  ] },
+  { name: 'Bass', channel: 1, instrument: 0, notes: [
+    { time: 1, duration: 1, midi: 48, velocity: .4 },
+    { time: 4.5, duration: 1, midi: 55, velocity: .4 },
+  ] },
+] })
+
+describe('Ink folio integration', () => {
+  it('retains music, time and audio load through repeated mode, style and view changes', async () => {
     const store = createStudioStore()
     const original = store.getState()
-    original.setPreset({ ...original.preset, effects: {
-      ...original.preset.effects, hit: { ...original.preset.effects.hit, enabled: false },
-      trail: { ...original.preset.effects.trail, enabled: false }, particles: { ...original.preset.effects.particles, enabled: false },
-    } })
-    const base = store.getState().preset
-    for (const view of ['stream', 'ensemble', 'constellation', 'stream'] as const) {
-      store.getState().setViewMode(view)
-      store.getState().setStreamStyleId('ink')
+    const audio = { load: vi.fn(), play: vi.fn(), pause: vi.fn(), stop: vi.fn(), seek: vi.fn(), dispose: vi.fn() }
+    const clock = new PlaybackClock(0, () => 10)
+    const controller = new PlaybackController(clock, audio)
+    await controller.load(original.compiled.score)
+    controller.seek(8)
+    await controller.play()
+    for (let i = 0; i < 20; i++) {
+      store.getState().setViewMode(i % 3 ? 'stream' : 'ensemble')
+      store.getState().setStreamStyleId(i % 2 ? 'ink' : 'original')
+      store.getState().setInkMode(i % 2 ? 'veins' : 'drops')
       const state = store.getState()
-      const ink = resolveStreamPreset(state.preset, view, state.streamStyleId)
+      const resolved = resolveStreamPreset(state.preset, state.viewMode, state.streamStyleId, state.inkMode)
       expect(state.compiled).toBe(original.compiled)
       expect(state.compiled.world).toBe(original.compiled.world)
       expect(state.compiled.plan).toBe(original.compiled.plan)
-      expect(ink.presentation).toBe(base.presentation)
-      expect(ink.camera).toBe(base.camera)
-      expect(ink.effects.hit.enabled).toBe(false)
-      expect(ink.effects.trail.enabled).toBe(false)
-      expect(ink.effects.particles.enabled).toBe(false)
-      if (view !== 'stream') expect(ink).toBe(base)
+      expect(resolved.camera).toBe(original.preset.camera)
+      expect(resolved.presentation).toBe(original.preset.presentation)
+      expect(clock.getState()).toMatchObject({ time: 8, status: 'playing' })
     }
+    expect(audio.load).toHaveBeenCalledTimes(1)
     const listener = vi.fn()
     const unsubscribe = store.subscribe(listener)
-    store.getState().setStreamStyleId('ink')
+    store.getState().setInkMode(store.getState().inkMode)
     expect(listener).not.toHaveBeenCalled()
     unsubscribe()
-    store.getState().setScore(syntheticScore(128))
-    expect(store.getState().streamStyleId).toBe('ink')
+    store.getState().setScore(syntheticScore(64))
     store.getState().selectSession(original.activeSessionId)
+    expect(store.getState().inkMode).toBe('veins')
     expect(store.getState().compiled).toBe(original.compiled)
-    store.getState().setStreamStyleId('original')
-    expect(resolveStreamPreset(base, 'stream', store.getState().streamStyleId)).toBe(base)
   })
 
-  it('reconstructs the same bounded marks after arbitrary seeks and retains dense note/chord budgets', () => {
-    const score = syntheticScore(12000, true)
-    const ink = resolveStreamPreset(DefaultPreset, 'stream', 'ink')
-    const model = createMusicalPresentation(score, ink.presentation)
-    const sample = (time: number) => visibleStreamNotes(model, time, ink.presentation.stream)
-      .map(note => ({ id: note.id, ...inkNoteAppearance(note, time, ink.presentation.stream, ink.effects) }))
-    const at = sample(11.13)
-    for (const time of [0, 24, 5, score.duration, 11.13]) sample(time)
-    expect(sample(11.13)).toEqual(at)
-    expect(at.length).toBeLessThanOrEqual(ink.presentation.stream.maxVisibleNotes)
-    expect(at.filter(mark => mark.washOpacity > 0).length).toBeLessThanOrEqual(at.length)
-    expect(at.every(mark => mark.washRadius <= ink.effects.hit.radius + ink.effects.hit.expansion)).toBe(true)
-    expect(model.positions).toEqual(createMusicalPresentation(score, DefaultPreset.presentation).positions)
+  it('preserves effects off and normalizes only the new visual preference', () => {
+    const preset = { ...DefaultPreset, effects: { ...DefaultPreset.effects, hit: { ...DefaultPreset.effects.hit, enabled: false } } }
+    expect(resolveStreamPreset(preset, 'stream', 'ink', 'veins')).toMatchObject({ inkMode: 'veins', effects: { hit: { enabled: false } } })
+    expect(resolveStreamPreset(preset, 'ensemble', 'ink')).toBe(preset)
+    for (const value of [undefined, null, 'brush', 'unknown']) expect(normalizeInkMode(value)).toBe('drops')
+    expect(normalizeInkMode('veins')).toBe('veins')
   })
 
-  it('starts wash at onset, keeps a sustained core, and ends all marks without accumulated history', () => {
-    const ink = resolveStreamPreset(DefaultPreset, 'stream', 'ink')
-    const note = { ...syntheticScore(4).notes[0]!, startTime: 10, duration: 4 }
-    const at = (time: number) => inkNoteAppearance(note, time, ink.presentation.stream, ink.effects)
-    expect(at(10 - ink.presentation.stream.leadInTime - .001)).toMatchObject({ opacity: 0, scale: 0, washOpacity: 0 })
-    expect(at(9.99).washOpacity).toBe(0)
-    expect(at(10).washOpacity).toBeGreaterThan(0)
-    expect(at(10.4).washRadius).toBeGreaterThan(at(10).washRadius)
-    expect(at(10 + ink.effects.hit.lifetime).washOpacity).toBe(0)
-    expect(at(13)).toMatchObject({ phase: 'active', opacity: 1, washOpacity: 0 })
-    expect(at(14.1).phase).toBe('fade')
-    expect(at(14 + ink.presentation.stream.fadeOutTime + .001)).toMatchObject({ opacity: 0, scale: 0, washRadius: 0 })
-    const disabled = { ...ink.effects, hit: { ...ink.effects.hit, enabled: false } }
-    expect(inkNoteAppearance(note, 10, ink.presentation.stream, disabled)).toMatchObject({ opacity: 1, washOpacity: 0, washRadius: 0 })
+  it('maps strong/long notes, local repeats and actual chords while keeping the score immutable', () => {
+    const score = sample(), before = JSON.stringify(score)
+    const model = createInkPresentation(score, config, score.tracks[0]!.id)
+    const frame = buildInkFrame(model, 'drops', 4.1, 1050, 620)
+    const lead = score.tracks[0]!.notes
+    const marks = lead.slice(0, 4).map(n => frame.find(m => m.source === n.id && m.type === 0)!)
+    expect(marks[0]!.x).toBe(marks[1]!.x)
+    expect(marks[1]!.x).toBe(marks[2]!.x)
+    expect(marks[2]!.strength).toBeGreaterThan(marks[0]!.strength)
+    expect(marks[3]!.duration).toBeGreaterThan(marks[0]!.duration)
+    expect(marks[3]!.radius).toBeGreaterThan(marks[0]!.radius)
+    expect(frame.some(m => m.type === 2)).toBe(true)
+    expect(buildInkFrame(model, 'drops', 4.1, 1050, 620, false).some(m => m.type === 2)).toBe(false)
+    expect(JSON.stringify(score)).toBe(before)
+  })
+
+  it('deposits only inside source note times, keeps real rests and reconstructs after arbitrary seeks', () => {
+    const score = sample(), model = createInkPresentation(score, config, score.tracks[0]!.id)
+    for (const mode of ['drops', 'veins'] as const) {
+      expect(buildInkFrame(model, mode, .99, 1050, 620)).toEqual([])
+      const at = buildInkFrame(model, mode, 5, 1050, 620)
+      for (const time of [9, 1, 28, 3.5, 5]) {
+        const marks = buildInkFrame(model, mode, time, 1050, 620)
+        for (const mark of marks) {
+          const source = score.notes.find(n => n.id === mark.source)!
+          expect(mark.born).toBeGreaterThanOrEqual(source.startTime)
+          expect(mark.born).toBeLessThanOrEqual(source.startTime + source.duration)
+          expect(mark.born).toBeLessThanOrEqual(time)
+          expect(Object.values(mark).filter(v => typeof v === 'number').every(Number.isFinite)).toBe(true)
+        }
+      }
+      expect(buildInkFrame(model, mode, 5, 1050, 620)).toEqual(at)
+      const rest = buildInkFrame(model, mode, 7.5, 1050, 620)
+      expect(rest.every(m => m.born <= 6)).toBe(true)
+      expect(buildInkFrame(model, mode, 28, 1050, 620)).toEqual([])
+    }
+    const branch = model.notes.find(n => n.note.trackId === score.tracks[1]!.id && n.note.startTime === 4.5)!
+    expect(branch.branch?.note.trackId).toBe(score.tracks[0]!.id)
+    expect(model.notes.filter(n => n.next).every(n => n.next!.note.trackId === n.note.trackId)).toBe(true)
+  })
+
+  it('bounds dense frames and supports empty scores, held notes and narrow paper', () => {
+    const score = syntheticScore(12000, true), model = createInkPresentation(score, config)
+    for (const mode of ['drops', 'veins'] as const) for (const [w, h] of [[1050, 620], [360, 420]]) {
+      const frame = buildInkFrame(model, mode, 13.2, w!, h!)
+      expect(frame.length).toBeGreaterThan(0)
+      expect(frame.length).toBeLessThanOrEqual(INK_LIMITS.marks)
+      expect(new Set(frame.map(m => m.source)).size).toBeLessThanOrEqual(INK_LIMITS.notes)
+      expect(frame.every(m => m.y >= 0 && m.y <= h! && m.radius > 0)).toBe(true)
+    }
+    expect(buildInkFrame(createInkPresentation({ ...score, notes: [], tracks: [], chords: [] }, config), 'veins', 0, 360, 420)).toEqual([])
+    const held = normalizeScore({ metadata: { title: 'Held note', source: 'demo' }, tracks: [
+      { name: 'Held', channel: 0, instrument: 0, notes: [{ time: 0, duration: 120, midi: 60, velocity: .7 }] },
+    ] })
+    const frame = buildInkFrame(createInkPresentation(held, config), 'veins', 90, 1050, 620)
+    expect(frame.length).toBeGreaterThan(0)
+    expect(frame.every(m => m.born <= 90 && m.duration > 0)).toBe(true)
+    expect(buildInkFrame(createInkPresentation(held, config), 'drops', 90, 1050, 620).length).toBe(1)
   })
 })
-
 describe('saved Stream style compatibility', () => {
   afterEach(() => { vi.unstubAllGlobals(); vi.resetModules() })
   it.each([undefined, 'unknown', 'ink', 'original'])('only normalizes style %s, preserving old library and preferences', async style => {
@@ -96,33 +147,6 @@ describe('saved Stream style compatibility', () => {
     const { loadSavedState: load } = await import('../src/state/persistence')
     const saved = await load()
     expect(saved.sessions).toEqual(sessions)
-    expect(saved.preferences).toEqual({ ...preferences, streamStyleId: style === 'ink' ? 'ink' : 'original' })
-  })
-})
-
-describe('local Ink asset preparation', () => {
-  afterEach(() => { vi.unstubAllGlobals(); vi.resetModules() })
-  it('shares a single completed load across warm switches and allows retry after failure', async () => {
-    vi.resetModules()
-    const images: { onload: () => void; onerror: () => void; src: string }[] = []
-    vi.stubGlobal('Image', class {
-      onload = () => {}
-      onerror = () => {}
-      src = ''
-      constructor() { images.push(this) }
-    })
-    const { prepareInkAssets } = await import('../src/ui/inkAssets')
-    const first = prepareInkAssets()
-    expect(prepareInkAssets()).toBe(first)
-    expect(images).toHaveLength(1)
-    const failure = expect(first).rejects.toThrow('Select Ink to retry')
-    images[0]!.onerror()
-    await failure
-    const retry = prepareInkAssets()
-    expect(images).toHaveLength(2)
-    images[1]!.onload()
-    await retry
-    for (let i = 0; i < 20; i++) expect(prepareInkAssets()).toBe(retry)
-    expect(images).toHaveLength(2)
+    expect(saved.preferences).toEqual({ ...preferences, streamStyleId: style === 'ink' ? 'ink' : 'original', inkMode: 'drops' })
   })
 })

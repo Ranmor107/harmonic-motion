@@ -1,0 +1,128 @@
+/* A listening folio: the paper is the stage, not an illustration behind it. */
+.studio[data-appearance=ink] {
+  --paper: #243b36; --brass: #9b8658; --ice: #65776d; --ink: #e8ece4;
+  --muted: #65776d; --line: #cbd2c5; --seal: #985147;
+  color: var(--paper); color-scheme: light;
+  grid-template-rows: 86px minmax(0, 1fr) 96px;
+  font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+}
+.studio[data-appearance=ink] .topbar { padding: 0 42px; gap: 24px; background: var(--ink); }
+.studio[data-appearance=ink] .brand { gap: 10px; }
+.studio[data-appearance=ink] .brand span { font-size: 29px; }
+.studio[data-appearance=ink] .brand-motif { width: 42px; }
+.studio[data-appearance=ink] .brand-motif path { stroke: #a4b0a2; }
+.studio[data-appearance=ink] .brand-motif .motif-slur { stroke: var(--paper); }
+.studio[data-appearance=ink] .brand-motif ellipse { fill: var(--paper); }
+.studio[data-appearance=ink] .brand-descriptor { font-size: 9px; letter-spacing: .15em; }
+.studio[data-appearance=ink] .style-label { display: none; }
+.studio[data-appearance=ink] .style-buttons { border: 0; gap: 14px; padding: 0; }
+.studio[data-appearance=ink] .style-buttons button { padding: 10px 0; background: none; border-radius: 0; }
+.studio[data-appearance=ink] .style-buttons button[aria-pressed=true] { color: var(--paper); box-shadow: inset 0 -1px var(--brass); background: none; }
+.studio[data-appearance=ink] .style-buttons button:hover { color: var(--paper); }
+.studio[data-appearance=ink] .status { font-size: 10px; letter-spacing: .1em; }
+.studio[data-appearance=ink] .status i { background: #8c9c90; }
+.studio[data-appearance=ink] .status.is-playing i { background: var(--seal); box-shadow: none; }
+.studio[data-appearance=ink] .drawer-trigger { border-color: var(--line); padding-left: 20px; }
+.studio[data-appearance=ink] .drawer-trigger span { color: var(--paper); font-size: 18px; }
+.studio[data-appearance=ink] .world-stage {
+  margin: 0 26px; background: #f3f4ed; border: 1px solid #cbd2c580;
+  box-shadow: 0 5px 18px #243b3605; overflow: hidden;
+}
+.studio[data-appearance=ink] .world-stage::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: .08;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72 .26' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%238b998c' opacity='.35' filter='url(%23p)' d='M0 0h180v180H0z'/%3E%3C/svg%3E");
+}
+.studio[data-appearance=ink] .scene-canvas { inset: 0; }
+.studio[data-appearance=ink] .scene-canvas::after { background: none; box-shadow: none; }
+.ink-paper-stage { position: absolute; inset: 94px 26px 76px; }
+.ink-paper-stage canvas { display: block; width: 100%; height: 100%; }
+.studio[data-appearance=ink] .score-card { top: 30px; left: 38px; width: min(72%, 900px); }
+.studio[data-appearance=ink] .score-card::before { display: none; }
+.studio[data-appearance=ink] .score-card .eyebrow { font-size: 9px; letter-spacing: .18em; }
+.studio[data-appearance=ink] h1 {
+  font-family: 'Songti SC', 'Noto Serif CJK SC', SimSun, 'Iowan Old Style', serif;
+  font-size: clamp(24px, 2.9vw, 38px); line-height: 1.3; letter-spacing: .065em;
+  margin: 11px 0 10px; text-wrap: initial; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.studio[data-appearance=ink] .artwork-data { display: none; }
+.ink-work-caption { margin: 0; color: var(--muted); font-size: 10px; letter-spacing: .045em; }
+.ink-work-caption span { padding: 0 10px; color: #a5af9f; }
+.ink-colophon { position: absolute; z-index: 3; right: 33px; bottom: 32px; display: flex; align-items: end; gap: 13px; pointer-events: none; }
+.ink-colophon > span { border: 1px solid var(--seal); color: var(--seal); padding: 5px 4px; font: 15px/1.15 'KaiTi', 'STKaiti', SimSun, serif; transform: rotate(-3deg); }
+.ink-colophon p { margin: 0; writing-mode: vertical-rl; font: 10px/1.5 'Songti SC', SimSun, serif; letter-spacing: .25em; color: var(--muted); }
+.ink-start { position: absolute; left: 0; right: 0; top: 50%; text-align: center; font: 15px/1.6 'Songti SC', SimSun, serif; letter-spacing: .12em; color: var(--muted); pointer-events: none; }
+.ink-view-selector { position: absolute; z-index: 4; bottom: 25px; left: 50%; transform: translateX(-50%); text-align: center; }
+.ink-view-selector > div { display: flex; align-items: center; justify-content: center; gap: 26px; }
+.ink-view-selector button { min-height: 44px; font: 19px/1.4 'Songti SC', SimSun, serif; letter-spacing: .16em; color: var(--muted); padding: 7px 5px; border-bottom: 1px solid transparent; }
+.ink-view-selector button[aria-pressed=true] { color: var(--paper); border-bottom-color: var(--brass); }
+.ink-view-selector button:hover { color: var(--paper); }
+.ink-view-selector > div > span { color: #b8c1b3; font-size: 12px; }
+.ink-view-selector p { margin: 10px 0 0; color: var(--muted); font-size: 10px; white-space: nowrap; letter-spacing: .04em; }
+.studio[data-appearance=ink] .live-reading { right: 36px; top: 33px; bottom: auto; gap: 10px; max-width: 23%; }
+.studio[data-appearance=ink] .pitch-reading { color: var(--muted); font-size: 16px; }
+.studio[data-appearance=ink] .pitch-reading.sounding { color: var(--paper); text-shadow: none; }
+.studio[data-appearance=ink] .focus-reading { font-size: 9px; letter-spacing: 0; }
+.studio[data-appearance=ink] .transport { padding: 25px 45px 30px; background: var(--ink); border: 0; }
+.studio[data-appearance=ink] .transport-primary { gap: 17px; }
+.studio[data-appearance=ink] .play-button { color: #f3f4ed; background: var(--paper); border-radius: 47% 51% 46% 50%; }
+.studio[data-appearance=ink] .play-button:hover { background: #3d554b; }
+.studio[data-appearance=ink] .track-step, .studio[data-appearance=ink] .mute-button,
+.studio[data-appearance=ink] .import-button { color: var(--paper); }
+.studio[data-appearance=ink] .current-time { color: var(--paper); }
+.studio[data-appearance=ink] .time { font-family: Consolas, monospace; font-size: 11px; }
+.studio[data-appearance=ink] .timeline::-webkit-slider-thumb { width: 10px; height: 11px; border: 0; border-radius: 47% 52% 44% 57%; background: var(--paper); box-shadow: 0 0 0 5px #243b3605; }
+.studio[data-appearance=ink] .timeline::-moz-range-thumb { background: var(--paper); }
+.studio[data-appearance=ink] .timeline-ticks span { color: var(--muted); }
+.studio[data-appearance=ink] .timeline-ticks span::before { background: #a7b29e; }
+.studio[data-appearance=ink] .controls-drawer { top: 86px; bottom: 96px; background: #eef1e9fa; backdrop-filter: blur(18px); border-color: var(--line); box-shadow: -10px 0 30px #243b3605; }
+.studio[data-appearance=ink] .drawer-heading { font: 22px/1.5 'Songti SC', SimSun, serif; letter-spacing: .06em; }
+.studio[data-appearance=ink] .control-section, .studio[data-appearance=ink] .segmented,
+.studio[data-appearance=ink] .library li { border-color: var(--line); }
+.studio[data-appearance=ink] .segmented button { color: var(--muted); }
+.studio[data-appearance=ink] .segmented button:hover { color: var(--paper); }
+.studio[data-appearance=ink] .segmented button[aria-pressed=true] { color: var(--paper); }
+.studio[data-appearance=ink] .part-label, .studio[data-appearance=ink] .setting-toggle,
+.studio[data-appearance=ink] .volume-label, .studio[data-appearance=ink] .camera-actions button,
+.studio[data-appearance=ink] .score-select { color: var(--paper); }
+.studio[data-appearance=ink] .part-select { color: var(--paper); background: #f3f4ed; border-color: #a5b19e; }
+.studio[data-appearance=ink] .is-current .score-name { color: #6d592f; }
+.studio[data-appearance=ink] .library-heading button { color: #6d592f; }
+.studio[data-appearance=ink] .error-message { background: #f3e8e0; border-color: var(--seal); color: #713b34; }
+.studio[data-appearance=ink] .scene-fallback { color: var(--paper); line-height: 1.8; }
+.studio[data-appearance=ink] .scene-fallback button { text-decoration: underline; padding: 12px; }
+.studio[data-appearance=ink] button:focus-visible, .studio[data-appearance=ink] input:focus-visible,
+.studio[data-appearance=ink] select:focus-visible { outline: 2px solid var(--brass); outline-offset: 4px; }
+@media (max-width: 1000px) {
+  .studio[data-appearance=ink] .topbar { padding-inline: 25px; gap: 18px; }
+  .studio[data-appearance=ink] .brand-descriptor { display: none; }
+}
+@media (max-width: 700px) {
+  .studio[data-appearance=ink] { grid-template-rows: 74px minmax(0, 1fr) 96px; min-height: 600px; }
+  .studio[data-appearance=ink] .topbar { padding-inline: 17px; gap: 13px; }
+  .studio[data-appearance=ink] .brand span { font-size: 25px; }
+  .studio[data-appearance=ink] .brand-motif, .studio[data-appearance=ink] .status { display: none; }
+  .studio[data-appearance=ink] .stream-style-desktop { display: flex; margin-left: auto; }
+  .studio[data-appearance=ink] .stream-style-mobile { display: none; }
+  .studio[data-appearance=ink] .style-buttons { gap: 10px; }
+  .studio[data-appearance=ink] .style-buttons button { font-size: 10px; min-height: 44px; padding: 6px 0; }
+  .studio[data-appearance=ink] .drawer-trigger { font-size: 10px; padding-left: 10px; white-space: nowrap; }
+  .studio[data-appearance=ink] .drawer-trigger span { display: none; }
+  .studio[data-appearance=ink] .world-stage { margin-inline: 10px; }
+  .studio[data-appearance=ink] .score-card { top: 24px; left: 23px; width: calc(100% - 46px); }
+  .studio[data-appearance=ink] h1 { font-size: 27px; margin: 12px 0; }
+  .studio[data-appearance=ink] .ink-work-caption { font-size: 9px; }
+  .studio[data-appearance=ink] .ink-work-caption span { padding: 0 7px; }
+  .ink-paper-stage { inset: 122px 0 98px; }
+  .studio[data-appearance=ink] .live-reading { display: none; }
+  .ink-colophon { right: 17px; bottom: 24px; }
+  .ink-colophon p { display: none; }
+  .ink-colophon > span { font-size: 11px; padding: 4px 3px; }
+  .ink-view-selector { bottom: 26px; }
+  .ink-view-selector > div { gap: 18px; }
+  .ink-view-selector button { font-size: 17px; }
+  .ink-view-selector p { font-size: 9px; }
+  .studio[data-appearance=ink] .transport { padding: 25px 16px 27px; }
+  .studio[data-appearance=ink] .transport-primary { gap: 6px; }
+  .studio[data-appearance=ink] .time { font-size: 10px; }
+  .studio[data-appearance=ink] .controls-drawer { top: 74px; bottom: 96px; }
+}

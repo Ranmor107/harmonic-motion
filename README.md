@@ -1,91 +1,115 @@
 # Cantivela · Project Harmonic Motion
 
-Purpose: 项目说明、启动及用户操作入口。
-Authority: 快速使用指南；现状、架构和维护规范分别链接到 canonical 文档。
-Update when: 启动方式、用户操作或导航入口变化。
-Last verified: 2026-09-28；增加 Ink Stream 与配套界面切换。
+**把一首音乐，放进可以观看的空间。**
 
-**Music Geometry Engine — a score-to-world generative engine.**
+Cantivela 是在自己电脑上运行的 MIDI 音乐可视化应用。打开一首曲子，它会根据音符、起音、时值、轨道与和弦生成画面，并用内置合成器演奏。你可以在星座、流动舞台、圆形舞台和水墨册页之间切换，随时暂停、跳转或换曲。
 
-The score is compiling a world.
+![原创示例曲在墨脉视图中的画面](docs/assets/readme-ink-quick-study.jpg)
 
-暂定产品名 Cantivela；工程代号与核心引擎名称保持不变。品牌候选、字标文本与引语统一配置在 [branding/config](src/branding/config.ts)。
+*画面来自项目内置的原创短曲《Where the light gathers》，停在 00:20。*
 
-本项目是可运行的音乐空间应用：本地 MIDI / 内置原创乐谱 → 音乐语义 → 确定性音乐空间 → 编舞 → 合成音频与 3D 演奏。没有后端、账号、数据上传或物理引擎。
+## 开始使用
 
-## 启动
+需要 Node.js 和 npm；Windows 一键启动还需要已安装的 Microsoft Edge 或 Google Chrome。项目在 Node.js 24 上完成开发验证。
 
-Windows 用户可直接双击仓库根目录的 `start-harmonic-motion.cmd`。它会启动本地服务并打开一个独立的 Harmonic Motion 浏览器窗口；关闭这个独立窗口后，启动器会自动停止自己启动的浏览器和 Vite 进程，并保留应用专用浏览器资料供下次恢复曲库。普通浏览器标签页不属于这个关闭信号，其曲库也与独立窗口分开保存。
+1. 下载本仓库，或在终端获取源码：
 
-推荐 Node.js 24 LTS（开发验证使用 24.18.0）。在项目目录运行：
+   ~~~sh
+   git clone https://github.com/Ranmor107/harmonic-motion.git
+   cd harmonic-motion
+   ~~~
 
-```sh
-npm install
+2. 首次使用，在项目目录安装依赖：
+
+   ~~~sh
+   npm ci
+   ~~~
+
+3. Windows 用户双击 [start-harmonic-motion.cmd](start-harmonic-motion.cmd)。它会打开独立的应用窗口；关闭该窗口时，会停止它启动的本地服务。曲库保存在这个专用浏览器资料中，下次仍可恢复。
+
+也可以在项目目录运行：
+
+~~~sh
 npm run dev
-```
+~~~
 
-打开终端显示的本地地址。默认展示约 31 秒的原创 Quick Study；点击 **Listen to a study** 开始，或点 **Open my MIDI** 选择自己的文件。浏览器要求首次点击播放后才启用音频。
+然后打开终端给出的本地地址。普通浏览器标签页关闭后，开发服务仍会运行；在终端按 Ctrl+C 停止。普通浏览器与一键启动窗口使用不同的浏览器资料，曲库不会互相出现。
 
-已安装过依赖的干净检出可用 `npm ci` 严格按锁文件恢复。
+首次进入会显示约 31 秒的原创示例曲。点击 **Listen to a study** 试听，或点击 **Open my MIDI** 导入自己的乐谱。浏览器通常需要先点击播放，才能开启声音。
 
-## 使用
+## 选择观看方式
 
-| 操作 | 行为 |
+在 **Controls / 曲库与设置 → View / 观看空间** 中选择舞台；页头可在 **Original** 与 **水墨册页** 之间切换。水墨册页会进入 Stream，并在纸面下方提供两种表达。
+
+| 舞台 | 会看到什么 |
 | --- | --- |
-| Listen to a study / Open my MIDI | 首次进入时直接试听内置原创短曲，或打开本地 MIDI 文件选择器；视觉说明可关闭并重新打开 |
-| Play / Pause | 启动或冻结统一音乐时间，暂停立即停止声音 |
-| Mute / Unmute | 底栏一键静音或恢复；静音期间仍保持歌曲时间 |
-| Controls → Sound → Volume | 调整音量；暂停、跳转、切曲或重新打开后保留 |
-| Restart | 从头重新演奏 |
-| Replay last 10 seconds | 从当前位置回退 10 秒；播放中继续播放，暂停或结束时从回退位置开始播放 |
-| 时间滑杆 | 播放或暂停时均可跳转，对既有轨迹求位置，恢复节点和效果状态；播放中恢复仍在延续的音符 |
-| Add MIDI / Library + Add | 一次选择多份 `.mid` / `.midi`；本地解析与编译后加入曲库，并保存在当前浏览器。批次中有效文件正常加入，错误文件逐个提示；全部失败时保留原曲和时间 |
-| Library / 上一曲 / 下一曲 | 切换停止并归零；会话内复用缓存 score/world/plan，保留视图、效果和跟随偏好。移除曲目会删除本地保存副本；移除最后一曲时回到内置示例 |
-| Controls | 打开右侧控制抽屉；默认关闭，Escape 关闭并返回入口焦点 |
-| Regenerate | seed 加一，重新生成世界和轨迹，保持乐谱、音乐时序与当前播放进度 |
-| Effects on/off | 只切换视觉反馈，不重新编译世界或演奏计划 |
-| Constellation / Stream / Ensemble | 在空间关系、正面 Ribbon 主线和稳定声部弧区之间切换；保持音乐时间与正式编译结果。Ensemble 在密集段减少绘制代表，但不删除音频或乐谱 |
-| Stream → Style → Original / Ink | 桌面页头切换原版与水墨舞台/配套界面；窄屏入口在 Controls 的 View 下方。切换保留播放、镜头、轨道焦点与效果开关。离开 Stream 使用该视图原版，返回时记住 Stream 风格；资源准备失败保留当前外观，点击 Ink 重试 |
-| Controls → Part focus | Auto lead 沿用自动显著性主线；也可指定一条有音符的 MIDI 轨道，使它在三种视图中更突出，Stream 主线随之改变。其他轨道仍可见、仍发声；选择按曲目保存在当前浏览器。MIDI 轨道不一定等于独立声部或真正旋律 |
-| Overview / Focus / Current path | 显示全世界、时间相关局部或最精简当前路径；Stream 自带局部时间窗 |
-| 滚轮 / 拖拽 | 在 3D 场景内受限缩放和平移，不中断播放 |
-| Fit world / Fit stage / Reset | 按投影范围恢复取景；Stream 在当前演奏位置取景 |
-| Controls → Camera → Fullscreen | 将整个演奏界面切换为全屏；再次点击或按 Escape 退出 |
-| Follow performer | Constellation 跟随现有 Performer；Stream 稳定水平前移；Ensemble 保持舞台稳定。跟随时可用滚轮调整倍率；手动平移会关闭跟随，可重新开启 |
+| **Constellation** | 音符与声部形成空间关系，适合观察连接和整体结构；可选 Overview、Focus 或 Current path |
+| **Stream · Original** | 正面展开的 Ribbon 主线及伴随音群，适合跟随音乐在时间中前进 |
+| **Ensemble** | 圆形舞台中按声部组织的音符，从内层向外浮现 |
+| **Stream · 水墨册页** | **宣纸落墨**强调起音、晕染和余韵；**墨脉**用不同笔势呈现主线、伴奏与和声 |
 
-在舞台或页面空白处按 Space 播放/暂停、←/→ 前后跳转 5 秒、R 重听最近 10 秒、F 切换全屏。按钮、输入框、选择框保持原生键盘操作；聚焦时间滑杆时 ←/→ 仍按 5 秒跳转。窄屏时间轴隐藏刻度标签，时间位置和总时长仍可见。
+切换观看方式会保留当前歌曲时间。水墨画面自动随时间展开；它没有 3D 相机的拖拽和缩放。切到其他舞台时会显示原版画面，回到 Stream 时会记住此前选择的水墨风格。
 
-导入曲目、最近选择、逐曲轨道焦点、视图、Stream 风格、效果、音量及上次时间位置保存在当前浏览器的本机存储中；再次打开时恢复为暂停，不自动播放。音频和 MIDI 不上传。清除站点数据、使用隐私模式或更换浏览器会失去该浏览器内的曲库；保存失败时界面会提示。
+在设置中，**Part focus / 主线** 可选自动主线或指定一条 MIDI 轨道。被指定的轨道会更突出，其他轨道仍会发声。MIDI 轨道不一定对应真正的旋律或独立声部；自动主线也只是画面选择规则。
 
-主线在 0.22 秒短窗内按力度、时长、音区和连续性选择显著音，属于可配置展示启发式，不是真正旋律提取。其余音符按轨道、休止间隔和长度上限组成短组；不改变音频或正式编舞。完整边界见 [ADR-0001](docs/decisions/ADR-0001-musical-presentation.md)。
+## 播放、曲库和画面控制
 
-可导入 `tests/fixtures/tempo-and-voices.mid` 体验双轨、重叠音符和速度变化。该文件为程序生成的测试素材，不包含商业作品。
+| 操作 | 用法 |
+| --- | --- |
+| 播放 / 暂停 | 底部主按钮；暂停会停止声音并固定画面 |
+| 时间轴 | 拖动到任意位置；画面根据该时间重新呈现，播放中的长音也会恢复 |
+| 重听最近 10 秒 / Restart | 前者回退 10 秒并播放，后者从头播放 |
+| 上一曲 / 下一曲 | 在底部切换曲目；新曲从头开始 |
+| 打开乐谱 / Add MIDI | 选择一份或多份 .mid、.midi 文件，加入当前浏览器的本机曲库 |
+| Controls / 曲库与设置 | 打开右侧面板，选择舞台、主线、视觉效果、音量和曲目；面板中的 × 可移除本机保存的曲目副本 |
+| 静音 / 音量 | 底部切换静音，面板中调节音量；静音不暂停时间 |
+| 全屏 | 面板中的 Fullscreen / 全屏观看；再次点击或按 Esc 退出 |
 
-## 验证
+在舞台或页面空白处还可以使用键盘：
 
-```sh
+| 按键 | 功能 |
+| --- | --- |
+| 空格 | 播放 / 暂停 |
+| ← / → | 后退 / 前进 5 秒 |
+| R | 重听最近 10 秒 |
+| F | 切换全屏 |
+| Esc | 退出全屏，或关闭设置面板 |
+
+原版 3D 舞台支持滚轮缩放、拖拽平移与 Fit / Reset。Constellation 和原版 Stream 可选择跟随视角；跟随时仍可调整放大倍率。水墨册页使用固定纸面取景。关闭视觉效果后，核心音符与主笔势仍然可见。
+
+## 导入与本机保存
+
+支持带音乐节拍时间（PPQ）的 Standard MIDI Type 0 / 1 文件；单文件不超过 10 MiB、20,000 个音符。Type 2、SMPTE 计时和空乐谱会被拒绝。批量导入时，成功的文件仍会加入曲库，失败文件会显示原因。
+
+导入的乐谱、最近曲目、时间位置、轨道焦点、观看方式、水墨模式、音量等保存在**当前浏览器的本机存储**中。重新打开时恢复到上次位置，但保持暂停。文件在本机解析，不上传到服务器；本项目没有账号或云同步。
+
+请保留原始 MIDI 文件：清除站点数据、使用隐私窗口、更换浏览器或更换一键启动所用的浏览器资料，都可能让保存的曲库不可用。移除曲目只删除浏览器内的副本，不删除电脑上的原文件。
+
+## 使用边界与常见问题
+
+- **没有声音？** 先点击播放以启用浏览器音频，再检查底部静音、面板音量及系统输出设备。
+- **水墨或 3D 画面空白？** 检查浏览器图形加速；水墨画面需要 WebGL2。可先切换到其他观看方式确认控件和歌曲仍可使用。
+- **MIDI 无法导入？** 检查文件扩展名、上述格式和大小限制；必要时从制谱软件重新导出为 Type 0 / 1 PPQ。
+- **曲库怎么不见了？** 确认使用的是上次的浏览器资料和同一本地站点地址；一键启动窗口与普通浏览器的曲库分开保存。
+
+音频由项目根据 MIDI 音符合成，不会还原原曲的真实乐器、踏板或弯音。密集乐谱会有展示抽样，画面不一定显示每一个音符。项目目前不提供视频导出；如需保存演奏画面，可使用电脑上的录屏工具。[完整的已知边界](docs/KNOWN_LIMITATIONS.md)另有说明。
+
+## 开发与文档
+
+开发检查和生产构建：
+
+~~~sh
 npm run test
 npm run lint
 npm run build
-```
+npm run preview
+~~~
 
-定向测试与覆盖边界见 [TEST_MATRIX](docs/TEST_MATRIX.md)；最近实际结果见 [VERIFICATION](docs/VERIFICATION.md#stream-line-rollback-2026-09-28)。
+源码中的音乐流程为 MIDI 乐谱 → 音乐模型 → 演奏计划 → 画面与声音。[当前能力](docs/CURRENT_STATE.md)、[架构说明](docs/ARCHITECTURE.md)、[开发流程](AGENTS.md)和[本轮水墨验证](docs/VERIFICATION.md#ink-folio-2026-10-01)供希望继续开发项目的人查阅。
 
-`npm run preview` 可预览生产构建。浏览器交互验收记录见 [docs/VERIFICATION.md](docs/VERIFICATION.md)。
-
-## 架构
-
-三个中心数据模型：`NormalizedScore`、`WorldModel`、`PerformancePlan`。它们均为可序列化纯数据。核心代码不依赖 React、Three.js 或 Tone.js。
-
-完整约束、时间语义和扩展方式见 [ARCHITECTURE](docs/ARCHITECTURE.md)，源码路径和责任边界见 [CODEBASE_OPERATING_MODEL](docs/CODEBASE_OPERATING_MODEL.md)。
-
-## 仓库导航与当前边界
-
-开发从 [AGENTS.md](AGENTS.md) → [docs/index.md](docs/index.md) 开始，按需求定位模块，不默认通读或重写仓库。
-
-- [CURRENT_STATE](docs/CURRENT_STATE.md)：Implemented / Partially implemented / Not implemented。
-- [KNOWN_LIMITATIONS](docs/KNOWN_LIMITATIONS.md)：输入/声部限制、seek 听感、性能未知项及 Documentation Drift。
-- [ROADMAP](docs/ROADMAP.md)：候选方向与状态，不代表已承诺的功能。
-- [DEVELOPMENT_WORKFLOW](docs/DEVELOPMENT_WORKFLOW.md)：局部修改、范围扩展门槛、计划和文档维护。
-
-运行时不请求字体、音色样本或外部 API；安装依赖后可以离线使用。
+<!--
+Purpose: 项目面向使用者的介绍、安装与操作入口。
+Authority: 启动与用户操作指南；架构和长期限制见链接的仓库文档。
+Update when: 启动方式、用户操作或公开支持边界变化。
+Last verified: 2026-10-01；按当前应用源码、一键启动器和水墨集成核对。
+-->

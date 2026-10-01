@@ -1,6 +1,6 @@
 import type { NormalizedScore } from '../domain/score'
-import type { StreamStyleId, ViewMode, VisibilityMode } from '../domain/visual'
-import { normalizeStreamStyle } from '../visual/presets/inkStream'
+import type { InkMode, StreamStyleId, ViewMode, VisibilityMode } from '../domain/visual'
+import { normalizeInkMode, normalizeStreamStyle } from '../visual/presets/inkStream'
 
 export interface SavedSession {
   id: string
@@ -15,6 +15,7 @@ export interface SavedPreferences {
   position: number
   viewMode: ViewMode
   streamStyleId?: StreamStyleId
+  inkMode?: InkMode
   visibilityMode: VisibilityMode
   effectsEnabled: boolean
   volume: number
@@ -57,7 +58,7 @@ export async function loadSavedState(): Promise<{ sessions: SavedSession[]; pref
           && typeof settings.effectsEnabled === 'boolean' && typeof settings.muted === 'boolean'
           && typeof settings.followViews?.constellation === 'boolean'
           && typeof settings.followViews?.stream === 'boolean'
-          && typeof settings.followViews?.ensemble === 'boolean' ? { ...settings, streamStyleId: normalizeStreamStyle(settings.streamStyleId) } : undefined,
+          && typeof settings.followViews?.ensemble === 'boolean' ? { ...settings, streamStyleId: normalizeStreamStyle(settings.streamStyleId), inkMode: normalizeInkMode(settings.inkMode) } : undefined,
       })
     }
     transaction.onerror = () => reject(transaction.error)

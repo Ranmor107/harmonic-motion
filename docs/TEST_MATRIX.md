@@ -3,7 +3,7 @@
 Purpose: 按改动选择真实存在的检查，区分纯函数、mock 与浏览器证据。
 Authority: 验证映射与覆盖缺口的主要记录；实际运行结果见 [VERIFICATION](VERIFICATION.md)。
 Update when: scripts、测试文件/suite、覆盖范围或验证要求改变。
-Last verified: 2026-09-28；增加 Ink Stream 的时间、切换、资源与旧偏好检查。
+Last verified: 2026-10-01；更新 Ink 的纸面投影、时间、切换与旧偏好检查。
 
 所有命令在仓库根目录运行。`npm run test` 是 `vitest run`，额外文件和 `-t` 参数通过 `--` 传入。
 现有 scripts 没有独立 typecheck、coverage、E2E 或截图命令；需要类型检查时使用 `npm run build`（内含 `tsc -b`）。不要写不存在的 `npm run typecheck` / `test:render`。
@@ -24,7 +24,7 @@ Last verified: 2026-09-28；增加 Ink Stream 的时间、切换、资源与旧�
 | T-UI · layout/title/buttons | 无 UI 自动测试；动作相关时使用对应核心 suite | `npm run lint`；`npm run build`；行为变化追加所属模块的 targeted test | UI 接线改变跨模块控制流时 T-GLOBAL | 控件、焦点、错误提示、标题长度、常用窗口尺寸；全屏按钮/F 与 Escape、Space/←/→/R、滑杆焦点与非交互区域、390px transport；纯布局不冒充引擎变更 |
 | T-STATE · score/session/seed/preset composition | [session.test.ts](../tests/session.test.ts)：缓存引用、切曲偏好、删除、seed、保存记录恢复后重新编译并延续唯一 ID、加载归零与 late unlock；engine 的 `Independent extension points` | `npm run test -- tests/session.test.ts tests/engine.test.ts` | compiled/score 生命周期或模块装配改变时 T-GLOBAL | 导入归零、刷新后曲库/选中曲/偏好/暂停位置及逐曲轨道焦点恢复，删除后不复活；regenerate 保持进度、preset 不重编译 |
 | T-DEMO · procedural example | [quick-study.test.ts](../tests/quick-study.test.ts) 验证默认曲目时长、分层加入、和弦变化与默认会话；engine/playback 使用旧短句的具体音符和时刻 | `npm run test -- tests/quick-study.test.ts tests/engine.test.ts tests/playback.test.ts` | 若 normalize/契约也改则 T-GLOBAL | 开页默认世界、标题/数量描述与实际一致；第一次点击播放、导入入口及说明的浏览器检查 |
-| T-INK · Stream style/UI | [ink-stream.test.ts](../tests/ink-stream.test.ts)：相同 compiled/world/plan 和 camera/presentation 引用、效果偏好、局部生命周期与密集预算、随机 seek、version 1 风格回退、资源缓存/失败重试 | `npm run test -- tests/ink-stream.test.ts tests/visual.test.ts tests/session.test.ts tests/engine.test.ts`；lint / build | 新视觉类型与 UI/state 接线需 T-GLOBAL | 同时刻对照、镜头/播放连续、View 往返、刷新、Effects Off、键盘、390px/全屏、长曲和 20 次切换；音频 load 及资源释放需实际观察，单测不替代浏览器 |
+| T-INK · Stream style/UI | [ink-stream.test.ts](../tests/ink-stream.test.ts)：相同 compiled/world/plan 和 camera/presentation 引用、mock audio load、效果偏好、力度/时值/重复音/和弦/真实休止、密集预算、空谱与长音、随机 seek、version 1 兼容 | `npm run test -- tests/ink-stream.test.ts tests/visual.test.ts tests/session.test.ts tests/engine.test.ts`；lint / build | 新视觉类型与 UI/state 接线需 T-GLOBAL | 同时刻截图、播放连续、View 往返、刷新、Effects Off、键盘、390px/全屏、用户长曲与重复切换；WebGL 失败/恢复、资源释放和实际音频仍需浏览器或人工观察，单测不替代 |
 | T-GLOBAL · cross-module / domain / shared semantics | 全部现有测试 + 静态约束 + 生产编译 | `npm run test`；`npm run lint`；`npm run build` | public contract、≥3 责任层或无法局部隔离的集成变化必做 | 按受影响行为补浏览器 smoke；全量单测不能替代它 |
 | T-DOC · documentation only | Markdown 路径、符号、命令、metadata 与 diff；无专门文档测试脚本 | `git diff --check`；`git diff --name-only`；若已暂存再加 `git diff --cached --check` / `--name-only`；`git status --short` | 需要确认 baseline 或文档引用检查结果时可运行 T-GLOBAL；不为文档修产品失败 | 路由演练：zoom、InkTheme、Spiral；相对链接和 anchors 可达；用户已有文件保持不变 |
 

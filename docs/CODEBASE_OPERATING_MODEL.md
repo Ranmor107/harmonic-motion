@@ -3,7 +3,7 @@
 Purpose: 按真实模块定位 ownership、输入输出、公共入口与最小修改邻域。
 Authority: 模块归属的主要记录；契约语义以 [ARCHITECTURE](ARCHITECTURE.md) 为准。
 Update when: 入口、依赖、公共符号、模块职责或测试归属发生变化。
-Last verified: 2026-09-28；增加 Ink 的配置、绘制与切换入口，其他模块保留既有核对记录。
+Last verified: 2026-10-01；更新 Ink 的纸面投影、绘制与切换入口，其他模块保留既有核对记录。
 
 下面“允许/禁止”是维护边界，不声称全由工具强制。实际 lint 仅对 domain/engine/playback 禁止列出的框架、视觉模块导入及 `Math.random`；不覆盖全部跨层规则，也没有禁止全局 DOM API。具体见 [eslint.config.js](../eslint.config.js)。
 
@@ -120,7 +120,7 @@ Last verified: 2026-09-28；增加 Ink 的配置、绘制与切换入口，其�
 <a id="visual"></a>
 ## Visual configuration and camera
 
-Ink Stream 入口：[presets/inkStream.ts](../src/visual/presets/inkStream.ts) 的 `resolveStreamPreset` / `normalizeStreamStyle`、[effects/inkAppearance.ts](../src/visual/effects/inkAppearance.ts) 的绝对时间墨迹求值、[本地纸面淡景](../src/visual/assets/ink-landscape.svg)。有效 preset 保留基础 camera/presentation 引用，样式不能重新生成展示坐标；对应断言在 [ink-stream.test.ts](../tests/ink-stream.test.ts)。
+Ink 入口：[presets/inkStream.ts](../src/visual/presets/inkStream.ts) 的 `resolveStreamPreset` / 风格及模式 normalizer；[presentation/inkPresentation.ts](../src/visual/presentation/inkPresentation.ts) 的 `createInkPresentation` / `buildInkFrame` 负责落墨与墨脉、稳定声部位置、有限历史和绝对时间笔触。复用显著性选择，纸面坐标是独立 display projection；不写回 score/world/plan。有效 preset 保留基础 camera/presentation/effects 引用；对应断言在 [ink-stream.test.ts](../tests/ink-stream.test.ts)。
 
 - **Primary paths / entry points**：[themes/defaultCosmic.ts](../src/visual/themes/defaultCosmic.ts)、[effects/defaultEffects.ts](../src/visual/effects/defaultEffects.ts)、[environments/defaultEnvironment.ts](../src/visual/environments/defaultEnvironment.ts)、[camera/staticCamera.ts](../src/visual/camera/staticCamera.ts)、[presentation/evaluatePresentation.ts](../src/visual/presentation/evaluatePresentation.ts)、[presentation/defaultPresentation.ts](../src/visual/presentation/defaultPresentation.ts)、[presets/defaultPreset.ts](../src/visual/presets/defaultPreset.ts)。
 - **Responsibility / owns**：视觉配置及纯 CameraController；组合 preset，独立于乐谱编译。
@@ -135,7 +135,7 @@ Ink Stream 入口：[presets/inkStream.ts](../src/visual/presets/inkStream.ts) �
 <a id="render"></a>
 ## Render
 
-Stream 按有效 preset 的 `streamStyle` 选择现有 [StreamRenderer](../src/render/StreamRenderer.tsx) 或新增 [InkStreamRenderer](../src/render/InkStreamRenderer.tsx)；后者用 [参数化笔触 shader](../src/render/inkShaders.ts) 批量绘制墨心、叶形、笔势和有限晕染。Scene 保留 Canvas/CameraRig 实例，本地 image 在背景容器解释，EnvironmentRenderer 不将 image 当 gradient。
+Scene 保留原版 R3F Canvas/CameraRig；Ink 生效时隐藏并停止该 Canvas 的逐帧绘制，叠加独立 WebGL2 [InkStreamRenderer](../src/render/InkStreamRenderer.tsx)。后者读取相同 PlaybackSnapshot，用 [笔触 shader](../src/render/inkShaders.ts) 批量绘制湿边、墨芯和干湿余迹；模式切换复用画布，暂停不重复绘制相同帧，卸载释放自有 GPU 资源。Original 仍使用既有 [StreamRenderer](../src/render/StreamRenderer.tsx)。纸面不消费 3D 镜头；本地 image 仍由原版背景容器解释。
 
 - **Primary paths / entry points**：[Scene.tsx](../src/render/Scene.tsx)、[WorldRenderer.tsx](../src/render/WorldRenderer.tsx)、[PerformerRenderer.tsx](../src/render/PerformerRenderer.tsx)、[TrajectoryRenderer.tsx](../src/render/TrajectoryRenderer.tsx)、[StreamRenderer.tsx](../src/render/StreamRenderer.tsx)、[EffectsRenderer.tsx](../src/render/EffectsRenderer.tsx)、[EnvironmentRenderer.tsx](../src/render/EnvironmentRenderer.tsx)、[CameraRig.tsx](../src/render/CameraRig.tsx)、[types.ts](../src/render/types.ts)。
 - **Responsibility / owns**：R3F/Three 对象生命周期、由音乐数据推导的视觉状态、画面取景执行与错误降级。
@@ -166,7 +166,7 @@ Stream 按有效 preset 的 `streamStyle` 选择现有 [StreamRenderer](../src/r
 <a id="ui"></a>
 ## UI and bootstrap
 
-[inkAssets.ts](../src/ui/inkAssets.ts) 缓存本地背景准备，失败允许重试；App 用请求序号屏蔽过期切换。资源未就绪时保留完整旧外观，完成后一次更新同步舞台/UI；桌面按钮在页头，窄屏入口在 View 下方。
+App 的水墨选择立即同步舞台与册页 UI；纸面下方提供宣纸落墨 / 墨脉，`inkMode` 作为可选本机偏好保存。没有水墨图像资源加载步骤；WebGL2 失败由 renderer 提示重试。布局在 [ink.css](../src/ui/ink.css)；原版窄屏入口在 View 下方，水墨窄屏仍保留页头切换。
 
 - **Primary paths / entry points**：[src/main.tsx](../src/main.tsx)、[App.tsx](../src/ui/App.tsx)、[styles.css](../src/ui/styles.css)、[Icons.tsx](../src/ui/Icons.tsx)；品牌配置 [branding/config.ts](../src/branding/config.ts)、品牌资产 [mark.svg](../public/mark.svg)，页面壳 [index.html](../index.html)。
 - **Responsibility / owns**：用户输入、布局/文案、错误/忙碌状态、服务装配、播放快照桥接。

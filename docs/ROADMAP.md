@@ -3,7 +3,7 @@
 Purpose: 保留已提出方向、状态和待验证设计，不将探索写成开发承诺。
 Authority: 未来方向与工作状态的主要记录；现状只看 [CURRENT_STATE](CURRENT_STATE.md)。
 Update when: 方向被选择、明确排期、开始实施、完成验证、延期或被替代。
-Last verified: 2026-09-28；水墨 Stream、配套 UI 与按钮切换已完成。
+Last verified: 2026-10-01；水墨册页与两种观看方式已集成，其他候选状态不变。
 
 ## 状态约定
 
@@ -52,6 +52,7 @@ Last verified: 2026-09-28；水墨 Stream、配套 UI 与按钮切换已完成�
 | 主 Performer 视觉焦点与 Stream satellites | Completed | Iteration 02 presentation；仍是一名 choreography Performer | [C09](CHANGE_IMPACT_MATRIX.md#c09-appearance) |
 | Artistic UI：作品信息、实时音乐、时间线、motif、层级 | Completed | Iteration 02；只使用现有可靠 score/playback 数据 | [C01](CHANGE_IMPACT_MATRIX.md#c01-ui) |
 | 水墨 Stream、配套 UI 与原版/水墨按钮切换 | Completed | [已完成计划](plans/completed/2026-09-28-ink-stream-and-ui.md)、[验证证据](VERIFICATION.md#ink-stream-2026-09-28)：水墨仅用于 Stream，按钮同步切换舞台和界面，保留原版、音乐时间与取景 | [C01–C04](CHANGE_IMPACT_MATRIX.md#c01-ui)、[C09](CHANGE_IMPACT_MATRIX.md#c09-appearance) |
+| 水墨册页：宣纸落墨、墨脉与古韵界面 | Completed · local verified | [集成计划](plans/completed/2026-10-01-ink-folio-integration.md)、[验证证据](VERIFICATION.md#ink-folio-2026-10-01)：替换初版 Ink 表达，独立纸面投影保留音乐时间与曲库；实际审美和录制表现待用户体验 | [C01–C04](CHANGE_IMPACT_MATRIX.md#c01-ui)、[C09](CHANGE_IMPACT_MATRIX.md#c09-appearance) |
 | 新主题、效果、环境、相机样式 | Candidate | 先区分可配置字段和缺少的 Renderer 能力；参考 D-01 | [C02–C05](CHANGE_IMPACT_MATRIX.md#c02-theme) |
 
 ## Later

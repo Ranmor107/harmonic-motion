@@ -3,7 +3,7 @@
 Purpose: 区分当前可用能力、部分接通的扩展点与未实现方向。
 Authority: 当前实现状态的主要记录；架构理由见 [ARCHITECTURE](ARCHITECTURE.md)。
 Update when: 用户能力、实现覆盖或运行方式改变。
-Last verified: 2026-09-28；增加 Ink Stream 与配套界面切换。
+Last verified: 2026-10-01；核对水墨册页集成，其余模块沿用既有记录。
 
 ## Implemented
 
@@ -18,14 +18,14 @@ Last verified: 2026-09-28；增加 Ink Stream 与配套界面切换。
 | 播放 | play/pause/stop/restart/seek；ended 重播；启动异步 revision 防护 | [clock](../src/playback/clock.ts)、[controller](../src/playback/controller.ts) |
 | 音频 | Tone 自定义谐波的键盘式合成音、独立声部、lookahead、held-note seek 恢复、limiter；持续 master gain 支持音量/静音 | [ToneAudioEngine](../src/audio/ToneAudioEngine.ts)、[scheduler](../src/audio/scheduler.ts) |
 | 视觉 | Constellation 主关系/顺序/声部曲线与和弦辐射结构；Overview/Focus/Current Path；Stream 使用正面 Ribbon 主线与伴随组；独立 Ensemble/Radial Stage 让音符从舞台内层深处沿弧形路径向外涌现，分为 Hidden、Emerging、Approaching、Active、Fading，并保留声部弧区、和弦展开和长音共鸣。Auto 或指定 MIDI 轨道可决定展示主线和三视图焦点；其他轨道保持可见。密集段只减少绘制代表，不删乐谱 | [musicalPresentation](../src/visual/presentation/musicalPresentation.ts)、[ensemblePresentation](../src/visual/presentation/ensemblePresentation.ts)、[Scene](../src/render/Scene.tsx) |
-| Stream 风格 | Original 保留原版 Ribbon；Ink 使用相同音符/曲线位置绘制墨心、少量叶形、笔势、朱色运笔主角与有限晕染，并同步切换整套 UI。风格仅在 Stream 生效，返回记忆选择；保持相机/展示配置引用、世界/计划及播放，不重新加载音频 | [inkStream](../src/visual/presets/inkStream.ts)、[InkStreamRenderer](../src/render/InkStreamRenderer.tsx)、[inkAppearance](../src/visual/effects/inkAppearance.ts)、[App](../src/ui/App.tsx) |
-| 环境 | solid / gradient / 本地 image 背景；gradient 可带 seeded 星点；Ink 用本地静态纸面/淡景 SVG，参数化批量笔触无需逐音符纹理 | [EnvironmentRenderer](../src/render/EnvironmentRenderer.tsx)、[Scene](../src/render/Scene.tsx) |
+| Stream 风格 | Original 保留原版 Ribbon；水墨册页提供宣纸落墨与墨脉，以真实音符生成湿边、叠墨、主支声部笔势及局部和声墨域。独立有限纸面投影，不含引导线或移动主角。同步切换配套界面并记忆选择；保持世界/计划及播放，不重新加载音频 | [inkStream](../src/visual/presets/inkStream.ts)、[inkPresentation](../src/visual/presentation/inkPresentation.ts)、[InkStreamRenderer](../src/render/InkStreamRenderer.tsx)、[App](../src/ui/App.tsx) |
+| 环境 | solid / gradient / 本地 image 背景；gradient 可带 seeded 星点；Ink 使用淡色纸面与程序化纸纹、批量参数笔触，无外部图像加载 | [EnvironmentRenderer](../src/render/EnvironmentRenderer.tsx)、[Scene](../src/render/Scene.tsx)、[ink.css](../src/ui/ink.css) |
 | 相机 | 投影包围盒取景、wheel zoom、pointer pan、fit/reset 与 Performer follow；跟随时可缩放，平移退出跟随；Ribbon 正面水平前移；Ensemble 使用包含深层 z 范围的正面稳定舞台，舞台只做低幅平移/旋转/倾斜/缩放 | [staticCamera](../src/visual/camera/staticCamera.ts)、[CameraRig](../src/render/CameraRig.tsx)、[ensemblePresentation](../src/visual/presentation/ensemblePresentation.ts) |
 | 应用状态 | 多 MIDI 会话曲库缓存 CompiledScore/seed；切曲复用引用、停止归零；regenerate 只更新当前曲目。IndexedDB 保存导入乐谱、最近曲、逐曲轨道焦点、视图/效果/音量与上次位置，重新打开时编译恢复并暂停 | [store](../src/state/store.ts)、[persistence](../src/state/persistence.ts) |
 | UI | Cantivela 暂定品牌、原创 SVG 字标、窄铭牌、大舞台、可配置引语；首次进入提供 Listen to a study / Open my MIDI，并在试听后提供可关闭的视觉说明与各 View 的一句话用途；默认关闭的 Controls 抽屉含轨道聚焦、音量和全屏，底栏有静音、最近 10 秒重听与轻量 transport。舞台提供 Space 播放/暂停、←/→ 5 秒 seek、R 重听、F 全屏，Escape 退出全屏 | [App](../src/ui/App.tsx) |
 | Demo | 默认原创 Quick Study《Where the light gathers》约 30.8 秒，旋律先行、低音与和声逐步加入；3 轨 / 72 音符 / 18 个同时起音组，seed 107。旧 10.5 秒短句保留作引擎回归素材 | [demo](../src/demo/score.ts)、[store](../src/state/store.ts) |
 
-UI 由 `App` 装配音频、播放和相机；Zustand 不拥有歌曲时钟。Regenerate 保留 score 引用，因此不会触发仅依赖 score 的音频重载 effect。时间滑杆对既有曲线求值，不重新规划曲线。
+UI 由 `App` 装配音频、播放和相机；Zustand 不拥有歌曲时钟。Regenerate 保留 score 引用，因此不会触发仅依赖 score 的音频重载 effect。时间滑杆对既有曲线求值，不重新规划曲线。水墨纸面按歌曲时间自动取景，保留原版相机配置而不使用其 3D 投影；切回原版时，画布尺寸变化可能触发原有 fit。
 
 ## Partially implemented / contract only
 
@@ -33,7 +33,7 @@ UI 由 `App` 装配音频、播放和相机；Zustand 不拥有歌曲时钟。Re
 | --- | --- | --- |
 | 多 Performer | plan 为数组，Scene 遍历数组 | planner 只生成一个；无声部路由或 split/merge |
 | 可替换策略 | `compileScore` 接收策略；store 有 strategy 字段 | 没有 setStrategy action 或策略选择 UI；只提供一种真实策略 |
-| 可替换预设 | `setPreset`、效果开关、独立视觉类型；Stream 的 Original / Ink 及配套 UI 可切换，本机 version 1 偏好增加可选风格字段，旧/未知字段只回退风格 | 没有通用 preset 编辑器；Ink 不适配其他 View |
+| 可替换预设 | `setPreset`、效果开关、独立视觉类型；Stream 的 Original / Ink 及配套 UI 可切换，Ink 包含 drops / veins。本机 version 1 偏好增加可选风格及观看方式，旧/未知值分别回退 original / drops | 没有通用 preset 编辑器；Ink 不适配其他 View |
 | CameraController | 纯投影 fit controller；CameraRig 用统一 playback snapshot 执行 follow | 不是通用镜头编排器；没有自动 fit active region |
 | 节点类型 | domain 包含 anchor/rest | 当前策略不产生，planner 只接收 note/chord |
 | 音色信息 | 保存 channel/instrument | 未按乐器选择音色；不解释 pedal、pitch bend、CC |
@@ -48,7 +48,7 @@ UI 由 `App` 装配音频、播放和相机；Zustand 不拥有歌曲时钟。Re
 
 ## 验证及性能特征
 
-- 当前检查结果和包体积只在 [VERIFICATION](VERIFICATION.md#ink-stream-2026-09-28) 维护；如何选择测试见 [TEST_MATRIX](TEST_MATRIX.md)。
+- 当前检查结果和包体积只在 [VERIFICATION](VERIFICATION.md#ink-folio-2026-10-01) 维护；如何选择测试见 [TEST_MATRIX](TEST_MATRIX.md)。
 - 从代码可确认：节点为 instanced mesh；Focus/Path 节点预算 96/36，关系线预算 180；Stream 局部音符预算 120，Ensemble 预算 96 并按声部轮询，优先保留进行中/主线/音高轮廓。显示限制不删除 score/world/plan 数据。隐藏节点及关系仍参与 CPU 过滤。
 - 显著性短窗默认 0.22 秒；指定轨道只限制展示主线的候选音，不修改声部分析、正式 world/plan 或音频。Radial Stage 的涌现时间窗为起音前 3.5 秒、淡出 1.2 秒，短组按 track、起音间隔与数量上限构建。这是展示启发式，不是真实旋律/乐句分析。曲库元数据从缓存 score 读取，避免重复存储；刷新从本机保存的规范化乐谱重新编译，播放保持暂停。
 - 这些是实现特征，不是性能测量。复杂 MIDI 可读性、密集节点遮挡程度、最高稳定帧率和端到端音画延迟均未建立基准。

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { NormalizedScore } from '../domain/score'
-import type { StreamStyleId, ViewMode, VisibilityMode, VisualPreset } from '../domain/visual'
+import type { InkMode, StreamStyleId, ViewMode, VisibilityMode, VisualPreset } from '../domain/visual'
 import { compileScore, type CompiledScore } from '../engine/compile'
 import { ConstellationGeometryStrategy } from '../engine/music-geometry/strategies/constellation'
 import type { GeometryStrategy } from '../engine/music-geometry/GeometryStrategy'
@@ -24,6 +24,7 @@ interface StudioState {
   preset: VisualPreset
   viewMode: ViewMode
   streamStyleId: StreamStyleId
+  inkMode: InkMode
   visibilityMode: VisibilityMode
   setScore(score: NormalizedScore): void
   addScores(scores: { score: NormalizedScore; filename: string }[]): void
@@ -34,6 +35,7 @@ interface StudioState {
   setPreset(preset: VisualPreset): void
   setViewMode(viewMode: ViewMode): void
   setStreamStyleId(style: StreamStyleId): void
+  setInkMode(mode: InkMode): void
   setVisibilityMode(visibilityMode: VisibilityMode): void
 }
 
@@ -45,7 +47,7 @@ export function createStudioStore() {
   return create<StudioState>((set, get) => ({
     compiled: demo.compiled, seed, strategy, preset: DefaultPreset,
     sessions: [demo], activeSessionId: demo.id,
-    viewMode: 'constellation', visibilityMode: 'overview', streamStyleId: 'original',
+    viewMode: 'constellation', visibilityMode: 'overview', streamStyleId: 'original', inkMode: 'drops',
     setScore: score => get().addScores([{ score, filename: score.metadata.title }]),
     addScores: scores => {
       const state = get()
@@ -89,6 +91,7 @@ export function createStudioStore() {
     setPreset: preset => set({ preset }),
     setViewMode: viewMode => set({ viewMode }),
     setStreamStyleId: streamStyleId => { if (get().streamStyleId !== streamStyleId) set({ streamStyleId }) },
+    setInkMode: inkMode => { if (get().inkMode !== inkMode) set({ inkMode }) },
     setVisibilityMode: visibilityMode => set({ visibilityMode }),
   }))
 }
