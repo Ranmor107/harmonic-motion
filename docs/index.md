@@ -3,7 +3,7 @@
 Purpose: 从任务找到最小必要文档、源码和验证入口。
 Authority: 知识导航及各类事实的归属表，不重述各文档正文。
 Update when: 文档增加、移动，或知识归属变化。
-Last verified: 2026-09-17；产品基线 `db67599`。
+Last verified: 2026-10-05；补开发手册与审计导航，核对本地链接；不表示历史功能重新验收。
 
 默认路径：**[AGENTS](../AGENTS.md) → 本页 → 任务路由 → 对应模块 → 符号搜索 → 目标源码/测试**。
 日常任务不需要读完本表所有文档。
@@ -11,6 +11,8 @@ Last verified: 2026-09-17；产品基线 `db67599`。
 | Document | Purpose / Authority | When to read | When to update |
 | --- | --- | --- | --- |
 | [README](../README.md) | 用户启动和操作入口 | 首次运行、解释操作 | 启动方式或用户操作改变 |
+| [developer/index](developer/index.md) | 当前核心模块的开发手册：图、API、状态、配置、FAQ、扩展 | 新开发者入门、深入对应模块 | 当前 API、配置、流程或排错方法变化 |
+| [CODEBASE_AUDIT](../CODEBASE_AUDIT.md) | 2026-10-05 全仓问题证据、严重程度和分步重构建议 | 排查已知缺陷、规划技术修复 | 问题复现、修复状态和证据变化；不自动改变产品排期 |
 | [ARCHITECTURE](ARCHITECTURE.md) | 稳定契约、架构原则的主要记录 | 引擎语义、跨层契约、invariant 受影响 | 已落实的架构事实改变；候选设计先写 ADR |
 | [CURRENT_STATE](CURRENT_STATE.md) | 当前实现能力的主要记录 | 判断已做/部分/未做 | 功能支持状态改变 |
 | [CODEBASE_OPERATING_MODEL](CODEBASE_OPERATING_MODEL.md) | 模块归属、入口、依赖的主要记录 | 找负责修改的文件和邻接模块 | 文件入口、ownership、依赖或公共符号变化 |

@@ -78,7 +78,7 @@ Related ADR: none
 
 - PowerShell 语法检查与 `-NoBrowser` 受控路径，确认服务会启动并在退出时释放。
 - 实际启动脚本，确认独立浏览器应用窗口可打开本地页面；关闭窗口后确认 Vite 进程退出、端口释放、临时 profile 删除。
-- 按 [TEST_MATRIX](../TEST_MATRIX.md) 运行 `npm run test`、`npm run lint`、`npm run build`。
+- 按 [TEST_MATRIX](../../TEST_MATRIX.md) 运行 `npm run test`、`npm run lint`、`npm run build`。
 - `git diff --check` 并确认用户 `midi/` 未被暂存。
 
 ## Documentation updates

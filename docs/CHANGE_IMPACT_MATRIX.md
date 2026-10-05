@@ -3,7 +3,7 @@
 Purpose: 将用户需求路由到负责模块、最小源码范围、验证与文档更新。
 Authority: 任务路由的主要记录；实际符号和依赖见 [模块地图](CODEBASE_OPERATING_MODEL.md)。
 Update when: 模块边界、路由或已验证的责任归属变化。
-Last verified: 2026-09-18；复核本轮 UI、展示、相机与会话路由；其他路由沿用原记录。
+Last verified: 2026-10-05；纠正 C06 的旧遍历描述；其他路由规则未改变。
 
 表中 I1–I10 按 [ARCHITECTURE 十项 invariants](ARCHITECTURE.md#architecture-invariants) 的编号引用。
 验证代号 T-* 的完整命令、覆盖与全量条件仅在 [TEST_MATRIX](TEST_MATRIX.md#targeted-validation) 维护。
@@ -30,7 +30,7 @@ Secondary 是有证据才展开的邻域；不是默认要修改的清单。
 ## 相机与可见性路由的当前事实
 
 - 已有投影 bounds 取景、受限 zoom/pan、Fit/Reset 和 follow。CameraRig 以 controller 获取基础取景，再按 playback snapshot 跟随；Stream 仅水平前移。相机 effect 依赖真实 width/height，不依赖易被重建的 size 对象。
-- Focus/Current Path 从 songTime 派生强调集合并使用配置预算；隐藏不删 WorldModel。WorldRenderer 仍遍历实例，超大曲目性能需测量。
+- Focus/Current Path 从 songTime 派生强调集合并使用配置预算；隐藏不删 WorldModel。WorldRenderer 使用预建显示索引选择节点、更新有界实例和关系；超大曲目的准备/查询与 GPU 性能仍需测量。旧描述修正见 [D-03](KNOWN_LIMITATIONS.md#d03-audit-documentation)。
 - WorldModel 连接不变；visual/relations 把显著性、序列、声部与和弦成员解释为有层级的曲线。TrajectoryRenderer 继续采样正式计划当前段。
 - Stream 使用主线/伴随组的正面 Ribbon 显示投影；独立 Ensemble 使用稳定声部弧区和预算化代表音符，二者都复用 score/world/plan/playback，均不是 GeometryStrategy。所有选音/坐标/生命周期纯函数在 visual/presentation；边界见 [ADR-0001](decisions/ADR-0001-musical-presentation.md)。
 - 多 MIDI 曲库的导入/切换/删除从 App + state/ScoreSession 开始，沿 T-STATE/T-PLAYBACK 验证；不为曲库重写 MIDI parser 或 compileScore。

@@ -3,7 +3,7 @@
 Purpose: 保留带日期、baseline 和适用边界的实际检查证据。
 Authority: 已发生验证的记录；不能作为未来提交自动通过的保证。
 Update when: 新一轮检查产生结果，或旧证据被确认需更正。
-Last verified: 2026-10-01；最新证据见 Ink folio，早期记录保留其日期和适用边界。
+Last verified: 2026-10-05；最新证据见 Codebase audit，早期记录保留其日期和适用边界。
 
 日期：2026-09-17。环境：Windows、Node.js 24.18.0、Codex 内置 Chromium 浏览器，1280 × 720。
 
@@ -359,3 +359,25 @@ Ink 的 P95 在这次有限样本中增加 7.5%，median 下降约 6.7%，符合
 | 巴赫二部创意曲第一号 | 479 / 2 | veins | 0.066 / 0.256 | 768 |
 
 本地证据存于忽略的 `artifacts/ink-folio/`：`drops-canon.png`、`veins-bach.png`、`mobile.png` 和 `pure-frame-measurement.json`。未进行压缩录屏、跨设备听感或 GPU 帧率验收；WebGL2 失败提示/恢复有实现，但本轮未在真实失去图形加速的浏览器中强制验收。水墨使用独立自动纸面取景，保持原版镜头配置，不能据此承诺跨布局返回后手动镜头逐像素不变。
+
+<a id="codebase-audit-2026-10-05"></a>
+## Codebase audit · 2026-10-05
+
+范围：用户授权全仓阅读与开发文档建设，明确不立即修改产品源码。基线 `e15cad575396607d01f2225529fbe6b9a75527ab`；Windows、Node 24.18.0、npm 11.16.0。沿用既有 docs，不新增产品实施 plan；审计的建议路线尚未执行。
+
+| 检查 | 实际结果 / 证据边界 |
+| --- | --- |
+| 全仓范围 | 基线119个跟踪文件；58个src、16个tests/fixtures、31个docs、14个其余配置/脚本。读取第一方文本；lock结构核对；MIDI fixture解析。未跟踪用户midi/DOCX不编辑、不提交；不审计node_modules源码全集 |
+| 正式自动检查 | `npm run test`：12文件/90测试通过；`npm run lint`通过；`npm run build`通过（含strict TypeScript）。未修改正式测试或配置 |
+| 构建快照 | JS 1,456.25 kB / gzip 398.53 kB；CSS 23.23 kB / gzip 5.66 kB。Vite仍提示chunk >500kB，不将warning写成构建失败 |
+| 依赖图 | 56个源码TS/TSX，176条本地import声明、95条type-only；忽略纯类型边后未发现第一方运行时import环。不是第三方依赖安全审计 |
+| 受控复现 | 落墨重复音12秒后无mark、Ensemble淡出路径中间点跳变、Three旧boundingSphere裁剪错误、坏保存score被接受、部分恢复跳过记录、音频seek抛错后clock仍playing、IDB abort-only Promise未结束 |
+| 稀疏长曲 | 实际小规模1音符/86401秒模型产生86403个energy元素；37字节MIDI经库与normalize得到134217728秒。未为极端输入分配大数组或运行浏览器，内存耗尽影响标为风险 |
+| fixture | tempo-and-voices.mid经库与normalize得24notes/2tracks/8.1875秒；invalid.mid被拒绝；正式parser测试包含在全量suite中 |
+| 诊断工具边界 | Node/Vite临时模块装载和audio/IDB mock，不写真实曲库、不新增产品文件；parser的SSR CommonJS互操作限制改用Node require加载库，不算产品缺陷 |
+| 文档产出 | 根CODEBASE_AUDIT及8份developer手册；补README/索引/模块入口/测试缺口，纠正过期显示描述与历史启动plan链接，保留历史验证事实 |
+| 本轮未做 | 浏览器视觉/真实IDB事务/多窗口覆盖/声卡/GPU/录屏/真人体验；未重跑一键启动关窗；未修复审计源码问题、未提交或推送GitHub |
+
+问题的最小输入、观测值、位置与逐步路线统一见 [CODEBASE_AUDIT](../CODEBASE_AUDIT.md)；核心模块说明从 [开发者入口](developer/index.md) 开始。纯函数/受控mock复现不等于对应浏览器行为已经验收，也未成为正式回归覆盖。
+
+文档检查：本轮共核对41份Markdown中的543条本地链接及Markdown锚点；文档metadata齐备。新增文档也做空白/冲突标记检查；`git diff --check`通过。最终范围仅Markdown，源码、tests、启动器、依赖/配置无Git差异，既有用户素材保持原样。

@@ -3,9 +3,11 @@
 Purpose: 记录已确认限制、尚未验证的风险及文档/代码差异，防止候选方案冒充事实。
 Authority: 限制与 drift 的主要记录；验证证据见 [VERIFICATION](VERIFICATION.md)，候选状态见 [ROADMAP](ROADMAP.md)。
 Update when: 新证据、支持边界、解决情况或待确认决策变化。
-Last verified: 2026-10-01；更新 Ink 纸面投影与验证边界，其余限制沿用既有记录。
+Last verified: 2026-10-05；核对渲染预算、记录 D-03 与全仓审计；未实施源码修复。
 
 Priority 只是当前建议，不等于排期。`unknown` 表示缺乏影响/频率证据；不将未测量风险统一升级为 high。
+
+本次新增的保存边界、稀疏长曲内存、落墨重复音、路径生命周期、异常恢复等具体问题统一在 [CODEBASE_AUDIT](../CODEBASE_AUDIT.md) 保存严重程度、复现步骤与状态；此处不复制同一问题清单。下面的长期支持边界继续有效。
 
 ## Confirmed limitations and unverified risks
 
@@ -13,11 +15,11 @@ Priority 只是当前建议，不等于排期。`unknown` 表示缺乏影响/频
 | --- | --- | --- | --- | --- |
 | L01 · Confirmed · unknown | [parser](../src/midi/parser.ts)：10 × 1024² 字节、20,000 notes；拒绝空谱、Type 2、SMPTE。MIDI 文本没有统一字符集标记；[normalize](../src/midi/normalize.ts) 只在文件名可验证时识别 UTF-8 / GB18030 / Big5 / Shift_JIS 候选，否则保留可靠文本或回退文件名。不是完整 MIDI 格式兼容性认证 | 部分输入不能加载；文件名与元数据无关时，旧编码标题可能无法可靠还原 | 导出 Type 0/1 PPQ、截取较短片段；用正常文件名辅助旧编码标题识别 | midi；按真实文件兼容性证据扩展，不能只放宽限额或猜编码 |
 | L02 · Confirmed · unknown | [normalize](../src/midi/normalize.ts) 只提取 notes/channel/instrument 与 tempos；[Tone adapter](../src/audio/ToneAudioEngine.ts) 统一使用键盘式自定义谐波 Synth，并非采样钢琴或原曲乐器 | 原作乐器、踏板、弯音、CC、打击乐表现不还原 | 作为音符结构演示；需要忠实音色时另用原播放器对照 | midi/domain-score/audio；逐项定义表达和音色适配 |
-| L03 · Confirmed · unknown | Tone adapter 64 声部上限含 release；无空闲声部则跳过新音符；[EffectsRenderer](../src/render/EffectsRenderer.tsx) 最多显示最近64次瞬态 | 极密集音乐可能少发声/少画反馈；音乐计划不丢事件 | 较疏的片段；不要据画面反馈数量判断谱面丢音 | audio / render 各自拥有预算；需压力测试后讨论策略 |
+| L03 · Confirmed · unknown | Tone adapter 64 声部上限含 release；无空闲声部则跳过新音符；[EffectsRenderer](../src/render/EffectsRenderer.tsx) 通过 complexityPolicy 限制瞬态，少于160节点时预算32，较大世界随 detail 为8–16 | 极密集音乐可能少发声/少画反馈；音乐计划不丢事件 | 较疏的片段；不要据画面反馈数量判断谱面丢音 | audio / render 各自拥有预算；需压力测试后讨论策略 |
 | L04 · Confirmed · unknown | [scheduler](../src/audio/scheduler.ts) seek 将仍持续音符按剩余 duration 重新起音；不重建相位/ADSR；后台 setInterval 可被节流 | seek 听感不等同于从头播放；后台连续性没有保证 | 前台播放；对照相邻音符与节奏，而非要求波形一致 | audio/playback；真实输出测量、明确恢复语义 |
 | L05 · Confirmed · medium | [planner](../src/engine/choreography/planner.ts) 只有一名 ensemble Performer；每起音一个目标；同一时间多个目标报错 | 跨轨和弦共享一个抵达点，无独立声部叙事 | 使用已有 layerIds/noteIds 查看归属；不要伪装成多 Performer | choreography/domain-performance；多角色需先 plan |
 | L06 · Partially resolved · unknown | 已有 zoom/pan/fit/reset/follow；跟随时滚轮缩放保留跟随，平移退出；没有 fit active region | 局部范围仍需手动取景 | 手动 pan/zoom 或 Fit | visual/camera + render；证据见 [本轮验证](VERIFICATION.md#continuity-follow-zoom-2026-09-27) |
-| L07 · Partially resolved · unknown | Focus/Path/Stream 已提供局部视图和轨迹强调；隐藏实例 scale 为 0，WorldRenderer 仍逐帧遍历节点并筛选关系；Stream 过滤已准备好的短组 | 可读性改善，但极大曲目没有正式 GPU/内存基准 | Focus 96、Path 36、Stream 120 的配置预算；可关闭 effects | render/visual；先 profiling 再考虑更复杂索引/分块 |
+| L07 · Partially resolved · unknown | Focus/Path/Stream 已提供局部视图和轨迹强调；WorldRenderer 使用预建显示索引、预算选择与实例 count，只更新选中节点及有界关系；Stream 查询已准备短组和音符块 | 可读性改善；有界显示不等于准备和查询成本恒定，极大曲目仍无正式 GPU/内存保证，见审计 A12 | Focus 96、Path 36、Stream 120 的配置预算；可关闭 effects | render/visual；先 profiling 再考虑更复杂索引/分块 |
 | L08 · Browser-observed / performance unverified · unknown | 720 音符程序生成曲目在浏览器中可切换 Focus/Path/Stream 且视觉局部化；未采集 FPS、GPU 时间或长时稳定性 | 证明显示策略有效，不构成性能承诺 | 记录曲目规模、设备、帧率后再优化 | render；不能仅凭截图断言性能达标 |
 | L09 · Confirmed / partially validated quality · unknown | 用户反馈当前音色可接受；mock 覆盖切曲后旧声部清理与主增益保持，浏览器已验证切曲控件状态。仍没有声卡信号采集、跨设备试听记录或端到端延迟基准 | 当前主观接受不等于还原原曲乐器或精确音画同步 | 出现具体听感问题时记录设备、浏览器和段落；不要以单测替代 | audio/playback；未来测量方案 |
 | L10 · Confirmed · low | 生产包存在 Vite 体积警告，当前数值见 [本轮基线](VERIFICATION.md#repository-os-baseline) | 公网首次加载可能受网络影响；没有下载速度实测 | 当前本地使用；不影响构建通过 | 应用装配/交付；有交付目标再拆包，当前不改配置 |
@@ -45,6 +47,14 @@ Priority 只是当前建议，不等于排期。`unknown` 表示缺乏影响/频
 - **代码实际是什么**：[App](../src/ui/App.tsx) 调 controller.seek；[evaluator](../src/engine/choreography/evaluator.ts) 对既有 PerformancePlan 求位置，seek 路径不调用 compileScore/planPerformance。
 - **判断**：原文可以理解为“重新求值”，但也可能误读成“重新规划”。当前行为以既有计划的绝对时间求值为准，与 ARCHITECTURE 一致。
 - **处理及待确认**：本轮只将 README 明确为“对既有轨迹求位置，恢复节点和效果状态”。没有架构决策变化；若未来需求确实要求 seek 时重新规划，必须另行明确并进入 plan/ADR，不能沿用旧文案当授权。
+
+<a id="d03-audit-documentation"></a>
+### D-03 · 显示预算和模式名称存在历史漂移（Documentation corrected）
+
+- **原文**：L03 写最多64次瞬态，L07 与影响矩阵写 WorldRenderer 逐帧遍历全量节点/隐藏 scale=0；ARCHITECTURE 的展示行仍称 Ribbon/Helix。
+- **当前源码**：EffectsRenderer 取 complexityPolicy 的 hitBudget；WorldRenderer 使用 createDisplayIndex/selectDisplayNodes 和实例 count；Scene/ViewMode 当前为 Constellation、Stream Ribbon、Ensemble，并有 Stream Ink 独立投影，没有 Helix 选择器。
+- **处理**：2026-10-05 仅纠正上述现状描述，补开发手册；不改变产品行为、架构不变量或历史 plan/VERIFICATION 的当时证据。旧启动计划的 TEST_MATRIX 相对链接同时修正。
+- **另一个时间边界**：2026-09-28 的旧 Ink R3F 指标不能代表 10-01 独立 WebGL2 Ink；新版本仍缺 GPU 基准。当前 benchmark 工具缺口见审计 A10，未用文档改动冒充修复。
 
 ## 尚未证明的事项
 

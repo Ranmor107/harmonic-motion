@@ -3,11 +3,13 @@
 Purpose: 按真实模块定位 ownership、输入输出、公共入口与最小修改邻域。
 Authority: 模块归属的主要记录；契约语义以 [ARCHITECTURE](ARCHITECTURE.md) 为准。
 Update when: 入口、依赖、公共符号、模块职责或测试归属发生变化。
-Last verified: 2026-10-01；更新 Ink 的纸面投影、绘制与切换入口，其他模块保留既有核对记录。
+Last verified: 2026-10-05；全仓源码复核后补开发手册入口；模块职责未改变，历史验证不重新声明通过。
 
 下面“允许/禁止”是维护边界，不声称全由工具强制。实际 lint 仅对 domain/engine/playback 禁止列出的框架、视觉模块导入及 `Math.random`；不覆盖全部跨层规则，也没有禁止全局 DOM API。具体见 [eslint.config.js](../eslint.config.js)。
 
 测试命令、全量检查条件统一见 [TEST_MATRIX](TEST_MATRIX.md)，任务到模块的选择见 [CHANGE_IMPACT_MATRIX](CHANGE_IMPACT_MATRIX.md)。本文件不复制完整类型定义。
+
+需要架构图、关键类/函数用法、状态时序或扩展步骤时，进入 [开发者手册](developer/index.md)；具体缺陷与待测风险见 [本次全仓审计](../CODEBASE_AUDIT.md)。本文件继续作为 ownership 的主要入口。
 
 <a id="domain"></a>
 ## Domain

@@ -3,7 +3,7 @@
 Purpose: 定义稳定架构、音乐时间语义和不可破坏原则。
 Authority: 架构事实与契约的主要记录；当前支持状态不在此维护。
 Update when: 已落实的核心契约、语义、ownership 或 invariant 改变。
-Last verified: 2026-09-28；补充本地 image 与 Stream 外观契约；未改音乐核心契约。
+Last verified: 2026-10-05；纠正展示模式的过期名称并连接开发手册；音乐核心契约未改。
 
 任务定位从 [文档导航](index.md) 与 [模块地图](CODEBASE_OPERATING_MODEL.md) 开始。核心管线继续保留；Stream 的展示投影边界见 [ADR-0001](decisions/ADR-0001-musical-presentation.md)。
 
@@ -53,7 +53,7 @@ flowchart TD
 | CameraController | `getState(time, context)`，消费 bounds、aspect、config；不能修改世界 |
 | VisualPreset | 组合 theme、effects、environment、camera、presentation，可指定 Stream 外观；Ink 与原版共享 presentation/camera，不重编译音乐 |
 | Renderer | 读取 world/plan、PlaybackState、VisualPreset 与纯 musical presentation；不读取 MIDI，不修改编舞或调度音乐 |
-| Musical presentation | 只读 score 的显著性选音、短组、Ribbon/Helix 显示投影；主角沿显示曲线按绝对时间求值，不能写回正式 world/plan |
+| Musical presentation | 只读 score 的显著性选音、短组、Stream Ribbon、Ensemble 与 Ink 展示投影；主角/音符按绝对时间求值，不能写回正式 world/plan；当前没有独立 Helix 选择器 |
 | ScoreSession | application 维护 id/filename/seed/CompiledScore；缓存 score/analysis/world/plan，切回复用；元数据由 score 派生 |
 
 `src/domain/visual.ts` 只声明视觉数据类型，不包含视觉默认值或渲染库对象。数值与颜色集中在 `src/visual/`。核心模块通过 ESLint 限制导入 React、Three、Tone、render、state、visual；播放协调器只引用音频接口的类型。
@@ -144,6 +144,8 @@ audioEventTime = sourceAnchor + noteSongTime - savedPosition
 10. **VisualPreset 可替换**：视觉系统消费数据组合，不把 Cosmic 当成产品永久定义。
 
 ## Future extension points
+
+当前各投影、状态所有权、类/函数和配置的开发说明见 [developer/index](developer/index.md)。本轮纠正文档名称的证据见 [D-03](KNOWN_LIMITATIONS.md#d03-audit-documentation)，未改变音乐契约。
 
 当前不实现 MusicXML、live MIDI、转录、AI、phrase/motif/tension 分析、多 Performer split/merge、编辑器、视频导出或玩法。但可以分别替换输入、分析、策略、planner、音频适配器、主题、效果和相机。序列化 plan + 绝对时间求值为未来导出提供基础；当前不加入 worker、ECS 或复杂继承体系。
 

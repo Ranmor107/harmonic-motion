@@ -105,11 +105,13 @@ npm run build
 npm run preview
 ~~~
 
-源码中的音乐流程为 MIDI 乐谱 → 音乐模型 → 演奏计划 → 画面与声音。[当前能力](docs/CURRENT_STATE.md)、[架构说明](docs/ARCHITECTURE.md)、[开发流程](AGENTS.md)和[本轮水墨验证](docs/VERIFICATION.md#ink-folio-2026-10-01)供希望继续开发项目的人查阅。
+继续开发请从 [开发者文档](docs/developer/index.md) 开始：包含架构图、模块与关键函数、音乐/状态流、配置、启动、FAQ 和扩展指南。正式音乐流程为 MIDI → NormalizedScore → WorldModel → PerformancePlan；声音直接从乐谱按同一时钟调度，画面消费音乐计划或展示投影。
+
+[全仓审计与分步重构路线](CODEBASE_AUDIT.md) 记录当前发现的问题及证据，尚未实施其中的源码修复。[知识索引](docs/index.md)、[当前能力](docs/CURRENT_STATE.md)、[架构契约](docs/ARCHITECTURE.md)、[开发流程](AGENTS.md)和[水墨集成验证](docs/VERIFICATION.md#ink-folio-2026-10-01)分别保存长期事实与历史证据。
 
 <!--
 Purpose: 项目面向使用者的介绍、安装与操作入口。
 Authority: 启动与用户操作指南；架构和长期限制见链接的仓库文档。
 Update when: 启动方式、用户操作或公开支持边界变化。
-Last verified: 2026-10-01；按当前应用源码、一键启动器和水墨集成核对。
+Last verified: 2026-10-05；源码复核启动/操作说明，新增开发文档与审计入口；未重跑浏览器操作验证。
 -->

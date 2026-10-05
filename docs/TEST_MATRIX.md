@@ -3,10 +3,12 @@
 Purpose: 按改动选择真实存在的检查，区分纯函数、mock 与浏览器证据。
 Authority: 验证映射与覆盖缺口的主要记录；实际运行结果见 [VERIFICATION](VERIFICATION.md)。
 Update when: scripts、测试文件/suite、覆盖范围或验证要求改变。
-Last verified: 2026-10-01；更新 Ink 的纸面投影、时间、切换与旧偏好检查。
+Last verified: 2026-10-05；复核现有测试并连接审计覆盖缺口；未新增正式测试。
 
 所有命令在仓库根目录运行。`npm run test` 是 `vitest run`，额外文件和 `-t` 参数通过 `--` 传入。
 现有 scripts 没有独立 typecheck、coverage、E2E 或截图命令；需要类型检查时使用 `npm run build`（内含 `tsc -b`）。不要写不存在的 `npm run typecheck` / `test:render`。
+
+本轮审计发现的尚未覆盖边界及应补回归见 [CODEBASE_AUDIT](../CODEBASE_AUDIT.md#检查项覆盖与验证记录)：真实 IndexedDB/多窗口、App 初始化和失败恢复、重复落墨、淡出路径、动态 GL 包围体与当前 Ink 指标。临时诊断未加入正式 suite，不能将这些缺口标为已覆盖。结果快照见 [本轮验证](VERIFICATION.md#codebase-audit-2026-10-05)。
 
 <a id="targeted-validation"></a>
 ## 定向检查
