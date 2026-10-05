@@ -385,7 +385,7 @@ Ink 的 P95 在这次有限样本中增加 7.5%，median 下降约 6.7%，符合
 <a id="audit-step-1-2026-10-06"></a>
 ## Audit step 1 · Saved-score recovery and sparse-song memory · 2026-10-06
 
-基线 `5ee4bda` 为上一轮审计/手册独立提交，产品源码基线仍为 `e15cad5`。本轮仅修复 A01/A02；范围及契约见 [计划](plans/active/2026-10-06-audit-input-recovery.md)。参考 Dexie / R3F 的复现测试和语义提交方式，沿用本仓库工具链，不新增 CI、依赖或发布系统。
+基线 `5ee4bda` 为上一轮审计/手册独立提交，产品源码基线仍为 `e15cad5`。本轮仅修复 A01/A02；修复提交 `f9e2900` 已上传 GitHub，范围及契约见 [归档计划](plans/completed/2026-10-06-audit-input-recovery.md)。参考 Dexie / R3F 的复现测试和语义提交方式，沿用本仓库工具链，不新增 CI、依赖或发布系统。
 
 | 检查 | 实际结果 / 证据边界 |
 | --- | --- |

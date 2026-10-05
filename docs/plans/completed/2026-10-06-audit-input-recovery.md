@@ -5,7 +5,8 @@ Authority: 本轮有限实施计划；音乐契约以 ARCHITECTURE 为准。
 Update when: 范围、实现、验证、提交或完成状态变化。
 Last verified: 2026-10-06；核对受影响源码、调用方和测试。
 
-Status: Active · local verified · GitHub upload pending
+Status: Completed · implemented and uploaded
+Implementation commit: `f9e2900`；审计/手册基线提交 `5ee4bda` 一并上传。
 Source baseline: `5ee4bda`（上一轮审计/手册已单独提交）；产品源码仍为 `e15cad5`。用户未跟踪的 midi/、产品计划 DOCX 保留。
 Related request / roadmap item: 用户要求参考成熟 GitHub 仓库形式，先进行一步修复并上传；对应 [审计路线第1步](../../../CODEBASE_AUDIT.md#逐步修复与重构路线)。
 Related ADR: none；不改变权威时间、音乐世界或编舞语义。
@@ -64,8 +65,8 @@ Adjacent: midi/normalize 需要拒绝有限起音+有限时长溢出为 Infinity
 - [x] 成功记录可使用、失败记录原值不被写回覆盖、错误清楚且可重试。
 - [x] 稀疏长曲无按 duration 分配；正常运动/seek/切换契约保持。
 - [x] 全量检查、隔离浏览器验证、文档链接/diff 有证据。
-- [ ] 文档、审计状态已更新；提交范围核对后归档，保护用户素材。
-- [ ] 上传 GitHub 并核对远端提交。
+- [x] 文档、审计状态已更新；提交范围核对后归档，保护用户素材。
+- [x] 上传 GitHub 并核对远端提交。
 
 ## Execution notes
 
@@ -73,4 +74,6 @@ Adjacent: midi/normalize 需要拒绝有限起音+有限时长溢出为 Infinity
 
 2026-10-06 本机验证：新增回归先失败，再通过修复；复核补充 sparse note 数组空洞用例，修复同一信任边界。最终 13 文件/118 tests、lint/build 通过；构建 JS 1458.98 kB / gzip399.53kB，保留大 chunk warning。42 份 Markdown / 567 条本地链接及锚点可达；57 个 TS/TSX、181 条本地 import（96 条纯类型），无运行时环；diff 检查通过。精确覆盖与局限见 [验证记录](../../VERIFICATION.md#audit-step-1-2026-10-06)。
 
-浏览器使用独立5175 origin和自建记录：好坏混合/null容器，两键原值保留；正常曲、临时 MIDI 导入、持续提示/刷新；健康库 8.083 秒/Ensemble 恢复暂停；三 View/两 Ink保持暂停位置，极长曲实际进入各视图；未见 console error。音乐核心、audio/playback、启动器、依赖/配置及用户素材不在提交范围。本机完成后将推送并记录实现提交，再归档本文件。
+浏览器使用独立5175 origin和自建记录：好坏混合/null容器，两键原值保留；正常曲、临时 MIDI 导入、持续提示/刷新；健康库 8.083 秒/Ensemble 恢复暂停；三 View/两 Ink保持暂停位置，极长曲实际进入各视图；未见 console error。既有音乐算法、audio/playback、启动器、依赖/配置及用户素材不在提交范围；midi 只增加已说明的有限 note end 检查。
+
+交付：`f9e2900` 已推送至 Ranmor107/harmonic-motion main，GitHub 接受 `e15cad5..f9e2900`，包含前次审计/手册提交 `5ee4bda`。显式暂存28个路径，无用户 MIDI/DOCX。依仓库规定归档此计划并更新导航；用户要求减少不必要的验证，完成既有必要检查后不再扩展或重复全量测试。

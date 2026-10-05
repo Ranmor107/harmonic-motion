@@ -268,7 +268,7 @@ App 挂载时根据 reduced motion 关闭效果，但异步读回 `effectsEnable
 
 ## 逐步修复与重构路线
 
-第1步已在用户授权下实施并验证，见 [有限实施计划](docs/plans/active/2026-10-06-audit-input-recovery.md) 与 [验证记录](docs/VERIFICATION.md#audit-step-1-2026-10-06)。后续仍为建议顺序；执行前依照 [DEVELOPMENT_WORKFLOW](docs/DEVELOPMENT_WORKFLOW.md) 建立有限 plan，每步可单独验收和回退，不打包成全仓重写。
+第1步已在用户授权下实施并验证，修复提交 `f9e2900` 已上传 GitHub，见 [归档计划](docs/plans/completed/2026-10-06-audit-input-recovery.md) 与 [验证记录](docs/VERIFICATION.md#audit-step-1-2026-10-06)。后续仍为建议顺序；执行前依照 [DEVELOPMENT_WORKFLOW](docs/DEVELOPMENT_WORKFLOW.md) 建立有限 plan，每步可单独验收和回退，不打包成全仓重写。
 
 | 步骤 | 范围与产出 | 进入下一步的验收门槛 |
 | --- | --- | --- |
