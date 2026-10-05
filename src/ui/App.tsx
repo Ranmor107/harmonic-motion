@@ -53,6 +53,7 @@ export function App() {
   const [readReady, setReadReady] = useState(false)
   const [ready, setReady] = useState(false)
   const [storageReady, setStorageReady] = useState(false)
+  const [recoveryWarning, setRecoveryWarning] = useState('')
   const restorePosition = useRef<number | null>(null)
   const lastSavedPosition = useRef(0)
   const [entered, setEntered] = useState(false)
@@ -105,7 +106,11 @@ export function App() {
     void loadSavedState().then(({ sessions: saved, preferences }) => {
       if (!active) return
       const restored = restoreSessions(saved, preferences?.activeSessionId ?? 'score-0')
-      if (restored < saved.length) setError('Some saved scores could not be restored.')
+      if (restored.rejected) {
+        const message = `${restored.rejected} 条本机记录无法恢复。原数据已保留；本次曲库与设置改动仅在内存中，关闭页面后不会保存。`
+        setRecoveryWarning(message)
+        setError(message)
+      }
       if (preferences) {
         setViewMode(preferences.viewMode)
         setStreamStyleId(preferences.streamStyleId ?? 'original')
@@ -130,10 +135,10 @@ export function App() {
             typeof trackId === 'string' && library.some(session => session.id === id &&
               session.compiled.score.tracks.some(track => track.id === trackId && track.notes.length > 0)))))
         }
-        restorePosition.current = preferences.position
+        if (useStudio.getState().activeSessionId === preferences.activeSessionId) restorePosition.current = preferences.position
         setEntered(true)
-      } else if (saved.length) setEntered(true)
-      setStorageReady(true)
+      } else if (restored.restored) setEntered(true)
+      setStorageReady(restored.rejected === 0)
     }).catch(() => { if (active) storageFailed() }).finally(() => { if (active) setReadReady(true) })
     return () => { active = false }
   }, [audio, restoreSessions, setPreset, setViewMode, setVisibilityMode, storageFailed, setStreamStyleId, setInkMode])
@@ -445,7 +450,8 @@ export function App() {
         if (muted) { setMuted(false); audio.setMuted(false) }
       }} /></section>
       <section className="control-section library"><div className="library-heading"><h2>{ink ? '本机曲库' : 'Library'} <span>{sessions.length}</span></h2><button onClick={() => input.current?.click()} disabled={busy}>{ink ? '+ 添一曲' : '+ Add'}</button></div>
-        <p className="control-note">{ink ? '曲目保存在此浏览器；移除仅删除本机保存的副本。' : 'Saved in this browser · removing a score deletes its saved copy'}</p>
+        <p className="control-note" role={recoveryWarning ? 'status' : undefined}>{recoveryWarning || (ink ? '曲目保存在此浏览器；移除仅删除本机保存的副本。' : 'Saved in this browser · removing a score deletes its saved copy')}</p>
+        {recoveryWarning && <div className="camera-actions"><button onClick={() => window.location.reload()}>刷新重试恢复</button><button onClick={() => input.current?.click()} disabled={busy}>重新导入 MIDI</button></div>}
         <ol>{sessions.map((session, index) => <li key={session.id} className={session.id === activeSessionId ? 'is-current' : ''}>
           <button className="score-select" aria-current={session.id === activeSessionId ? 'true' : undefined} onClick={() => switchScore(session.id)} disabled={busy || starting} title={session.filename}><span className="score-number">{String(index + 1).padStart(2, '0')}</span><span className="score-name">{session.compiled.score.metadata.title}<small>{timeLabel(session.compiled.score.duration)} · {session.compiled.score.tracks.length} tracks</small></span></button>
           <button className="score-remove" aria-label={`Remove ${session.compiled.score.metadata.title}`} onClick={() => deleteScore(session.id)} disabled={busy || starting || (sessions.length === 1 && session.id === 'score-0')}>×</button>

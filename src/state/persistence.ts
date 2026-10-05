@@ -38,19 +38,17 @@ function database(): Promise<IDBDatabase> {
   return databasePromise
 }
 
-export async function loadSavedState(): Promise<{ sessions: SavedSession[]; preferences?: SavedPreferences }> {
+export async function loadSavedState(): Promise<{ sessions: unknown; preferences?: SavedPreferences }> {
   const db = await database()
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE, 'readonly')
     const sessions = transaction.objectStore(STORE).get('sessions')
     const preferences = transaction.objectStore(STORE).get('preferences')
     transaction.oncomplete = () => {
-      const records = sessions.result
+      const records: unknown = sessions.result
       const settings = preferences.result
       resolve({
-        sessions: Array.isArray(records) ? records.filter((record: SavedSession) =>
-          typeof record?.id === 'string' && typeof record.filename === 'string' && Number.isInteger(record.seed)
-          && Array.isArray(record.score?.notes) && Array.isArray(record.score?.tracks)) : [],
+        sessions: records === undefined ? [] : records,
         preferences: settings?.version === 1 && Number.isFinite(settings.position)
           && Number.isFinite(settings.volume) && typeof settings.activeSessionId === 'string'
           && ['constellation', 'stream', 'ensemble'].includes(settings.viewMode)

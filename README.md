@@ -85,6 +85,8 @@ npm run dev
 
 请保留原始 MIDI 文件：清除站点数据、使用隐私窗口、更换浏览器或更换一键启动所用的浏览器资料，都可能让保存的曲库不可用。移除曲目只删除浏览器内的副本，不删除电脑上的原文件。
 
+如果出现“本机记录无法恢复”，正常恢复的曲目仍可播放，原保存数据会保留。此时本次曲库与设置改动只在内存中，关闭后不会保存；可在曲库面板刷新重试或重新导入原 MIDI。不要直接清除站点数据。
+
 ## 使用边界与常见问题
 
 - **没有声音？** 先点击播放以启用浏览器音频，再检查底部静音、面板音量及系统输出设备。
@@ -107,11 +109,11 @@ npm run preview
 
 继续开发请从 [开发者文档](docs/developer/index.md) 开始：包含架构图、模块与关键函数、音乐/状态流、配置、启动、FAQ 和扩展指南。正式音乐流程为 MIDI → NormalizedScore → WorldModel → PerformancePlan；声音直接从乐谱按同一时钟调度，画面消费音乐计划或展示投影。
 
-[全仓审计与分步重构路线](CODEBASE_AUDIT.md) 记录当前发现的问题及证据，尚未实施其中的源码修复。[知识索引](docs/index.md)、[当前能力](docs/CURRENT_STATE.md)、[架构契约](docs/ARCHITECTURE.md)、[开发流程](AGENTS.md)和[水墨集成验证](docs/VERIFICATION.md#ink-folio-2026-10-01)分别保存长期事实与历史证据。
+[全仓审计与分步重构路线](CODEBASE_AUDIT.md) 记录问题及逐项状态；第1步已修复保存数据恢复和稀疏长曲内存问题，见 [修复验证](docs/VERIFICATION.md#audit-step-1-2026-10-06)。[知识索引](docs/index.md)、[当前能力](docs/CURRENT_STATE.md)、[架构契约](docs/ARCHITECTURE.md)、[开发流程](AGENTS.md)和[水墨集成验证](docs/VERIFICATION.md#ink-folio-2026-10-01)分别保存长期事实与历史证据。
 
 <!--
 Purpose: 项目面向使用者的介绍、安装与操作入口。
 Authority: 启动与用户操作指南；架构和长期限制见链接的仓库文档。
 Update when: 启动方式、用户操作或公开支持边界变化。
-Last verified: 2026-10-05；源码复核启动/操作说明，新增开发文档与审计入口；未重跑浏览器操作验证。
+Last verified: 2026-10-06；补损坏记录恢复说明与修复验证入口；启动方式未改变。
 -->

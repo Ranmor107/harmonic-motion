@@ -3,7 +3,7 @@
 Purpose: 记录已确认限制、尚未验证的风险及文档/代码差异，防止候选方案冒充事实。
 Authority: 限制与 drift 的主要记录；验证证据见 [VERIFICATION](VERIFICATION.md)，候选状态见 [ROADMAP](ROADMAP.md)。
 Update when: 新证据、支持边界、解决情况或待确认决策变化。
-Last verified: 2026-10-05；核对渲染预算、记录 D-03 与全仓审计；未实施源码修复。
+Last verified: 2026-10-06；审计 A01/A02 已修复，其余限制和 drift 沿用既有状态。
 
 Priority 只是当前建议，不等于排期。`unknown` 表示缺乏影响/频率证据；不将未测量风险统一升级为 high。
 

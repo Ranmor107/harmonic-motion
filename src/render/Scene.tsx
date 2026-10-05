@@ -35,9 +35,10 @@ export function Scene({ score, world, plan, preset, playback, cameraController, 
   cameraController: CameraController; viewMode: ViewMode; visibilityMode: VisibilityMode; fitRequest: number
   follow: boolean; onNavigate: () => void; focusTrackId?: string
 }) {
+  const ink = viewMode === 'stream' && preset.streamStyle === 'ink'
   const model = useMemo(() => createMusicalPresentation(score, preset.presentation, focusTrackId), [score, preset.presentation, focusTrackId])
-  const ensemble = useMemo(() => createEnsemblePresentation(score, model), [score, model])
-  const inkModel = useMemo(() => createInkPresentation(score, preset.presentation, focusTrackId), [score, preset.presentation, focusTrackId])
+  const ensemble = useMemo(() => viewMode === 'ensemble' ? createEnsemblePresentation(score, model) : undefined, [score, model, viewMode])
+  const inkModel = useMemo(() => ink ? createInkPresentation(score, preset.presentation, focusTrackId) : undefined, [score, preset.presentation, focusTrackId, ink])
   const followPosition = useMemo(() => viewMode === 'stream'
     ? (time: number) => streamCameraTarget(model, time)
     : (time: number) => plan.performers[0] ? evaluatePerformer(plan.performers[0], time) : { x: 0, y: 0, z: 0 }, [model, plan, viewMode])
@@ -45,12 +46,11 @@ export function Scene({ score, world, plan, preset, playback, cameraController, 
   const background = environment.type === 'solid' ? environment.color : environment.type === 'image'
     ? `${environment.color} url("${environment.source}") center / cover no-repeat`
     : `linear-gradient(160deg, ${environment.top}, ${environment.bottom})`
-  const ink = viewMode === 'stream' && preset.streamStyle === 'ink'
   const stage = viewMode === 'ensemble' ? ENSEMBLE_STAGE : RIBBON_STAGE
   const cameraConfig = useMemo(() => viewMode !== 'constellation'
     ? { ...preset.camera, direction: stage.direction, padding: 1.08 }
     : preset.camera, [preset.camera, viewMode, stage])
-  const cameraBounds = viewMode === 'ensemble' ? ensemble.bounds : viewMode === 'stream' ? RIBBON_STAGE.bounds : world.bounds
+  const cameraBounds = viewMode === 'ensemble' ? ensemble!.bounds : viewMode === 'stream' ? RIBBON_STAGE.bounds : world.bounds
   return <div className="scene-canvas" style={{ background }} aria-label={ink ? '水墨音乐舞台' : 'Generated music constellation'}>
     <SceneBoundary>
       <Canvas frameloop={ink ? 'never' : 'always'} style={{ visibility: ink ? 'hidden' : 'visible' }} dpr={[1, 1.75]} gl={{ antialias: true, alpha: true }} fallback={<div className="scene-fallback">WebGL is unavailable. Enable hardware acceleration to see the world.</div>}>
@@ -68,9 +68,9 @@ export function Scene({ score, world, plan, preset, playback, cameraController, 
           </group>)}
           <EffectsRenderer world={world} plan={plan} effects={preset.effects} theme={preset.theme} playback={playback} />
         </> : viewMode === 'stream' ? <StreamRenderer model={model} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} focusTrackId={focusTrackId} />
-          : <EnsembleRenderer model={ensemble} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} focusTrackId={focusTrackId} />}
+          : <EnsembleRenderer model={ensemble!} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} focusTrackId={focusTrackId} />}
       </Canvas>
     </SceneBoundary>
-    {ink && <InkStreamRenderer model={inkModel} mode={preset.inkMode ?? 'drops'} playback={playback} effects={preset.effects.hit.enabled} />}
+    {ink && <InkStreamRenderer model={inkModel!} mode={preset.inkMode ?? 'drops'} playback={playback} effects={preset.effects.hit.enabled} />}
   </div>
 }

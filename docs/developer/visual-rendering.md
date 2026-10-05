@@ -3,7 +3,7 @@
 Purpose: 说明三种舞台的纯展示模型、配置边界、逐帧绘制和资源所有权。
 Authority: 当前视觉实现手册；不替代音乐核心契约或美术验收。
 Update when: presentation、renderer、shader、camera、preset 或显示预算变化。
-Last verified: 2026-10-05；源码基线 `e15cad5`。
+Last verified: 2026-10-06；核对稀疏 energy 和按需准备，其余渲染说明沿用 `e15cad5` 审阅。
 
 ## 四种画面，三个 View
 
@@ -67,7 +67,7 @@ flowchart TD
 - `visibleEnsembleNotes`：0.18 秒局部组保留代表音/音高极值，时窗筛选和同声部空间去重后按轨道轮询，最多 96 音符。
 - `ensembleNoteState / ensemblePoint`：hidden → emerging（起音前 3.5 到 1.65 秒）→ approaching → active → fading（结束后 1.2 秒）。内外半径、弧度、深度、scale、opacity 和 glow 都是绝对时间函数。
 - `ensemblePath`：内层至当前点的采样轨迹；当前淡出 progress 重用缺陷见审计 A05。
-- `ensembleMotion`：按音符 energy 派生克制平移/旋转/倾斜/缩放；reducedMotion 时返回静止姿态。按时长准备 energy 的风险见 A02。
+- `ensembleMotion`：按音符 energy 派生克制平移/旋转/倾斜/缩放；reducedMotion 时返回静止姿态。energy 使用 `Map<number,number>`，只储存有起音的秒桶；峰值归一化与相邻秒平滑插值保持，空秒默认 0。A02 已修复，内存不随静默时长增长。
 
 其主体是音符及其关系，没有判定圈/命中输入/计分。增加运动应先说明它表达何种音乐结构，不应使整圆盘运动压过音符。
 
@@ -95,7 +95,7 @@ type 目前约定 0=drop、1=brush、2=wash；source 仅保留在 CPU 数据里�
 
 | 文件 / 组件 | 责任 |
 | --- | --- |
-| [Scene](../../src/render/Scene.tsx) | useMemo 准备三种模型、effective background、CameraRig 和 View 分支；当前全部模型无条件准备；SceneBoundary 仅包 Canvas |
+| [Scene](../../src/render/Scene.tsx) | useMemo 准备通用 musical 模型，按 ensemble View / Ink 生效分别准备对应模型；组合 background、CameraRig 和 View 分支；SceneBoundary 仍仅包 Canvas |
 | [WorldRenderer](../../src/render/WorldRenderer.tsx) | Constellation 节点实例、预算关系线、和弦成员与低密度远景；不全量重建 WorldModel |
 | [PerformerRenderer](../../src/render/PerformerRenderer.tsx) | evaluatePerformer 定位，主角外观与历史采样 trail |
 | [TrajectoryRenderer](../../src/render/TrajectoryRenderer.tsx) | 当前正式 segment 的 28 点采样 lineSegments；动态包围体缺口见 A04 |

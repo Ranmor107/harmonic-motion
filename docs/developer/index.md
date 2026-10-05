@@ -3,7 +3,7 @@
 Purpose: 提供从应用入口到音乐核心、状态和绘制的开发阅读路径。
 Authority: 当前实现的开发说明；稳定契约以 ARCHITECTURE 为准，ownership 以 CODEBASE_OPERATING_MODEL 为准。
 Update when: 入口、模块依赖、状态所有权或本手册目录变化。
-Last verified: 2026-10-05；源码基线 `e15cad5`，不包含审计问题的源码修复。
+Last verified: 2026-10-06；更新 A01/A02 修复后的依赖边界，其他手册内容沿用 `e15cad5` 审阅。
 
 ## 从哪里开始
 
@@ -68,7 +68,7 @@ flowchart TD
 | state | Zustand、compile/demo、配置、存储数据类型 | 保存 GPU/音频实例 |
 | UI | 组合以上能力、浏览器交互 | 新建另一个音乐时钟 |
 
-当前 `persistence` 为兼容偏好值直接调用 visual/presets 的纯 normalize 函数；store 又从 persistence 导入 `SavedSession` 类型。这是窄的组合依赖，不是运行时循环。若保存格式复杂化再提取存储契约，不提前建立多层服务。对当前 56 个源码 TS/TSX 的 import 图检查未发现运行时循环；具体方法见审计。
+当前 `persistence` 为兼容偏好值直接调用 visual/presets 的纯 normalize 函数；store 调用 `sessionValidation.isSavedSession`，validator 仅 type-import `SavedSession` 并复用 music-analysis 的 detectChords。存储原值是 unknown，验证后才编译。这是窄的组合依赖；若保存格式复杂化再提取存储契约，不提前建立多层服务。原 `e15cad5` 的 56 个源码 TS/TSX import 图未发现运行时循环；第1步新增 validator 没有引入回指 state 的运行时边。
 
 ## 数据流：静态产物与动态求值
 

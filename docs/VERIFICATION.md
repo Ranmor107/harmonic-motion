@@ -3,7 +3,7 @@
 Purpose: 保留带日期、baseline 和适用边界的实际检查证据。
 Authority: 已发生验证的记录；不能作为未来提交自动通过的保证。
 Update when: 新一轮检查产生结果，或旧证据被确认需更正。
-Last verified: 2026-10-05；最新证据见 Codebase audit，早期记录保留其日期和适用边界。
+Last verified: 2026-10-06；最新证据见 Audit step 1，早期记录保留其日期和适用边界。
 
 日期：2026-09-17。环境：Windows、Node.js 24.18.0、Codex 内置 Chromium 浏览器，1280 × 720。
 
@@ -381,3 +381,32 @@ Ink 的 P95 在这次有限样本中增加 7.5%，median 下降约 6.7%，符合
 问题的最小输入、观测值、位置与逐步路线统一见 [CODEBASE_AUDIT](../CODEBASE_AUDIT.md)；核心模块说明从 [开发者入口](developer/index.md) 开始。纯函数/受控mock复现不等于对应浏览器行为已经验收，也未成为正式回归覆盖。
 
 文档检查：本轮共核对41份Markdown中的543条本地链接及Markdown锚点；文档metadata齐备。新增文档也做空白/冲突标记检查；`git diff --check`通过。最终范围仅Markdown，源码、tests、启动器、依赖/配置无Git差异，既有用户素材保持原样。
+
+<a id="audit-step-1-2026-10-06"></a>
+## Audit step 1 · Saved-score recovery and sparse-song memory · 2026-10-06
+
+基线 `5ee4bda` 为上一轮审计/手册独立提交，产品源码基线仍为 `e15cad5`。本轮仅修复 A01/A02；范围及契约见 [计划](plans/active/2026-10-06-audit-input-recovery.md)。参考 Dexie / R3F 的复现测试和语义提交方式，沿用本仓库工具链，不新增 CI、依赖或发布系统。
+
+| 检查 | 实际结果 / 证据边界 |
+| --- | --- |
+| 先复现再修复 | 新回归在旧实现下暴露保存 score 校验、原值过滤与 duration 数组问题；先用有界样本断言稀疏类型，避免旧实现真的分配极端数组。复核时另用回归复现稀疏 note 数组空洞异常，并修复；没有弱化原用例 |
+| 全量自动检查 | `npm run test`：13 文件 / **118 测试通过**；`npm run lint`：通过，零 warning；`npm run build`：strict TypeScript 与 Vite 通过 |
+| 新覆盖 | session：缺 metadata、NaN/错误时长、乱序/空洞/重复 note、非法音高/力度、坏 track/chord/tempo、重复/未知版本/容器及好坏混合；persistence：unknown 原值保留、缺键与异常容器区分、正常保存恢复（IDB mock）；midi：有限 time+duration 溢出拒绝；ensemble：稀疏长曲、正常归一化/空桶插值 |
+| 稀疏内存 | 正式测试实际解析 37 字节 Type 0 / PPQ=1 MIDI，duration=134217728 秒、1 音符；energy 为 Map、size=1，不按曲长分配。空谱、长音、密集谱及随机 seek 既有用例通过；不是整机内存/GPU 基准 |
+| 构建快照 | JS **1,458.98 kB** / gzip **399.53 kB**；CSS **23.23 kB** / gzip **5.66 kB**。保留 chunk >500kB 的既有 warning，未扩大范围拆包 |
+| 浏览器隔离 | Codex IAB、1280×720，独立 origin `http://127.0.0.1:5175/`；自建 fixture、真实 IndexedDB。原 4173/5174 曲库不用于故障注入。沙箱服务不可达后改为本机测试服务，不修改项目启动配置 |
+| 好坏混合记录 | 正常曲目恢复，缺 metadata 的活动曲拒绝，回退 demo 的位置为 0（原 position=17 未套用）。关闭错误浮条后曲库仍持续提示临时状态，正常记录可选/播放；导入仓库 tempo-and-voices.mid 成功。切换视图/Ink 和临时导入后读取 DB：sessions 与 preferences 均和原值完全相同，坏记录仍存在 |
+| 异常容器 | sessions=null 时提示恢复失败，刷新重试可重新进入页面；两键读取仍与原值完全相同，没有转为空库后写回 |
+| 健康库保存恢复 | 正常活动曲从 5 秒暂停恢复；seek 到 8.083 秒并选 Ensemble 后离开页面，DB 保存该 position/view。重新打开恢复同曲、8.083 秒、Ensemble、暂停；sessions 值不变，preferences 按正常动作更新 |
+| 视觉与切换 | 正常曲暂停于 13.845 秒，Constellation/Stream/Ensemble 及 drops/veins 画面实际绘制，切换保持该时间；37 字节极长曲在末段进入 Ensemble 并切换 Constellation/Stream/Ink，未冻结，保持134217727.5秒。UI快照包含 Canvas fallback 文本，实际截图确认3D绘制，未将 fallback DOM 当作故障验收 |
+| 时间与音频边界 | 实际 Play 进入 performing、时间推进，Pause/seek 正常；source依赖核对与既有 mock 回归证明视觉动作不触发 compile/load/seek。浏览器测试静音，不声明真人听感、声卡延迟或调度失败恢复通过 |
+| 控制台 | 未见 error；仍有既有 THREE.Clock deprecated warning，不在本轮升级相关依赖 |
+| 文档与依赖 | 42 份 Markdown / 567 条本地链接及锚点可达；57 个源码 TS/TSX、181 条本地 import（96 条纯类型），无第一方运行时环；`git diff --check`通过 |
+
+恢复保护界面（自建测试曲目）：
+
+![恢复保护与可用曲目](assets/audit-step-1-recovery.jpg)
+
+本地补充证据位于忽略的 `artifacts/audit-step-1/`：`mixed-retention.json`、`null-retention.json`、`healthy-save.json`、各视图 JPEG 和 `browser-fixtures.html`；测试 JSON 为 `artifacts/audit-step-1-full.json`。Vitest 首次受沙箱临时目录缺失影响，使用本命令进程内的 TEMP/TMP 指向忽略的仓库 artifacts 后执行成功，未改项目配置。
+
+本轮不包含 abort/blocked/versionchange、多窗口覆盖、真实音频输出、GPU内存泄漏或跨设备性能验证；A03–A13仍开放。文档链接、diff 和 GitHub 交付状态在计划执行记录中保存。

@@ -17,7 +17,7 @@ export function normalizeScore(input: ScoreInput): NormalizedScore {
   const tracks: TrackModel[] = input.tracks.map((track, trackIndex) => {
     const id = `track:${trackIndex}`
     const notes: NoteEvent[] = track.notes.map((note, index) => {
-      if (![note.time, note.duration, note.midi, note.velocity].every(Number.isFinite) ||
+      if (![note.time, note.duration, note.time + note.duration, note.midi, note.velocity].every(Number.isFinite) ||
           note.time < 0 || note.duration <= 0 || !Number.isInteger(note.midi) || note.midi < 0 || note.midi > 127) {
         throw new Error('MIDI contains invalid note timing or pitch.')
       }

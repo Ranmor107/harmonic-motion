@@ -28,7 +28,7 @@ export interface EnsemblePresentation {
   placements: Map<string, NotePlacement>
   representatives: Set<string>
   chordByNote: Map<string, string>
-  energy: number[]
+  energy: Map<number, number>
   bounds: { min: Vec3; max: Vec3 }
 }
 
@@ -43,7 +43,7 @@ export function createEnsemblePresentation(score: NormalizedScore, source: Music
   }))
   const placements = new Map<string, NotePlacement>()
   const representatives = new Set<string>()
-  const energy = Array.from({ length: Math.ceil(score.duration) + 2 }, () => 0)
+  const energy = new Map<number, number>()
   tracks.forEach((track, voice) => {
     const region = regions[voice]!
     const low = track.notes.reduce((pitch, n) => Math.min(pitch, n.midi), 127)
@@ -61,7 +61,8 @@ export function createEnsemblePresentation(score: NormalizedScore, source: Music
       const group = buckets.get(bucket) ?? []
       group.push(note)
       buckets.set(bucket, group)
-      energy[Math.floor(note.startTime)]! += note.velocity
+      const second = Math.floor(note.startTime)
+      energy.set(second, (energy.get(second) ?? 0) + note.velocity)
     }
     // Stable selection before playback avoids frame-to-frame ranking flicker.
     // Keep the salient/held note plus pitch extremes of dense ornament/chord groups.
@@ -77,12 +78,14 @@ export function createEnsemblePresentation(score: NormalizedScore, source: Music
       }
     }
   })
-  const peak = energy.reduce((max, value) => Math.max(max, value), 1)
+  let peak = 1
+  for (const value of energy.values()) peak = Math.max(peak, value)
+  for (const [second, value] of energy) energy.set(second, value / peak)
   const extent = regions.reduce((max, region) => Math.max(max, region.radius), 2.9) + ENSEMBLE_WINDOW.future * 0.34 + 0.25
   return { source, regions, placements, representatives,
     bounds: { min: { x: -extent, y: -extent, z: -1.85 }, max: { x: extent, y: extent, z: 0.35 } },
     chordByNote: new Map(score.chords.flatMap(chord => chord.notes.map(note => [note.id, chord.id]))),
-    energy: energy.map(value => value / peak) }
+    energy }
 }
 
 function stableUnit(value: string) {
@@ -173,7 +176,7 @@ export function ensembleMotion(model: EnsemblePresentation, time: number, reduce
   const second = Math.max(0, Math.floor(time))
   const fraction = clamp(time - second, 0, 1)
   const smooth = fraction * fraction * (3 - 2 * fraction)
-  const energy = (model.energy[second] ?? 0) * (1 - smooth) + (model.energy[second + 1] ?? 0) * smooth
+  const energy = (model.energy.get(second) ?? 0) * (1 - smooth) + (model.energy.get(second + 1) ?? 0) * smooth
   return { x: Math.sin(time * 0.11) * 0.12, y: Math.sin(time * 0.08) * 0.09,
     rotation: Math.sin(time * 0.07) * 0.055, tiltX: Math.sin(time * 0.055) * 0.018, tiltY: Math.cos(time * 0.065) * 0.02, scale: 1 + energy * 0.025 }
 }

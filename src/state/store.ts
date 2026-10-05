@@ -6,7 +6,7 @@ import { ConstellationGeometryStrategy } from '../engine/music-geometry/strategi
 import type { GeometryStrategy } from '../engine/music-geometry/GeometryStrategy'
 import { createQuickStudyScore } from '../demo/score'
 import { DefaultPreset } from '../visual/presets/defaultPreset'
-import type { SavedSession } from './persistence'
+import { isSavedSession } from './sessionValidation'
 
 export interface ScoreSession {
   id: string
@@ -28,7 +28,7 @@ interface StudioState {
   visibilityMode: VisibilityMode
   setScore(score: NormalizedScore): void
   addScores(scores: { score: NormalizedScore; filename: string }[]): void
-  restoreSessions(sessions: SavedSession[], activeSessionId: string): number
+  restoreSessions(sessions: unknown, activeSessionId: string): { restored: number; rejected: number }
   selectSession(id: string): void
   removeSession(id: string): void
   regenerate(): void
@@ -57,18 +57,19 @@ export function createStudioStore() {
     },
     restoreSessions: (records, activeSessionId) => {
       const sessions: ScoreSession[] = [demo]
-      for (const record of records) {
-        if (record.id === demo.id || sessions.some(session => session.id === record.id)) continue
+      let rejected = Array.isArray(records) ? 0 : 1
+      for (const record of Array.isArray(records) ? records : []) {
+        if (!isSavedSession(record) || sessions.some(session => session.id === record.id)) { rejected++; continue }
         try {
           sessions.push({ id: record.id, filename: record.filename, seed: record.seed,
             compiled: compileScore(record.score, strategy, record.seed) })
           const id = /^score-(\d+)$/.exec(record.id)
           if (id) nextId = Math.max(nextId, Number(id[1]) + 1)
-        } catch { /* Keep other saved scores available if one record cannot compile. */ }
+        } catch { rejected++ }
       }
       const active = sessions.find(session => session.id === activeSessionId) ?? demo
       set({ sessions, activeSessionId: active.id, compiled: active.compiled, seed: active.seed })
-      return sessions.length - 1
+      return { restored: sessions.length - 1, rejected }
     },
     selectSession: id => {
       const session = get().sessions.find(item => item.id === id)

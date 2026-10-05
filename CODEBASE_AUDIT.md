@@ -1,15 +1,15 @@
 # Codebase Audit · Harmonic Motion
 
 Purpose: 记录全仓审计的可核对证据、严重程度和分步修复路线。
-Authority: 2026-10-05 的审计快照；不是修复完成声明，也不替代产品 ROADMAP。
+Authority: 保留 2026-10-05 的审计快照，逐项追加修复状态；不替代产品 ROADMAP。
 Update when: 复现结果、问题状态、优先级或验收证据改变。
-Last verified: 2026-10-05；源码基线 `e15cad575396607d01f2225529fbe6b9a75527ab`。
+Last verified: 2026-10-06；原审计源码基线 `e15cad575396607d01f2225529fbe6b9a75527ab`，第1步修复证据见下文。
 
 ## 结论与范围
 
 音乐核心的分层成立：解析、音乐分析、几何、编舞、播放时钟、音频和展示各有入口；没有必要重写核心引擎。优先处理的是**保存数据的信任边界、按时长分配内存、展示生命周期和失败恢复**，然后才是拆分 App 和性能优化。
 
-本轮只修改文档。共记录 **13 项：P0 0 项、P1 2 项、P2 8 项、P3 3 项**。未发现 P0 不等于完成了安全认证。所有源码问题仍为 Open；文档漂移的修正另记于 [KNOWN_LIMITATIONS](docs/KNOWN_LIMITATIONS.md#d03-audit-documentation)。
+原审计只修改文档，共记录 **13 项：P0 0 项、P1 2 项、P2 8 项、P3 3 项**。2026-10-06 已修复 A01/A02；其余 **11 项仍为 Open**。未发现 P0 不等于完成了安全认证。文档漂移的修正另记于 [KNOWN_LIMITATIONS](docs/KNOWN_LIMITATIONS.md#d03-audit-documentation)。
 
 读取范围为基线的 119 个跟踪文件：58 个 `src` 文件（56 个 TS/TSX、2 个 CSS）、16 个测试/fixture 文件、31 个 docs 文件，以及根配置、启动脚本等 14 个文件。逐文件读取第一方源码、测试、配置、现存开发文档和历史计划；锁文件按依赖结构核查，二进制 MIDI fixture 做解析检查，图片作为已有文档资源核对，不做二进制内容的代码审计。
 
@@ -60,8 +60,8 @@ flowchart LR
 
 | ID | 级别 | 发现 | 证据 |
 | --- | --- | --- | --- |
-| A01 | P1 | 保存乐谱校验过浅；部分恢复后覆盖原始记录 | 纯函数复现 + 保存链路静态确认 |
-| A02 | P1 | Ensemble 按曲目秒数分配数组，所有 View 都会准备它 | 小型 MIDI / 有界分配复现；极限内存影响为风险 |
+| A01 | P1 · Resolved 2026-10-06 | 保存乐谱校验过浅；部分恢复后覆盖原始记录 | 正式回归 + 隔离浏览器原数据核对，见下方修复记录 |
+| A02 | P1 · Resolved 2026-10-06 | Ensemble 按曲目秒数分配数组，所有 View 都会准备它 | 稀疏 Map 回归 + 极长曲浏览器验证，见下方修复记录 |
 | A03 | P2 | 水墨重复音永久复用旧 anchor，落点滑出画面 | 纯函数复现 |
 | A04 | P2 | 动态轨迹更新坐标后包围球不更新 | Three CPU 复现；页面视觉待复验 |
 | A05 | P2 | Ensemble 淡出阶段复用进度字段，路径突然收缩 | 纯函数复现 |
@@ -78,6 +78,8 @@ flowchart LR
 
 ### A01 · P1 · 保存数据校验与失败记录保留
 
+**状态：Resolved · 2026-10-06。** 读取保留 unknown 原值；[sessionValidation.ts](src/state/sessionValidation.ts) 在编译前核对元数据、有限数值、排序、ID 和 note/track/chord 一致性。`restoreSessions` 返回 `{restored,rejected}`；任一拒绝会暂停本次会话的曲库和偏好写入，持续提示并提供刷新/导入入口。成功曲目仍可用，新导入仅在内存；原数据库保留。活动曲未恢复时不应用其旧 position。正式用例在 [session.test.ts](tests/session.test.ts)、[persistence.test.ts](tests/persistence.test.ts)，真实浏览器证据见 [第1步验证](docs/VERIFICATION.md#audit-step-1-2026-10-06)。以下保留原始发现，不是当前实现描述。
+
 **位置**：[persistence.ts](src/state/persistence.ts) `loadSavedState`（51–59 行）；[store.ts](src/state/store.ts) `restoreSessions`（58–73 行）；[App.tsx](src/ui/App.tsx)（103–163 行）。
 
 读取 IndexedDB 时把结果标注为 `SavedSession`，只验证 id、filename、seed、notes/tracks 数组。并未校验 metadata、chords、duration、音符字段、排序和引用关系。TypeScript 类型不会验证磁盘里的对象。
@@ -89,6 +91,8 @@ flowchart LR
 **验收**：缺 metadata、非法时长、乱序/缺字段音符、重复 ID、坏轨道、未知版本、部分恢复；坏数据不进入 Scene，成功记录可用，原失败记录仍可恢复，自动保存不悄悄删除。
 
 ### A02 · P1 · 稀疏长曲导致无界时长数组
+
+**状态：Resolved · 2026-10-06。** energy 改为仅含起音秒桶的 `Map<number,number>`，保留峰值归一化和相邻秒插值；Scene 按需准备 Ensemble/Ink 模型。normalize 拒绝 time+duration 溢出为 Infinity；没有新增任意最大曲长限制。[ensemble-presentation.test.ts](tests/ensemble-presentation.test.ts) 实际运行 37 字节、134217728 秒的 MIDI，energy.size=1，正常运动数值对照通过；该曲也在隔离浏览器进入所有视图。见 [第1步验证](docs/VERIFICATION.md#audit-step-1-2026-10-06)。以下保留原始发现。
 
 **位置**：[ensemblePresentation.ts](src/visual/presentation/ensemblePresentation.ts) `createEnsemblePresentation` 第 46 行；[Scene.tsx](src/render/Scene.tsx) 第 39–41 行；[normalize.ts](src/midi/normalize.ts) 第 35 行。
 
@@ -149,6 +153,8 @@ active 阶段 `progress=1`；fading 阶段把 progress 重用为“消散进度�
 **验收**：complete/error/abort/blocked/versionchange、存储不可用与重试；所有操作进入终态，不挂住页面，不重复保存、不清空库。
 
 ### A07 · P2 · 保存操作缺少多窗口一致性
+
+**状态：Open。** 2026-10-06 的 A01 修复已限定 position 只用于匹配的已恢复曲目；本项的多窗口整库覆盖与跨键事务一致性仍未解决。
 
 **位置**：[App.tsx](src/ui/App.tsx) 第 158–173 行；[persistence.ts](src/state/persistence.ts) `save`。
 
@@ -262,11 +268,11 @@ App 挂载时根据 reduced motion 关闭效果，但异步读回 `effectsEnable
 
 ## 逐步修复与重构路线
 
-这是建议顺序，**不是已开工的新产品迭代**。实际执行前依照 [DEVELOPMENT_WORKFLOW](docs/DEVELOPMENT_WORKFLOW.md) 建立有限 plan；每步可单独验收和回退，不打包成全仓重写。
+第1步已在用户授权下实施并验证，见 [有限实施计划](docs/plans/active/2026-10-06-audit-input-recovery.md) 与 [验证记录](docs/VERIFICATION.md#audit-step-1-2026-10-06)。后续仍为建议顺序；执行前依照 [DEVELOPMENT_WORKFLOW](docs/DEVELOPMENT_WORKFLOW.md) 建立有限 plan，每步可单独验收和回退，不打包成全仓重写。
 
 | 步骤 | 范围与产出 | 进入下一步的验收门槛 |
 | --- | --- | --- |
-| 1 · 保存与输入边界 | A01/A02：unknown 解码、失败记录保留、有限时长、稀疏 energy | 损坏记录可恢复/隔离且不丢原数据；极长稀疏 MIDI 不按时长分配；正常曲目模型结果一致 |
+| 1 · 保存与输入边界 · 已验证 | A01/A02：unknown 解码、失败记录保留、有限时长、稀疏 energy | 118 测试、lint/build 与隔离浏览器通过；原记录保留，energy 内存不按时长分配 |
 | 2 · 展示正确性 | A03/A04/A05：重复音聚合边界、动态包围体、独立生命周期进度 | 新回归 + 同曲同时间浏览器对照；长同音、远距 seek、淡出连续；world/plan 引用和音频 load 次数保持 |
 | 3 · 失败与一致性 | A06/A07/A08/A09：事务终态、窗口写入策略、播放失败回退、有效效果偏好 | 使用隔离数据库的应用集成测试；错误可见可恢复；真实浏览器 reduced-motion/两窗口检查；无数据丢失 |
 | 4 · 可信诊断 | A10：区分 renderer 指标、完整 CSS、独立测试存储 | 三种 View 和 Ink 指标可信、正式库无变化；形成后续性能对照基线 |

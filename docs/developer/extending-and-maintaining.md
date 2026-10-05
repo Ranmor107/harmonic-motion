@@ -3,7 +3,7 @@
 Purpose: 给核心模块扩展和后续重构提供有限、可验证的实施步骤。
 Authority: 对现有 AGENTS / DEVELOPMENT_WORKFLOW 的操作补充，不创建新的审批或架构规则。
 Update when: 扩展接口、测试要求、文档归属或仓库工作流程变化。
-Last verified: 2026-10-05；源码基线 `e15cad5`。
+Last verified: 2026-10-06；更新保存边界的当前实现状态，其余规范沿用 `e15cad5` 审阅。
 
 ## 每轮工作流程
 
@@ -60,7 +60,7 @@ Last verified: 2026-10-05；源码基线 `e15cad5`。
 
 ### 新保存字段或格式
 
-把 DB 原始值视为 unknown；为旧版本、缺失、未知 enum、超范围和部分损坏定义行为。迁移成功前保留原记录；失败不自动覆盖残缺库；position 必须与 activeSessionId 对应。新窗口/页面的写入策略需要明确，测试用隔离 origin/profile。当前 A01/A06/A07 是优先补齐的缺口，不在其上增加更多脆弱字段。
+把 DB 原始值视为 unknown；为旧版本、缺失、未知 enum、超范围和部分损坏定义行为。迁移成功前保留原记录；失败不自动覆盖残缺库；position 必须与 activeSessionId 对应。A01 已建立完整保存乐谱 validator 与失败时暂停写入的边界，复用它并补回归，不能绕过 store 直接信任磁盘对象。新窗口/页面的写入策略需要明确，测试用隔离 origin/profile。A06/A07 的事务终态和多窗口一致性仍待补齐，不在其上增加更多脆弱字段。
 
 ## 重构边界
 

@@ -3,12 +3,12 @@
 Purpose: 按改动选择真实存在的检查，区分纯函数、mock 与浏览器证据。
 Authority: 验证映射与覆盖缺口的主要记录；实际运行结果见 [VERIFICATION](VERIFICATION.md)。
 Update when: scripts、测试文件/suite、覆盖范围或验证要求改变。
-Last verified: 2026-10-05；复核现有测试并连接审计覆盖缺口；未新增正式测试。
+Last verified: 2026-10-06；新增保存读取回归及非法恢复、稀疏长曲、有限 note end 用例。
 
 所有命令在仓库根目录运行。`npm run test` 是 `vitest run`，额外文件和 `-t` 参数通过 `--` 传入。
 现有 scripts 没有独立 typecheck、coverage、E2E 或截图命令；需要类型检查时使用 `npm run build`（内含 `tsc -b`）。不要写不存在的 `npm run typecheck` / `test:render`。
 
-本轮审计发现的尚未覆盖边界及应补回归见 [CODEBASE_AUDIT](../CODEBASE_AUDIT.md#检查项覆盖与验证记录)：真实 IndexedDB/多窗口、App 初始化和失败恢复、重复落墨、淡出路径、动态 GL 包围体与当前 Ink 指标。临时诊断未加入正式 suite，不能将这些缺口标为已覆盖。结果快照见 [本轮验证](VERIFICATION.md#codebase-audit-2026-10-05)。
+审计边界见 [CODEBASE_AUDIT](../CODEBASE_AUDIT.md#检查项覆盖与验证记录)。A01/A02 已补正式回归，并单独检查真实浏览器中的恢复/写入保护；结果见 [第1步验证](VERIFICATION.md#audit-step-1-2026-10-06)。IDB abort/blocked、多窗口、App 音频失败、重复落墨、淡出路径、动态 GL 包围体与 Ink 指标仍存在覆盖缺口，不能据此标成全部已覆盖。
 
 <a id="targeted-validation"></a>
 ## 定向检查
@@ -25,6 +25,7 @@ Last verified: 2026-10-05；复核现有测试并连接审计覆盖缺口；未�
 | T-VISIBILITY · focus/path/stream | visual 测窗口分类；musical-presentation 测显示预算、生命周期/和弦/seek；engine 测 evaluator | `npm run test -- tests/visual.test.ts tests/musical-presentation.test.ts tests/engine.test.ts`；`npm run lint`；`npm run build` | 修改事件、世界或轨迹数据语义时 T-GLOBAL | 时间0/末尾、前后seek、pause、overview/focus/path/stream；密集测试曲 |
 | T-UI · layout/title/buttons | 无 UI 自动测试；动作相关时使用对应核心 suite | `npm run lint`；`npm run build`；行为变化追加所属模块的 targeted test | UI 接线改变跨模块控制流时 T-GLOBAL | 控件、焦点、错误提示、标题长度、常用窗口尺寸；全屏按钮/F 与 Escape、Space/←/→/R、滑杆焦点与非交互区域、390px transport；纯布局不冒充引擎变更 |
 | T-STATE · score/session/seed/preset composition | [session.test.ts](../tests/session.test.ts)：缓存引用、切曲偏好、删除、seed、保存记录恢复后重新编译并延续唯一 ID、加载归零与 late unlock；engine 的 `Independent extension points` | `npm run test -- tests/session.test.ts tests/engine.test.ts` | compiled/score 生命周期或模块装配改变时 T-GLOBAL | 导入归零、刷新后曲库/选中曲/偏好/暂停位置及逐曲轨道焦点恢复，删除后不复活；regenerate 保持进度、preset 不重编译 |
+| T-STORAGE · saved-score trust and recovery | [persistence.test.ts](../tests/persistence.test.ts)：原值读取、异常容器、好坏记录保留、正常 save/load（IDB mock）；session：完整 score 校验、部分恢复结果与引用；midi/ensemble：有限 note end、37 字节稀疏长曲及正常 energy 数值 | `npm run test -- tests/persistence.test.ts tests/session.test.ts tests/midi.test.ts tests/ensemble-presentation.test.ts`；跨模块接线另执行 T-GLOBAL | 存储契约、写入策略或恢复控制流改变时 T-GLOBAL | 独立 origin/profile：坏记录/容器原值及 preferences 不被覆盖；正常曲仍可用；临时导入、持续提示/重试、匹配曲目位置、健康库保存恢复；不在用户曲库注入故障。此 suite 不覆盖 abort/blocked/多窗口 |
 | T-DEMO · procedural example | [quick-study.test.ts](../tests/quick-study.test.ts) 验证默认曲目时长、分层加入、和弦变化与默认会话；engine/playback 使用旧短句的具体音符和时刻 | `npm run test -- tests/quick-study.test.ts tests/engine.test.ts tests/playback.test.ts` | 若 normalize/契约也改则 T-GLOBAL | 开页默认世界、标题/数量描述与实际一致；第一次点击播放、导入入口及说明的浏览器检查 |
 | T-INK · Stream style/UI | [ink-stream.test.ts](../tests/ink-stream.test.ts)：相同 compiled/world/plan 和 camera/presentation 引用、mock audio load、效果偏好、力度/时值/重复音/和弦/真实休止、密集预算、空谱与长音、随机 seek、version 1 兼容 | `npm run test -- tests/ink-stream.test.ts tests/visual.test.ts tests/session.test.ts tests/engine.test.ts`；lint / build | 新视觉类型与 UI/state 接线需 T-GLOBAL | 同时刻截图、播放连续、View 往返、刷新、Effects Off、键盘、390px/全屏、用户长曲与重复切换；WebGL 失败/恢复、资源释放和实际音频仍需浏览器或人工观察，单测不替代 |
 | T-GLOBAL · cross-module / domain / shared semantics | 全部现有测试 + 静态约束 + 生产编译 | `npm run test`；`npm run lint`；`npm run build` | public contract、≥3 责任层或无法局部隔离的集成变化必做 | 按受影响行为补浏览器 smoke；全量单测不能替代它 |

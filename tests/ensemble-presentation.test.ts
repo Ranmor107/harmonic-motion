@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeScore } from '../src/midi/normalize'
+import { parseMidi } from '../src/midi/parser'
 import { createDemoScore } from '../src/demo/score'
 import { createStudioStore } from '../src/state/store'
 import { createMusicalPresentation } from '../src/visual/presentation/musicalPresentation'
@@ -13,6 +14,48 @@ const dense = normalizeScore({ metadata: { title: 'Fast polyphony', source: 'dem
 const prepare = (score = dense) => createEnsemblePresentation(score, createMusicalPresentation(score, config))
 
 describe('Ensemble presentation', () => {
+  it('allocates energy only for occupied seconds, including the 37-byte sparse long MIDI', () => {
+    const score = normalizeScore({ metadata: { title: 'Long silence', source: 'demo' }, tracks: [{
+      name: 'Voice', channel: 0, instrument: 0,
+      notes: [{ time: 86400, duration: 1, midi: 60, velocity: 0.8 }],
+    }] })
+    const model = prepare(score)
+    // Fail before loading the extreme duration on implementations using a dense array.
+    expect(model.energy).toBeInstanceOf(Map)
+    expect(model.energy.size).toBe(1)
+    expect(ensembleMotion(model, 86400).scale).toBeCloseTo(1.02)
+
+    const bytes = Uint8Array.from([
+      77,84,104,100,0,0,0,6,0,0,0,1,0,1,77,84,114,107,0,0,0,15,
+      255,255,255,127,144,60,64,1,128,60,0,0,255,47,0,
+    ])
+    const sparse = parseMidi(bytes, 'sparse.mid')
+    expect(sparse.duration).toBe(134217728)
+    expect(sparse.notes).toHaveLength(1)
+    const longModel = prepare(sparse)
+    expect(longModel.energy.size).toBe(1)
+    expect(visibleEnsembleNotes(longModel, sparse.notes[0]!.startTime)).toContain(sparse.notes[0])
+    expect(ensembleMotion(longModel, 0).scale).toBe(1)
+    expect(ensembleMotion(longModel, sparse.notes[0]!.startTime)).toEqual(ensembleMotion(prepare(sparse), sparse.notes[0]!.startTime))
+  })
+
+  it('preserves the established peak-normalized response and interpolation across empty seconds', () => {
+    const score = normalizeScore({ metadata: { title: 'Energy response', source: 'demo' }, tracks: [{
+      name: 'Voice', channel: 0, instrument: 0, notes: [
+        { time: 0.2, duration: 0.5, midi: 60, velocity: 0.8 },
+        { time: 0.2, duration: 0.5, midi: 64, velocity: 0.6 },
+        { time: 2.2, duration: 0.5, midi: 67, velocity: 0.7 },
+      ],
+    }] })
+    const model = prepare(score)
+    expect(ensembleMotion(model, 0).scale).toBeCloseTo(1.025)
+    expect(ensembleMotion(model, 0.5).scale).toBeCloseTo(1.0125)
+    expect(ensembleMotion(model, 1).scale).toBe(1)
+    expect(ensembleMotion(model, 1.5).scale).toBeCloseTo(1.00625)
+    expect(ensembleMotion(model, 2).scale).toBeCloseTo(1.0125)
+    expect(ensembleMotion(model, 10).scale).toBe(1)
+  })
+
   it('uses stable per-track regions and pitch positions; all musical data remains intact', () => {
     const before = structuredClone(dense)
     const model = prepare()

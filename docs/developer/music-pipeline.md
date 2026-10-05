@@ -3,7 +3,7 @@
 Purpose: 说明音乐核心输入输出、关键符号、算法边界和验证要求。
 Authority: 当前实现细节；音乐契约与不变量以 ARCHITECTURE 为准。
 Update when: 数据模型、解析、分析、几何、编舞或纯工具契约变化。
-Last verified: 2026-10-05；源码基线 `e15cad5`。
+Last verified: 2026-10-06；补有限 note end 和保存校验边界，其余流水线沿用 `e15cad5` 审阅。
 
 ## 数据模型
 
@@ -18,7 +18,7 @@ Last verified: 2026-10-05；源码基线 `e15cad5`。
 | [domain/performance.ts](../../src/domain/performance.ts) `PerformancePlan` | duration、performers、events；轨迹是可序列化 cubic Bézier 定义，不保存运行实例 |
 | 同文件 `PerformerPlan` / `TrajectorySegment` | 起始位置、按时序抵达目标、分段时间和曲线；由绝对歌曲时间随机访问 |
 
-这些接口没有运行时自动校验，也不是 readonly 深冻结对象。核心按只读输入约定使用，测试检查确定性与不变性；保存数据恢复当前校验不足，见审计 A01。扩展时不能把“类型可编译”等同于“外部数据合法”。
+这些接口没有运行时自动校验，也不是 readonly 深冻结对象。核心按只读输入约定使用，测试检查确定性与不变性；保存恢复入口现由 [sessionValidation.ts](../../src/state/sessionValidation.ts) 显式检查 unknown，再交给编译器。扩展时不能把“类型可编译”等同于“外部数据合法”。
 
 ## 从 MIDI 到 NormalizedScore
 
@@ -36,12 +36,12 @@ flowchart TD
 | --- | --- |
 | [parseMidi](../../src/midi/parser.ts) | bytes + 可选文件名 → score；10 MiB、20,000 notes；检查 MThd、拒绝 Type 2 / SMPTE / 空乐谱；抛可显示错误 |
 | [normalizeMidi](../../src/midi/normalize.ts) | 已解析 Midi → ScoreInput → score；共享 tempo map 把 ticks 换为秒；只提取音符、轨道/channel/instrument 和 tempo |
-| `normalizeScore` | ScoreInput → 有序 score；验证有限 time/duration/midi/velocity、非负起音、正时长、整数 MIDI 0–127；velocity clamp；生成稳定 track/note IDs 和总体 duration |
+| `normalizeScore` | ScoreInput → 有序 score；验证有限 time/duration/note end/midi/velocity、非负起音、正时长、整数 MIDI 0–127；velocity clamp；生成稳定 track/note IDs 和总体 duration |
 | `decodeMidiTitle`（内部） | 先尝试与文件名一致的 UTF-8/GB18030/Big5/Shift_JIS 解码，再采用可信 UTF-8 或回退；不是任意 MIDI 编码自动识别 |
 | [groupOnsets](../../src/engine/music-analysis/chords.ts) | 已排序 notes → onset groups；epsilon=1e-7 秒；不按拍点量化 |
 | `detectChords` | 多成员 onset group → ChordEvent；保留成员音符，不做调性/和弦标签分析 |
 
-排序和稳定 ID 是二分查询、seek 和 seeded 展示的前提。直接构造 `NormalizedScore` 时必须自行遵守全部契约；推荐测试/示例走 `normalizeScore`。目前 channel/instrument、tempo 元数据和最终时长溢出未完整校验，不能用于接收未经校验的外部 JSON。
+排序和稳定 ID 是二分查询、seek 和 seeded 展示的前提。直接构造 `NormalizedScore` 时必须自行遵守全部契约；推荐测试/示例走 `normalizeScore`。normalize 已拒绝最终 note end 非有限，但 channel/instrument 和 tempo 元数据仍未完整校验，不能用于接收未经校验的外部 JSON。保存恢复的 validator 会另行核对这些字段及 note/track/chord 一致性。
 
 示例（位于仓库根的测试文件可按实际相对路径导入）：
 
@@ -97,4 +97,4 @@ const score = normalizeScore({
 
 ## 已知边界与扩展入口
 
-解析不还原踏板/弯音/表达控制器，和弦只按同步起音分组；无真实旋律/调性识别。超长稀疏曲的内存风险来自展示预计算，而非几何需要按秒数组；详见审计 A02。新输入格式应先适配 score；新正式空间实现 GeometryStrategy；新美术舞台去 visual/render。具体步骤见 [扩展指南](extending-and-maintaining.md)。
+解析不还原踏板/弯音/表达控制器，和弦只按同步起音分组；无真实旋律/调性识别。Ensemble 已用稀疏秒桶消除按曲长分配的 A02 问题，没有新增最大曲长限制；其他准备/查询热点仍见审计 A12。新输入格式应先适配 score；新正式空间实现 GeometryStrategy；新美术舞台去 visual/render。具体步骤见 [扩展指南](extending-and-maintaining.md)。

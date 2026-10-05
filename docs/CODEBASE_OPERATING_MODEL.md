@@ -3,7 +3,7 @@
 Purpose: 按真实模块定位 ownership、输入输出、公共入口与最小修改邻域。
 Authority: 模块归属的主要记录；契约语义以 [ARCHITECTURE](ARCHITECTURE.md) 为准。
 Update when: 入口、依赖、公共符号、模块职责或测试归属发生变化。
-Last verified: 2026-10-05；全仓源码复核后补开发手册入口；模块职责未改变，历史验证不重新声明通过。
+Last verified: 2026-10-06；更新 A01/A02 的保存边界及按需模型准备；其他职责沿用全仓审阅。
 
 下面“允许/禁止”是维护边界，不声称全由工具强制。实际 lint 仅对 domain/engine/playback 禁止列出的框架、视觉模块导入及 `Math.random`；不覆盖全部跨层规则，也没有禁止全局 DOM API。具体见 [eslint.config.js](../eslint.config.js)。
 
@@ -137,7 +137,7 @@ Ink 入口：[presets/inkStream.ts](../src/visual/presets/inkStream.ts) 的 `res
 <a id="render"></a>
 ## Render
 
-Scene 保留原版 R3F Canvas/CameraRig；Ink 生效时隐藏并停止该 Canvas 的逐帧绘制，叠加独立 WebGL2 [InkStreamRenderer](../src/render/InkStreamRenderer.tsx)。后者读取相同 PlaybackSnapshot，用 [笔触 shader](../src/render/inkShaders.ts) 批量绘制湿边、墨芯和干湿余迹；模式切换复用画布，暂停不重复绘制相同帧，卸载释放自有 GPU 资源。Original 仍使用既有 [StreamRenderer](../src/render/StreamRenderer.tsx)。纸面不消费 3D 镜头；本地 image 仍由原版背景容器解释。
+Scene 保留原版 R3F Canvas/CameraRig；Ink 生效时隐藏并停止该 Canvas 的逐帧绘制，叠加独立 WebGL2 [InkStreamRenderer](../src/render/InkStreamRenderer.tsx)。后者读取相同 PlaybackSnapshot，用 [笔触 shader](../src/render/inkShaders.ts) 批量绘制湿边、墨芯和干湿余迹；模式切换复用画布，暂停不重复绘制相同帧，卸载释放自有 GPU 资源。Original 仍使用既有 [StreamRenderer](../src/render/StreamRenderer.tsx)。Ensemble 模型仅在 ensemble View 准备，Ink 模型仅在 Ink 生效时准备；energy 为占用秒桶的 Map。通用 musical 模型仍需供隐藏的 StreamRenderer 使用。纸面不消费 3D 镜头；本地 image 仍由原版背景容器解释。
 
 - **Primary paths / entry points**：[Scene.tsx](../src/render/Scene.tsx)、[WorldRenderer.tsx](../src/render/WorldRenderer.tsx)、[PerformerRenderer.tsx](../src/render/PerformerRenderer.tsx)、[TrajectoryRenderer.tsx](../src/render/TrajectoryRenderer.tsx)、[StreamRenderer.tsx](../src/render/StreamRenderer.tsx)、[EffectsRenderer.tsx](../src/render/EffectsRenderer.tsx)、[EnvironmentRenderer.tsx](../src/render/EnvironmentRenderer.tsx)、[CameraRig.tsx](../src/render/CameraRig.tsx)、[types.ts](../src/render/types.ts)。
 - **Responsibility / owns**：R3F/Three 对象生命周期、由音乐数据推导的视觉状态、画面取景执行与错误降级。
@@ -155,12 +155,13 @@ Scene 保留原版 R3F Canvas/CameraRig；Ink 生效时隐藏并停止该 Canvas
 
 `streamStyleId` / `setStreamStyleId` 只维护一份 Stream 风格偏好，相同选择 no-op；不会写 compiled 或歌曲时间。SavedPreferences version 1 新增可选字段，缺省/未知值仅回退 Original。UI 由 View + 风格派生舞台与配套界面，避免双主题状态。
 
-- **Primary path / entry points**：[src/state/store.ts](../src/state/store.ts) `createStudioStore` / `useStudio`；[src/state/persistence.ts](../src/state/persistence.ts) 本机保存记录。
+- **Primary path / entry points**：[src/state/store.ts](../src/state/store.ts) `createStudioStore` / `useStudio`；[src/state/persistence.ts](../src/state/persistence.ts) 本机保存记录；[sessionValidation.ts](../src/state/sessionValidation.ts) `isSavedSession(unknown)`。
 - **Responsibility / owns**：ScoreSession[]、activeSessionId、当前 compiled/seed、strategy、preset、viewMode、visibilityMode；每曲缓存独立，视觉偏好共用。持久化模块只读写规范化乐谱与版本化偏好，不保存运行时 compiled 对象。
 - **Consumes → produces**：demo/导入 score、compileScore、默认策略/preset → Zustand 应用状态和 actions。
+- **保存信任边界**：loadSavedState 返回 unknown sessions 原值；restoreSessions 编译前验证完整 score，返回 `{restored,rejected}`。App 只在 rejected=0 时启用曲库/偏好自动写入；否则保留原数据库，本次更改临时使用。位置只恢复到匹配的已恢复曲目。数据库格式/版本/key 未改变。
 - **Public contracts / symbols**：`ScoreSession`、`addScores`、`restoreSessions`、`selectSession`、`removeSession`；`setScore` 委托单曲加入；`regenerate` 更新当前 session 缓存；`setPreset`、`setViewMode`、`setVisibilityMode` 只改显示。`compiled` 始终指向当前 session 的同一对象；跨重启则由已保存的 score 重新编译。
 - **Allowed dependencies**：Zustand、domain、compile、策略、demo、visual 默认值。**Forbidden / undesirable**：把歌曲时钟/每帧对象移入 store、解析二进制或控制 Tone 声部。
-- **Related tests**：[engine.test.ts](../tests/engine.test.ts)；[session.test.ts](../tests/session.test.ts) 的多曲缓存、独立 seed、删除/回退、偏好与播放加载协调。
+- **Related tests**：[engine.test.ts](../tests/engine.test.ts)；[session.test.ts](../tests/session.test.ts) 的多曲缓存、非法/部分恢复、独立 seed、删除/回退、偏好与播放加载协调；[persistence.test.ts](../tests/persistence.test.ts) 的原值读取与正常保存 mock。真实浏览器证据见 [第1步验证](VERIFICATION.md#audit-step-1-2026-10-06)，abort/多窗口仍未自动覆盖。
 - **Safe local changes**：应用组合或新增局部选择状态；不要为了一个 UI 控件重构 store。
 - **Adjacent scope**：导入/切曲/删除当前曲目由 App 先 stop，再改 session；score effect 调 controller.load，保证音乐归零。新增解析发生在 App，store 只接收 normalized score。
 - **Must NOT decide**：曲线计算、时钟算法、材质解释。视觉变化只更新 preset，不触发 compileScore。

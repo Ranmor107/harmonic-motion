@@ -57,7 +57,7 @@ describe('score sessions', () => {
       { id: 'score-7', filename: 'first.mid', seed: 301, score: first },
       { id: 'score-8', filename: 'second.mid', seed: 302, score: second },
     ], 'score-8')
-    expect(restored).toBe(2)
+    expect(restored).toEqual({ restored: 2, rejected: 0 })
     expect(store.getState()).toMatchObject({ activeSessionId: 'score-8', seed: 302 })
     expect(store.getState().compiled.score).toBe(second)
     expect(store.getState().sessions[1]!.compiled.world.nodes.length).toBeGreaterThan(0)
@@ -66,6 +66,64 @@ describe('score sessions', () => {
     expect(store.getState().activeSessionId).toBe('score-9')
     store.getState().removeSession('score-7')
     expect(store.getState().sessions.map(session => session.id)).toEqual(['score-0', 'score-8', 'score-9'])
+  })
+
+  it.each([
+    ['missing metadata', (score: ReturnType<typeof createDemoScore>) => { Reflect.deleteProperty(score, 'metadata') }],
+    ['non-finite duration', (score: ReturnType<typeof createDemoScore>) => { score.duration = NaN }],
+    ['incorrect duration', (score: ReturnType<typeof createDemoScore>) => { score.duration += 1 }],
+    ['unordered notes', (score: ReturnType<typeof createDemoScore>) => { score.notes.reverse() }],
+    ['sparse note array', (score: ReturnType<typeof createDemoScore>) => { Reflect.deleteProperty(score.notes, 0) }],
+    ['duplicate note IDs', (score: ReturnType<typeof createDemoScore>) => { score.notes[1]!.id = score.notes[0]!.id }],
+    ['invalid velocity', (score: ReturnType<typeof createDemoScore>) => { score.notes[0]!.velocity = NaN }],
+    ['invalid pitch', (score: ReturnType<typeof createDemoScore>) => { score.notes[0]!.midi = 128 }],
+    ['inconsistent pitch class', (score: ReturnType<typeof createDemoScore>) => { score.notes[0]!.pitchClass = 11 }],
+    ['missing track member', (score: ReturnType<typeof createDemoScore>) => { score.tracks[0]!.notes.pop() }],
+    ['duplicate track IDs', (score: ReturnType<typeof createDemoScore>) => { score.tracks.push(structuredClone(score.tracks[0]!)) }],
+    ['inconsistent track data', (score: ReturnType<typeof createDemoScore>) => {
+      score.tracks[0]!.notes[0] = { ...score.tracks[0]!.notes[0]!, duration: 100 }
+    }],
+    ['invalid channel', (score: ReturnType<typeof createDemoScore>) => { score.tracks[0]!.channel = 17 }],
+    ['missing chords', (score: ReturnType<typeof createDemoScore>) => { Reflect.deleteProperty(score, 'chords') }],
+    ['incorrect chord members', (score: ReturnType<typeof createDemoScore>) => { score.chords[0]!.notes.pop() }],
+    ['invalid tempo map', (score: ReturnType<typeof createDemoScore>) => { score.metadata.tempoMap = [{ time: 0, bpm: NaN }] }],
+  ])('rejects saved scores with %s before they become active', (_label, corrupt) => {
+    const store = createStudioStore()
+    const original = store.getState().compiled
+    const score = structuredClone(createDemoScore())
+    corrupt(score)
+    const record = { id: 'score-1', filename: 'damaged.mid', seed: 107, score }
+    const before = structuredClone(record)
+    expect(store.getState().restoreSessions([record], record.id)).toEqual({ restored: 0, rejected: 1 })
+    expect(store.getState().compiled).toBe(original)
+    expect(record).toEqual(before)
+  })
+
+  it('reports partial recovery without mutating failed records or activating them', () => {
+    const store = createStudioStore()
+    const good = { id: 'score-7', filename: 'good.mid', seed: 301, score: createDemoScore() }
+    const failed = { id: 'score-8', filename: 'failed.mid', seed: 107, score: { notes: [], tracks: [], duration: 1 } }
+    const records = [good, failed]
+    const before = structuredClone(records)
+    expect(store.getState().restoreSessions(records, failed.id)).toEqual({ restored: 1, rejected: 1 })
+    expect(store.getState().sessions.map(session => session.id)).toEqual(['score-0', good.id])
+    expect(store.getState().activeSessionId).toBe('score-0')
+    expect(store.getState().sessions[1]!.compiled.score).toBe(good.score)
+    expect(records).toEqual(before)
+  })
+
+  it.each([null, 1, { version: 2, sessions: [] }])('rejects unknown library containers: %j', records => {
+    const store = createStudioStore()
+    expect(store.getState().restoreSessions(records, 'score-1')).toEqual({ restored: 0, rejected: 1 })
+    expect(store.getState().sessions).toHaveLength(1)
+  })
+
+  it('reports duplicate IDs and unknown record versions as rejected', () => {
+    const store = createStudioStore()
+    const record = { id: 'score-1', filename: 'good.mid', seed: 107, score: createDemoScore() }
+    expect(store.getState().restoreSessions([record, record, { ...record, id: 'score-2', version: 2 }], record.id))
+      .toEqual({ restored: 1, rejected: 2 })
+    expect(store.getState().activeSessionId).toBe(record.id)
   })
 
   it('removes inactive and active sessions and falls back to the cached demo when the last score is removed', () => {

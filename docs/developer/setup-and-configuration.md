@@ -3,7 +3,7 @@
 Purpose: 提供可执行的本地开发/构建路径及真实配置位置。
 Authority: 当前仓库的开发运行说明；用户操作以 README 为入口。
 Update when: package scripts、依赖/工具链、启动器、端口或调试入口改变。
-Last verified: 2026-10-05；Windows、Node 24.18.0、npm 11.16.0；test/lint/build 已执行，启动器本轮仅源码复核。
+Last verified: 2026-10-06；test/lint/build 与隔离浏览器已执行；启动器、依赖和配置未改变。
 
 ## 环境与安装
 
@@ -69,13 +69,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-harmonic-mot
 ```sh
 npm run test -- tests/midi.test.ts tests/engine.test.ts
 npm run test -- tests/playback.test.ts tests/audio.test.ts
-npm run test -- tests/session.test.ts tests/ink-stream.test.ts
+npm run test -- tests/session.test.ts tests/persistence.test.ts tests/ink-stream.test.ts
 npm run test -- tests/visual.test.ts tests/musical-presentation.test.ts tests/ensemble-presentation.test.ts tests/dense-presentation.test.ts
 ```
 
-完整检查依次执行 test、lint、build。本次实际结果和包体积见 [2026-10-05 验证记录](../VERIFICATION.md#codebase-audit-2026-10-05)，它是日期快照，不是预设性能门槛。
+完整检查依次执行 test、lint、build。最新修复结果和包体积见 [2026-10-06 验证记录](../VERIFICATION.md#audit-step-1-2026-10-06)，它是日期快照，不是预设性能门槛。
 
-测试环境是 node，没有 DOM、真实 IndexedDB、GPU 或声卡。当前没有自动浏览器测试 runner，也没有 CI workflow。不要把 `npm test` 通过写成“浏览器视觉/音频全部验收”。
+测试环境是 node，persistence suite 使用 IDB mock，没有 DOM、真实 IndexedDB、GPU 或声卡。当前没有自动浏览器测试 runner，也没有 CI workflow。第1步另有隔离浏览器的真实存储检查；不要把 `npm test` 通过写成“浏览器视觉/音频全部验收”。
 
 ## 性能诊断和隔离
 
