@@ -1,6 +1,6 @@
 # Built-in classical scores
 
-Status: Implemented · local verified · GitHub delivery pending
+Status: Completed · uploaded
 Date: 2026-10-07
 Source baseline: `d48df9b`
 
@@ -40,11 +40,13 @@ Adjacent: App 初始化和曲目来源标签；用户说明和模块文档。
 - [x] 空库 defaults 不算已恢复记录；保存的 seed/score 优先；坏记录原值保留且活动曲回退；用户导入/删除仍正常。
 - [x] 一次全量 test / lint / build；只增加本任务必要回归。
 - [x] 隔离浏览器检查曲库选择、播放/暂停、刷新恢复，不扩展重复视觉矩阵。
-- [ ] 文档同步、归档计划、显式暂存本轮路径。
-- [ ] 提交并推送 GitHub，核对远端提交。
+- [x] 文档同步、归档计划、显式暂存本轮路径。
+- [x] 提交并推送 GitHub，核对远端提交。
 
 ## Execution evidence
 
 2026-10-07：三份 Public Domain + 一份 CC BY-SA 3.0 + 一份 CC BY 4.0 MIDI 的原文件下载/解析通过；卡农使用官方 ZIP 的 `canon_per_3_violini_e_basso.mid`，保留4轨合奏。两个现代曲目没有公开分发许可证据，不打包。曲库提供来源/许可链接，README 说明视频使用的署名和 ShareAlike 条件。
 
 14文件/124 tests、lint/build 一次通过；新增6项必要回归。隔离生产 preview 验证五曲选择、卡农播放、重新打开及刷新25.176秒暂停恢复、水墨切换保持时间；未见 console error。实际截图和边界见 [验证记录](../../VERIFICATION.md#builtin-classics-2026-10-07)。未重复全量检查或扩展长曲/音频/视觉矩阵。
+
+交付：`e2cbacc` 已推送到 Ranmor107/harmonic-motion main（GitHub 接受 `d48df9b..e2cbacc`），显式暂存19个本轮路径。按流程归档此计划；用户原有 `midi/` 和 DOCX 仍保留本地，不在提交内。

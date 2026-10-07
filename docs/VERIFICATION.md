@@ -414,7 +414,7 @@ Ink 的 P95 在这次有限样本中增加 7.5%，median 下降约 6.7%，符合
 <a id="builtin-classics-2026-10-07"></a>
 ## Built-in classics · 2026-10-07
 
-Baseline: `d48df9b`；[实施计划](plans/active/2026-10-07-builtin-classics.md)。新增五首 Mutopia 经典 MIDI，原字节、SHA-256、具体版本许可与转录者见 [来源记录](../src/demo/assets/SOURCES.md)。未上传用户 `midi/`、DOCX 或授权未明确的现代曲目。
+Baseline: `d48df9b`；实现 `e2cbacc` 已推送 GitHub main；[完成计划](plans/completed/2026-10-07-builtin-classics.md)。新增五首 Mutopia 经典 MIDI，原字节、SHA-256、具体版本许可与转录者见 [来源记录](../src/demo/assets/SOURCES.md)。未上传用户 `midi/`、DOCX 或授权未明确的现代曲目。
 
 - 一次全量 `npm run test`：14 文件 / 124 tests 通过；新增6项回归覆盖五份真实资产的完整音乐数据、HTTP失败、默认补齐不计入恢复数、保存内置 seed/score 优先、坏记录替补不激活和删除边界。
 - `npm run lint`、`npm run build` 通过。生产主 JS 1466.97 kB / gzip 402.07 kB，保留既有超过500 kB的 chunk 提示；较小的 BWV772 资源按 Vite 默认规则内联，其余4份 MIDI 独立打包。未新增依赖或更改配置。
