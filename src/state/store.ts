@@ -5,6 +5,7 @@ import { compileScore, type CompiledScore } from '../engine/compile'
 import { ConstellationGeometryStrategy } from '../engine/music-geometry/strategies/constellation'
 import type { GeometryStrategy } from '../engine/music-geometry/GeometryStrategy'
 import { createQuickStudyScore } from '../demo/score'
+import type { BuiltinScore } from '../demo/library'
 import { DefaultPreset } from '../visual/presets/defaultPreset'
 import { isSavedSession } from './sessionValidation'
 
@@ -28,7 +29,7 @@ interface StudioState {
   visibilityMode: VisibilityMode
   setScore(score: NormalizedScore): void
   addScores(scores: { score: NormalizedScore; filename: string }[]): void
-  restoreSessions(sessions: unknown, activeSessionId: string): { restored: number; rejected: number }
+  restoreSessions(sessions: unknown, activeSessionId: string, builtins?: BuiltinScore[]): { restored: number; rejected: number }
   selectSession(id: string): void
   removeSession(id: string): void
   regenerate(): void
@@ -43,6 +44,7 @@ export function createStudioStore() {
   const seed = 107
   const strategy = ConstellationGeometryStrategy
   let nextId = 1
+  let builtinIds = new Set<string>()
   const demo = { id: 'score-0', filename: 'Original Quick Study', seed, compiled: compileScore(createQuickStudyScore(), strategy, seed) }
   return create<StudioState>((set, get) => ({
     compiled: demo.compiled, seed, strategy, preset: DefaultPreset,
@@ -55,7 +57,7 @@ export function createStudioStore() {
       if (!added.length) return
       set({ sessions: [...state.sessions, ...added], activeSessionId: added[0]!.id, compiled: added[0]!.compiled })
     },
-    restoreSessions: (records, activeSessionId) => {
+    restoreSessions: (records, activeSessionId, builtins = []) => {
       const sessions: ScoreSession[] = [demo]
       let rejected = Array.isArray(records) ? 0 : 1
       for (const record of Array.isArray(records) ? records : []) {
@@ -68,14 +70,23 @@ export function createStudioStore() {
         } catch { rejected++ }
       }
       const active = sessions.find(session => session.id === activeSessionId) ?? demo
+      const restored = sessions.length - 1
+      builtinIds = new Set(builtins.map(entry => entry.id))
+      for (const entry of builtins) {
+        if (!sessions.some(session => session.id === entry.id)) {
+          sessions.push({ id: entry.id, filename: entry.filename, seed,
+            compiled: compileScore(entry.score, strategy, seed) })
+        }
+      }
       set({ sessions, activeSessionId: active.id, compiled: active.compiled, seed: active.seed })
-      return { restored: sessions.length - 1, rejected }
+      return { restored, rejected }
     },
     selectSession: id => {
       const session = get().sessions.find(item => item.id === id)
       if (session) set({ activeSessionId: id, compiled: session.compiled, seed: session.seed })
     },
     removeSession: id => {
+      if (builtinIds.has(id)) return
       const state = get()
       if (state.sessions.length === 1) { set({ sessions: [demo], activeSessionId: demo.id, compiled: demo.compiled, seed: demo.seed }); return }
       const sessions = state.sessions.filter(session => session.id !== id)

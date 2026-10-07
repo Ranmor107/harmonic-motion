@@ -3,7 +3,7 @@
 Purpose: 按真实模块定位 ownership、输入输出、公共入口与最小修改邻域。
 Authority: 模块归属的主要记录；契约语义以 [ARCHITECTURE](ARCHITECTURE.md) 为准。
 Update when: 入口、依赖、公共符号、模块职责或测试归属发生变化。
-Last verified: 2026-10-06；更新 A01/A02 的保存边界及按需模型准备；其他职责沿用全仓审阅。
+Last verified: 2026-10-07；源码核对内置曲库的 demo/UI/state 接入；其他职责沿用既有审阅，运行检查结果见 VERIFICATION。
 
 下面“允许/禁止”是维护边界，不声称全由工具强制。实际 lint 仅对 domain/engine/playback 禁止列出的框架、视觉模块导入及 `Math.random`；不覆盖全部跨层规则，也没有禁止全局 DOM API。具体见 [eslint.config.js](../eslint.config.js)。
 
@@ -157,11 +157,11 @@ Scene 保留原版 R3F Canvas/CameraRig；Ink 生效时隐藏并停止该 Canvas
 
 - **Primary path / entry points**：[src/state/store.ts](../src/state/store.ts) `createStudioStore` / `useStudio`；[src/state/persistence.ts](../src/state/persistence.ts) 本机保存记录；[sessionValidation.ts](../src/state/sessionValidation.ts) `isSavedSession(unknown)`。
 - **Responsibility / owns**：ScoreSession[]、activeSessionId、当前 compiled/seed、strategy、preset、viewMode、visibilityMode；每曲缓存独立，视觉偏好共用。持久化模块只读写规范化乐谱与版本化偏好，不保存运行时 compiled 对象。
-- **Consumes → produces**：demo/导入 score、compileScore、默认策略/preset → Zustand 应用状态和 actions。
-- **保存信任边界**：loadSavedState 返回 unknown sessions 原值；restoreSessions 编译前验证完整 score，返回 `{restored,rejected}`。App 只在 rejected=0 时启用曲库/偏好自动写入；否则保留原数据库，本次更改临时使用。位置只恢复到匹配的已恢复曲目。数据库格式/版本/key 未改变。
-- **Public contracts / symbols**：`ScoreSession`、`addScores`、`restoreSessions`、`selectSession`、`removeSession`；`setScore` 委托单曲加入；`regenerate` 更新当前 session 缓存；`setPreset`、`setViewMode`、`setVisibilityMode` 只改显示。`compiled` 始终指向当前 session 的同一对象；跨重启则由已保存的 score 重新编译。
+- **Consumes → produces**：demo/导入/已解析内置 score、compileScore、默认策略/preset → Zustand 应用状态和 actions。
+- **保存信任边界**：loadSavedState 返回 unknown sessions 原值；restoreSessions 编译前验证完整 score，返回 `{restored,rejected}`，只统计保存记录。先从成功恢复记录确定活动曲或回退 demo，再补齐缺失的内置默认曲，已保存内置 score/seed 优先。App 只在保存读取成功且 rejected=0 时启用曲库/偏好自动写入；否则保留原数据库，本次更改临时使用。位置只恢复到匹配的已恢复曲目，损坏内置记录的默认替补不会恢复其位置。数据库格式/版本/key 未改变。
+- **Public contracts / symbols**：`ScoreSession`、`addScores`、`restoreSessions(records, activeId, builtins=[])`、`selectSession`、`removeSession`；restore 注册的内置 ID 不可移除；省略 builtins 保留原恢复/删除语义。`setScore` 委托单曲加入；`regenerate` 更新当前 session 缓存；`setPreset`、`setViewMode`、`setVisibilityMode` 只改显示。`compiled` 始终指向当前 session 的同一对象；跨重启则由已保存的 score 重新编译。
 - **Allowed dependencies**：Zustand、domain、compile、策略、demo、visual 默认值。**Forbidden / undesirable**：把歌曲时钟/每帧对象移入 store、解析二进制或控制 Tone 声部。
-- **Related tests**：[engine.test.ts](../tests/engine.test.ts)；[session.test.ts](../tests/session.test.ts) 的多曲缓存、非法/部分恢复、独立 seed、删除/回退、偏好与播放加载协调；[persistence.test.ts](../tests/persistence.test.ts) 的原值读取与正常保存 mock。真实浏览器证据见 [第1步验证](VERIFICATION.md#audit-step-1-2026-10-06)，abort/多窗口仍未自动覆盖。
+- **Related tests**：[engine.test.ts](../tests/engine.test.ts)；[session.test.ts](../tests/session.test.ts) 的多曲缓存、非法/部分恢复、独立 seed、删除/回退、偏好与播放加载协调；[builtin-library.test.ts](../tests/builtin-library.test.ts) 的默认补齐、保存内置 score/seed 优先、独立恢复计数、损坏替补不激活、注册内置不可删除及导入 ID；[persistence.test.ts](../tests/persistence.test.ts) 的原值读取与正常保存 mock。真实浏览器证据见 [第1步验证](VERIFICATION.md#audit-step-1-2026-10-06)，abort/多窗口仍未自动覆盖。
 - **Safe local changes**：应用组合或新增局部选择状态；不要为了一个 UI 控件重构 store。
 - **Adjacent scope**：导入/切曲/删除当前曲目由 App 先 stop，再改 session；score effect 调 controller.load，保证音乐归零。新增解析发生在 App，store 只接收 normalized score。
 - **Must NOT decide**：曲线计算、时钟算法、材质解释。视觉变化只更新 preset，不触发 compileScore。
@@ -173,7 +173,7 @@ App 的水墨选择立即同步舞台与册页 UI；纸面下方提供宣纸落�
 
 - **Primary paths / entry points**：[src/main.tsx](../src/main.tsx)、[App.tsx](../src/ui/App.tsx)、[styles.css](../src/ui/styles.css)、[Icons.tsx](../src/ui/Icons.tsx)；品牌配置 [branding/config.ts](../src/branding/config.ts)、品牌资产 [mark.svg](../public/mark.svg)，页面壳 [index.html](../index.html)。
 - **Responsibility / owns**：用户输入、布局/文案、错误/忙碌状态、服务装配、播放快照桥接。
-- **Consumes → produces**：用户文件/按钮、本机保存记录、store、controller、Scene → DOM/UI 与用户命令；先恢复曲库再加载当前曲目，恢复进度时保持暂停；rAF 读取时钟并写快照，约 32ms 更新文本状态。
+- **Consumes → produces**：用户文件/按钮、本机保存记录、内置 MIDI、store、controller、Scene → DOM/UI 与用户命令；allSettled 并行读取保存状态和内置资源，两条链失败分别处理，完成后恢复曲库再加载当前曲目，恢复进度时保持暂停；rAF 读取时钟并写快照，约 32ms 更新文本状态。内置标识、署名/来源/许可链接及移除禁用由 manifest ID 派生。
 - **Public contracts / symbols**：`App`、`Icon`；内部 `onLoad`、`switchScore`、`deleteScore`、`togglePlayback`、`toggleEffects` 是主要定位符号。
 - **Allowed dependencies**：React、state、midi、playback、audio、visual camera、render、utils。**Forbidden / undesirable**：重新实现解析/生成/编舞/时钟；这层可装配多模块，不代表每次改布局都要修改它们。
 - **Related tests**：没有 UI 自动测试；需 [TEST_MATRIX 的浏览器清单](TEST_MATRIX.md#manual-smoke)。
@@ -184,14 +184,14 @@ App 的水墨选择立即同步舞台与册页 UI；纸面下方提供宣纸落�
 <a id="demo"></a>
 ## Demo
 
-- **Primary path / entry point**：[src/demo/score.ts](../src/demo/score.ts) `createQuickStudyScore`；`createDemoScore` 保留为旧引擎回归素材。
-- **Responsibility / owns**：默认原创 Quick Study 与旧回归短句。
-- **Consumes → produces**：显式 notes/time/duration/velocity → normalizeScore → NormalizedScore。
-- **Public contracts / symbols**：`createQuickStudyScore()`、`createDemoScore()`；无二进制素材依赖。
-- **Allowed dependencies**：midi 的纯 normalizeScore。**Forbidden / undesirable**：Tone、Three、store、商业曲目或网络资源。
-- **Related tests**：[quick-study.test.ts](../tests/quick-study.test.ts) 验证默认内容；[engine.test.ts](../tests/engine.test.ts)、[playback.test.ts](../tests/playback.test.ts) 使用旧短句并包含具体时刻/数量断言。
+- **Primary path / entry point**：[src/demo/score.ts](../src/demo/score.ts) `createQuickStudyScore`；`createDemoScore` 保留为旧引擎回归素材；[src/demo/library.ts](../src/demo/library.ts) 与 [assets](../src/demo/assets/) 提供五首内置经典 MIDI。
+- **Responsibility / owns**：默认原创 Quick Study、旧回归短句、内置曲 manifest/素材加载及署名/来源/许可元数据。
+- **Consumes → produces**：显式 notes/time/duration/velocity → normalizeScore → NormalizedScore；打包 MIDI 的 Vite `?url` → 同源 fetch → parseMidi → 仅替换中文 title 的 NormalizedScore。内置加载采用 Promise.all，任一资源读取/解析失败即拒绝本批加载。
+- **Public contracts / symbols**：`createQuickStudyScore()`、`createDemoScore()`、`BUILTIN_SCORES`、`loadBuiltinScores()`、`isBuiltinSessionId()`；内置 ID 在 manifest 明确列出，不按文件名或泛前缀分类。
+- **Allowed dependencies**：midi 的 normalizeScore/parseMidi、打包静态资源及其同源读取。**Forbidden / undesirable**：Tone、Three、store、运行时从外站获取 MIDI。
+- **Related tests**：[quick-study.test.ts](../tests/quick-study.test.ts) 验证默认内容；[builtin-library.test.ts](../tests/builtin-library.test.ts) 读取五个实际素材、核对仅标题变化和可保存 score、检查资源 HTTP 错误；[engine.test.ts](../tests/engine.test.ts)、[playback.test.ts](../tests/playback.test.ts) 使用旧短句并包含具体时刻/数量断言。
 - **Safe local changes**：明确要求时调整示例内容；须同步依赖该示例的断言，不能用改 demo 掩盖算法错误。
-- **Adjacent scope**：App 的 demo 描述和固定 notes/chord 文案；默认注入点在 store。
+- **Adjacent scope**：App 的 demo 描述和固定 notes/chord 文案；内置资源由 App 读取后作为 normalized defaults 传入 store，store 不解析 MIDI 二进制。
 - **Must NOT decide**：几何或视觉风格、播放规则。
 
 <a id="utils"></a>

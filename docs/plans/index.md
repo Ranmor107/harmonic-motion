@@ -24,6 +24,7 @@ plan 是实施边界，不是永久架构规范。真正的架构决策另用 [A
 
 | Plan | Status | Path | Evidence / next step |
 | --- | --- | --- | --- |
+| Built-in classical scores | Active | [active plan](active/2026-10-07-builtin-classics.md) | 五首有明确来源的经典 MIDI；默认曲合并、保存与 GitHub 分发 |
 | Audit step 1: saved-score recovery and sparse-song memory | Completed · uploaded | [completed plan](completed/2026-10-06-audit-input-recovery.md) | `f9e2900` 已上传；A01/A02 已修复，118 tests、lint/build、隔离浏览器通过；[证据](../VERIFICATION.md#audit-step-1-2026-10-06) |
 | Ink folio: drops, veins and classical UI | Completed · local verified | [completed plan](completed/2026-10-01-ink-folio-integration.md) | 正式集成宣纸落墨、墨脉与册页 UI，复用主站曲库和统一时间；[验证证据](../VERIFICATION.md#ink-folio-2026-10-01) |
 | Ink Stream, coordinated UI and style buttons | Completed | [completed plan](completed/2026-09-28-ink-stream-and-ui.md) | Original / Ink 同步切换舞台和 UI，保留播放与取景；89 项测试、lint/build 与浏览器检查通过；[验证证据](../VERIFICATION.md#ink-stream-2026-09-28) |

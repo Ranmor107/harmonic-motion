@@ -3,7 +3,7 @@
 Purpose: 按改动选择真实存在的检查，区分纯函数、mock 与浏览器证据。
 Authority: 验证映射与覆盖缺口的主要记录；实际运行结果见 [VERIFICATION](VERIFICATION.md)。
 Update when: scripts、测试文件/suite、覆盖范围或验证要求改变。
-Last verified: 2026-10-06；新增保存读取回归及非法恢复、稀疏长曲、有限 note end 用例。
+Last verified: 2026-10-07；源码核对 builtin-library suite 与内置恢复覆盖；实际运行结果见 VERIFICATION。
 
 所有命令在仓库根目录运行。`npm run test` 是 `vitest run`，额外文件和 `-t` 参数通过 `--` 传入。
 现有 scripts 没有独立 typecheck、coverage、E2E 或截图命令；需要类型检查时使用 `npm run build`（内含 `tsc -b`）。不要写不存在的 `npm run typecheck` / `test:render`。
@@ -24,9 +24,9 @@ Last verified: 2026-10-06；新增保存读取回归及非法恢复、稀疏长�
 | T-CAMERA · navigation/follow/fit | musical-presentation 测宽/窄视口投影角点，visual 测 home state；真实 pointer/follow 仍需浏览器 | `npm run test -- tests/visual.test.ts tests/musical-presentation.test.ts`；`npm run lint`；`npm run build` | 相机之外的核心 contract 改变时 T-GLOBAL | zoom/pan/fit、view 切换和中等窗口；比对 world/plan/playback 保持不变 |
 | T-VISIBILITY · focus/path/stream | visual 测窗口分类；musical-presentation 测显示预算、生命周期/和弦/seek；engine 测 evaluator | `npm run test -- tests/visual.test.ts tests/musical-presentation.test.ts tests/engine.test.ts`；`npm run lint`；`npm run build` | 修改事件、世界或轨迹数据语义时 T-GLOBAL | 时间0/末尾、前后seek、pause、overview/focus/path/stream；密集测试曲 |
 | T-UI · layout/title/buttons | 无 UI 自动测试；动作相关时使用对应核心 suite | `npm run lint`；`npm run build`；行为变化追加所属模块的 targeted test | UI 接线改变跨模块控制流时 T-GLOBAL | 控件、焦点、错误提示、标题长度、常用窗口尺寸；全屏按钮/F 与 Escape、Space/←/→/R、滑杆焦点与非交互区域、390px transport；纯布局不冒充引擎变更 |
-| T-STATE · score/session/seed/preset composition | [session.test.ts](../tests/session.test.ts)：缓存引用、切曲偏好、删除、seed、保存记录恢复后重新编译并延续唯一 ID、加载归零与 late unlock；engine 的 `Independent extension points` | `npm run test -- tests/session.test.ts tests/engine.test.ts` | compiled/score 生命周期或模块装配改变时 T-GLOBAL | 导入归零、刷新后曲库/选中曲/偏好/暂停位置及逐曲轨道焦点恢复，删除后不复活；regenerate 保持进度、preset 不重编译 |
-| T-STORAGE · saved-score trust and recovery | [persistence.test.ts](../tests/persistence.test.ts)：原值读取、异常容器、好坏记录保留、正常 save/load（IDB mock）；session：完整 score 校验、部分恢复结果与引用；midi/ensemble：有限 note end、37 字节稀疏长曲及正常 energy 数值 | `npm run test -- tests/persistence.test.ts tests/session.test.ts tests/midi.test.ts tests/ensemble-presentation.test.ts`；跨模块接线另执行 T-GLOBAL | 存储契约、写入策略或恢复控制流改变时 T-GLOBAL | 独立 origin/profile：坏记录/容器原值及 preferences 不被覆盖；正常曲仍可用；临时导入、持续提示/重试、匹配曲目位置、健康库保存恢复；不在用户曲库注入故障。此 suite 不覆盖 abort/blocked/多窗口 |
-| T-DEMO · procedural example | [quick-study.test.ts](../tests/quick-study.test.ts) 验证默认曲目时长、分层加入、和弦变化与默认会话；engine/playback 使用旧短句的具体音符和时刻 | `npm run test -- tests/quick-study.test.ts tests/engine.test.ts tests/playback.test.ts` | 若 normalize/契约也改则 T-GLOBAL | 开页默认世界、标题/数量描述与实际一致；第一次点击播放、导入入口及说明的浏览器检查 |
+| T-STATE · score/session/seed/preset composition | [session.test.ts](../tests/session.test.ts)：缓存引用、切曲偏好、删除、seed、保存记录恢复后重新编译并延续唯一 ID、加载归零与 late unlock；[builtin-library.test.ts](../tests/builtin-library.test.ts)：默认补齐不计入 restored、保存内置 score/seed 优先、不重复追加、导入 ID 延续、损坏替补不激活、注册内置不可删除；engine 的 `Independent extension points` | `npm run test -- tests/session.test.ts tests/builtin-library.test.ts tests/engine.test.ts` | compiled/score 生命周期或模块装配改变时 T-GLOBAL | 导入归零、刷新后曲库/选中曲/偏好/暂停位置及逐曲轨道焦点恢复，删除后不复活；内置曲保留且不可移除；regenerate 保持进度、preset 不重编译 |
+| T-STORAGE · saved-score trust and recovery | [persistence.test.ts](../tests/persistence.test.ts)：原值读取、异常容器、好坏记录保留、正常 save/load（IDB mock）；session：完整 score 校验、部分恢复结果与引用；builtin-library：损坏保存内置记录保留原值且默认替补不激活；midi/ensemble：有限 note end、37 字节稀疏长曲及正常 energy 数值 | `npm run test -- tests/persistence.test.ts tests/session.test.ts tests/builtin-library.test.ts tests/midi.test.ts tests/ensemble-presentation.test.ts`；跨模块接线另执行 T-GLOBAL | 存储契约、写入策略或恢复控制流改变时 T-GLOBAL | 独立 origin/profile：坏记录/容器原值及 preferences 不被覆盖；正常曲仍可用；临时导入、持续提示/重试、匹配曲目位置、健康库保存恢复；保存/内置读取失败分别处理。不在用户曲库注入故障；此 suite 不覆盖 App allSettled 接线、abort/blocked/多窗口 |
+| T-DEMO · procedural example / bundled classics | [quick-study.test.ts](../tests/quick-study.test.ts) 验证默认曲目时长、分层加入、和弦变化与默认会话；[builtin-library.test.ts](../tests/builtin-library.test.ts) 读取五个实际 MIDI、核对仅标题变化及合法保存格式，检查 HTTP 失败和明确 ID 分类；engine/playback 使用旧短句的具体音符和时刻 | `npm run test -- tests/quick-study.test.ts tests/builtin-library.test.ts tests/engine.test.ts tests/playback.test.ts` | 若 normalize/契约也改则 T-GLOBAL | 开页默认世界、标题/数量描述与实际一致；五首内置曲标识与署名/来源/许可链接；第一次点击播放、导入入口及说明的浏览器检查 |
 | T-INK · Stream style/UI | [ink-stream.test.ts](../tests/ink-stream.test.ts)：相同 compiled/world/plan 和 camera/presentation 引用、mock audio load、效果偏好、力度/时值/重复音/和弦/真实休止、密集预算、空谱与长音、随机 seek、version 1 兼容 | `npm run test -- tests/ink-stream.test.ts tests/visual.test.ts tests/session.test.ts tests/engine.test.ts`；lint / build | 新视觉类型与 UI/state 接线需 T-GLOBAL | 同时刻截图、播放连续、View 往返、刷新、Effects Off、键盘、390px/全屏、用户长曲与重复切换；WebGL 失败/恢复、资源释放和实际音频仍需浏览器或人工观察，单测不替代 |
 | T-GLOBAL · cross-module / domain / shared semantics | 全部现有测试 + 静态约束 + 生产编译 | `npm run test`；`npm run lint`；`npm run build` | public contract、≥3 责任层或无法局部隔离的集成变化必做 | 按受影响行为补浏览器 smoke；全量单测不能替代它 |
 | T-DOC · documentation only | Markdown 路径、符号、命令、metadata 与 diff；无专门文档测试脚本 | `git diff --check`；`git diff --name-only`；若已暂存再加 `git diff --cached --check` / `--name-only`；`git status --short` | 需要确认 baseline 或文档引用检查结果时可运行 T-GLOBAL；不为文档修产品失败 | 路由演练：zoom、InkTheme、Spiral；相对链接和 anchors 可达；用户已有文件保持不变 |
@@ -45,13 +45,13 @@ Last verified: 2026-10-06；新增保存读取回归及非法恢复、稀疏长�
 <a id="manual-smoke"></a>
 ## Browser smoke：按影响选择
 
-1. 默认 demo：世界/节点/连接/Performer 可见，无异常；不只看 DOM fallback 文本判断 WebGL 成败。
+1. 默认 demo：世界/节点/连接/Performer 可见，无异常；内置加载成功时曲库补齐五首经典曲目，标识与署名/来源/许可链接可见。不只看 DOM fallback 文本判断 WebGL 成败。
 2. Play → Pause → Restart：时间与当前位置一致；暂停无新音符。
 3. 播放中和暂停中前后 seek，尤其和弦和延音；首节点之前与结束时刻也检查。
 4. Regenerate：seed 改变，score/timing/当前进度保留；视觉 preset 变化保留 world/plan。
 5. 导入 [tempo-and-voices.mid](../tests/fixtures/tempo-and-voices.mid)，验证双轨与变速；导入 [invalid.mid](../tests/fixtures/invalid.mid)，验证错误提示与原曲保留。
 6. 检查修改涉及的画面/相机/显示模式以及浏览器 console；需要证明听感时进行真人试听或实际音频输出测量。
-7. 多选导入、切曲停止归零、删除当前/非当前曲目、最后一曲回退；模式/形态/效果/跟随偏好保留。缓存引用复用由 session 单测证明，界面切回本身不能证明没重编译。
+7. 多选导入、切曲停止归零、删除当前/非当前导入曲目；内置曲不可移除，移除全部导入曲后仍保留。未注册内置时的最后一曲回退由 session 单测覆盖；模式/形态/效果/跟随偏好保留。缓存引用复用由 session 单测证明，界面切回本身不能证明没重编译。
 8. pointer 操作前后截帧，等待一次 UI 更新后确认缩放/平移仍保持；Fit 恢复。不能把“发出了 wheel/drag”当成结果已生效。抽屉 Escape/焦点返回、不同宽度与 reduced-motion 样式另做人工检查。
 9. Continuity：导入至少两曲、调整 View/音量并 seek，刷新或重新打开后核对标题/曲目数/偏好/暂停位置；删除测试曲后再刷新，确认记录消失。一键启动器另检查关闭窗口后服务端口释放且专用 profile 保留。
 10. 轨道焦点：三轨示例在 Auto 与指定轨间切换，检查三视图主次关系、其他轨仍在、播放中切换后时间继续；切曲再返回和刷新后恢复逐曲选择。无效旧选择回退 Auto。

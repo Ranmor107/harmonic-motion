@@ -3,7 +3,7 @@
 Purpose: 保留带日期、baseline 和适用边界的实际检查证据。
 Authority: 已发生验证的记录；不能作为未来提交自动通过的保证。
 Update when: 新一轮检查产生结果，或旧证据被确认需更正。
-Last verified: 2026-10-06；最新证据见 Audit step 1，早期记录保留其日期和适用边界。
+Last verified: 2026-10-07；最新证据见 Built-in classics，早期记录保留其日期和适用边界。
 
 日期：2026-09-17。环境：Windows、Node.js 24.18.0、Codex 内置 Chromium 浏览器，1280 × 720。
 
@@ -410,3 +410,17 @@ Ink 的 P95 在这次有限样本中增加 7.5%，median 下降约 6.7%，符合
 本地补充证据位于忽略的 `artifacts/audit-step-1/`：`mixed-retention.json`、`null-retention.json`、`healthy-save.json`、各视图 JPEG 和 `browser-fixtures.html`；测试 JSON 为 `artifacts/audit-step-1-full.json`。Vitest 首次受沙箱临时目录缺失影响，使用本命令进程内的 TEMP/TMP 指向忽略的仓库 artifacts 后执行成功，未改项目配置。
 
 本轮不包含 abort/blocked/versionchange、多窗口覆盖、真实音频输出、GPU内存泄漏或跨设备性能验证；A03–A13仍开放。文档链接、diff 和 GitHub 交付状态在计划执行记录中保存。
+
+<a id="builtin-classics-2026-10-07"></a>
+## Built-in classics · 2026-10-07
+
+Baseline: `d48df9b`；[实施计划](plans/active/2026-10-07-builtin-classics.md)。新增五首 Mutopia 经典 MIDI，原字节、SHA-256、具体版本许可与转录者见 [来源记录](../src/demo/assets/SOURCES.md)。未上传用户 `midi/`、DOCX 或授权未明确的现代曲目。
+
+- 一次全量 `npm run test`：14 文件 / 124 tests 通过；新增6项回归覆盖五份真实资产的完整音乐数据、HTTP失败、默认补齐不计入恢复数、保存内置 seed/score 优先、坏记录替补不激活和删除边界。
+- `npm run lint`、`npm run build` 通过。生产主 JS 1466.97 kB / gzip 402.07 kB，保留既有超过500 kB的 chunk 提示；较小的 BWV772 资源按 Vite 默认规则内联，其余4份 MIDI 独立打包。未新增依赖或更改配置。
+- 隔离的生产 preview `127.0.0.1:5176`、内置 Chromium、1280×720：初始仍为 Quick Study，引导保留，曲库共6项；逐首选择五首，中文标题、时长、轨道与音符数正确，未见错误提示，内置移除禁用。
+- 卡农播放状态进入 Performing，时间增长至21秒；测试标签关闭后重新打开恢复卡农、暂停与20.176秒保存位置。再用键盘跳转5秒并刷新，精确恢复25.176秒、Paused；切到水墨保持时间、出现“内置经典”和当前曲的转录者/来源/CC BY 4.0链接。
+- 截图观察到水墨画面实际绘制，五首列表与来源链接可见；上述操作未见 console error。没有重新跑三视图矩阵、批量导入或故障注入；用户导入和坏记录边界由已有及新增 store 测试覆盖。测试不证明真人听感、输出延迟或视频平台的版权判定。
+- 保存数据库仍为 version 1，位置只用于成功恢复的活动记录；内置默认曲不覆盖已保存 seed/score。未改音乐解析/分析/编舞、audio/playback、视觉相机或启动器。
+
+![内置经典曲库与卡农水墨舞台](assets/builtin-classics.jpg)

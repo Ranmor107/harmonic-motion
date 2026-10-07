@@ -12,6 +12,7 @@ import { upperBound } from '../utils/math'
 import { branding } from '../branding/config'
 import type { StreamStyleId } from '../domain/visual'
 import { resolveStreamPreset } from '../visual/presets/inkStream'
+import { BUILTIN_SCORES, isBuiltinSessionId, loadBuiltinScores } from '../demo/library'
 
 const timeLabel = (time: number) => `${String(Math.floor(time / 60)).padStart(2, '0')}:${String(Math.floor(time % 60)).padStart(2, '0')}`
 const pitchLabel = (midi: number) => `${['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'][midi % 12]}${Math.floor(midi / 12) - 1}`
@@ -33,6 +34,7 @@ export function App() {
     addScores, restoreSessions, selectSession, removeSession, regenerate, setPreset, setViewMode, setVisibilityMode, setStreamStyleId, setInkMode,
   } = useStudio()
   const { score, world, plan } = compiled
+  const builtin = BUILTIN_SCORES.find(entry => entry.id === activeSessionId)
   const [{ controller, audio }] = useState(() => {
     const clock = new PlaybackClock(0, audioNow)
     const audio = new ToneAudioEngine(clock)
@@ -103,9 +105,12 @@ export function App() {
 
   useEffect(() => {
     let active = true
-    void loadSavedState().then(({ sessions: saved, preferences }) => {
+    void Promise.allSettled([loadSavedState(), loadBuiltinScores()]).then(([savedResult, builtinResult]) => {
       if (!active) return
-      const restored = restoreSessions(saved, preferences?.activeSessionId ?? 'score-0')
+      if (builtinResult.status === 'rejected') setError('内置曲目加载失败。已保存曲目仍可使用，请刷新重试。')
+      if (savedResult.status === 'rejected') storageFailed()
+      const { sessions: saved, preferences } = savedResult.status === 'fulfilled' ? savedResult.value : { sessions: [], preferences: null }
+      const restored = restoreSessions(saved, preferences?.activeSessionId ?? 'score-0', builtinResult.status === 'fulfilled' ? builtinResult.value : [])
       if (restored.rejected) {
         const message = `${restored.rejected} 条本机记录无法恢复。原数据已保留；本次曲库与设置改动仅在内存中，关闭页面后不会保存。`
         setRecoveryWarning(message)
@@ -138,7 +143,7 @@ export function App() {
         if (useStudio.getState().activeSessionId === preferences.activeSessionId) restorePosition.current = preferences.position
         setEntered(true)
       } else if (restored.restored) setEntered(true)
-      setStorageReady(restored.rejected === 0)
+      setStorageReady(savedResult.status === 'fulfilled' && restored.rejected === 0)
     }).catch(() => { if (active) storageFailed() }).finally(() => { if (active) setReadReady(true) })
     return () => { active = false }
   }, [audio, restoreSessions, setPreset, setViewMode, setVisibilityMode, storageFailed, setStreamStyleId, setInkMode])
@@ -371,7 +376,7 @@ export function App() {
     }}>
       <Scene score={score} world={world} plan={plan} preset={effectivePreset} playback={snapshot} cameraController={StaticCamera} viewMode={viewMode} visibilityMode={visibilityMode} focusTrackId={focusTrackId} fitRequest={fitRequest} follow={follow} onNavigate={() => setFollow(false)} />
       <div className="score-card">
-        <p className="eyebrow">{ink ? '纸上听音' : 'Opus'} {String(sessionIndex + 1).padStart(2, '0')} / {score.metadata.source === 'demo' ? ink ? '原创小品' : 'Quick Study' : ink ? '本机乐谱' : 'Local score'}</p>
+        <p className="eyebrow">{ink ? '纸上听音' : 'Opus'} {String(sessionIndex + 1).padStart(2, '0')} / {builtin ? ink ? '内置经典' : 'Built-in classic' : score.metadata.source === 'demo' ? ink ? '原创小品' : 'Quick Study' : ink ? '本机乐谱' : 'Local score'}</p>
         <h1>{score.metadata.title}</h1>
         {ink && <p className="ink-work-caption">{score.tracks.filter(track => track.notes.length).length} 条轨道<span>·</span>{timeLabel(score.duration)}<span>·</span>{inkMode === 'drops' ? '一音落纸，余韵渐开' : '主脉行进，众声相和'}</p>}
         <dl className="artwork-data">
@@ -450,11 +455,12 @@ export function App() {
         if (muted) { setMuted(false); audio.setMuted(false) }
       }} /></section>
       <section className="control-section library"><div className="library-heading"><h2>{ink ? '本机曲库' : 'Library'} <span>{sessions.length}</span></h2><button onClick={() => input.current?.click()} disabled={busy}>{ink ? '+ 添一曲' : '+ Add'}</button></div>
-        <p className="control-note" role={recoveryWarning ? 'status' : undefined}>{recoveryWarning || (ink ? '曲目保存在此浏览器；移除仅删除本机保存的副本。' : 'Saved in this browser · removing a score deletes its saved copy')}</p>
+        <p className="control-note" role={recoveryWarning ? 'status' : undefined}>{recoveryWarning || (ink ? '内置经典始终可用；导入曲保存在此浏览器，可移除本机副本。' : 'Built-in classics are always available · imported scores are saved in this browser')}</p>
+        {builtin && <p className="control-note">MIDI: <a href={builtin.sourceUrl} target="_blank" rel="noreferrer">{builtin.credit} / Mutopia</a> · <a href={builtin.license.url} target="_blank" rel="noreferrer">{builtin.license.label}</a></p>}
         {recoveryWarning && <div className="camera-actions"><button onClick={() => window.location.reload()}>刷新重试恢复</button><button onClick={() => input.current?.click()} disabled={busy}>重新导入 MIDI</button></div>}
         <ol>{sessions.map((session, index) => <li key={session.id} className={session.id === activeSessionId ? 'is-current' : ''}>
-          <button className="score-select" aria-current={session.id === activeSessionId ? 'true' : undefined} onClick={() => switchScore(session.id)} disabled={busy || starting} title={session.filename}><span className="score-number">{String(index + 1).padStart(2, '0')}</span><span className="score-name">{session.compiled.score.metadata.title}<small>{timeLabel(session.compiled.score.duration)} · {session.compiled.score.tracks.length} tracks</small></span></button>
-          <button className="score-remove" aria-label={`Remove ${session.compiled.score.metadata.title}`} onClick={() => deleteScore(session.id)} disabled={busy || starting || (sessions.length === 1 && session.id === 'score-0')}>×</button>
+          <button className="score-select" aria-current={session.id === activeSessionId ? 'true' : undefined} onClick={() => switchScore(session.id)} disabled={busy || starting} title={session.filename}><span className="score-number">{String(index + 1).padStart(2, '0')}</span><span className="score-name">{session.compiled.score.metadata.title}<small>{isBuiltinSessionId(session.id) && (ink ? '内置 · ' : 'Built-in · ')}{timeLabel(session.compiled.score.duration)} · {session.compiled.score.tracks.length} tracks</small></span></button>
+          <button className="score-remove" aria-label={`Remove ${session.compiled.score.metadata.title}`} onClick={() => deleteScore(session.id)} disabled={busy || starting || isBuiltinSessionId(session.id) || (sessions.length === 1 && session.id === 'score-0')}>×</button>
         </li>)}</ol>
       </section>
     </aside>
