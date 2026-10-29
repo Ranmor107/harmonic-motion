@@ -11,9 +11,42 @@ import { DefaultPresentation } from '../src/visual/presentation/defaultPresentat
 import { evaluateNodePresentation } from '../src/visual/presentation/evaluatePresentation'
 import { evaluatePerformer } from '../src/engine/choreography/evaluator'
 import { createEnsemblePresentation, visibleEnsembleNotes } from '../src/visual/presentation/ensemblePresentation'
+import { createRenderMetrics, readRenderMetrics, renderIdentity } from '../src/render/renderMetrics'
 
 const rows: object[] = []
 const measured = <T,>(fn: () => T) => { const start = performance.now(); const value = fn(); return { value, ms: performance.now() - start } }
+describe('renderer diagnostics', () => {
+  it('reports a bounded window of actual drawn frame intervals with its source and timestamps', () => {
+    const sampler = createRenderMetrics(renderIdentity('stream', 'ink', 'veins'))
+    for (let frame = 0; frame <= 160; frame++) sampler.record(frame * 10)
+    expect(sampler.snapshot()).toMatchObject({ renderer: 'ink-webgl2', mode: 'stream:ink:veins', frames: 161,
+      sampleCount: 120, sampleStartMs: 400, sampleEndMs: 1600, frameMedianMs: 10, frameP95Ms: 10,
+      sampleBasis: 'drawn-frame-intervals' })
+  })
+  it('does not turn a first frame or a pause/resume gap into a rendering interval', () => {
+    const sampler = createRenderMetrics(renderIdentity('stream', 'ink', 'drops'))
+    sampler.record(16)
+    expect(sampler.snapshot()).toMatchObject({ frames: 1, sampleCount: 0, frameMedianMs: null, frameP95Ms: null })
+    sampler.record(32)
+    sampler.record(8000, false)
+    expect(sampler.snapshot()).toMatchObject({ frames: 1, sampleCount: 0, sampleStartMs: 8000, sampleEndMs: 8000,
+      frameMedianMs: null, frameP95Ms: null })
+    sampler.record(8016)
+    expect(sampler.snapshot()).toMatchObject({ sampleCount: 1, frameMedianMs: 16, frameP95Ms: 16 })
+  })
+  it('accepts only the current renderer and mode instead of reusing another canvas sample', () => {
+    const identities = [renderIdentity('constellation', 'original', 'drops', 'focus'), renderIdentity('stream'),
+      renderIdentity('ensemble'), renderIdentity('stream', 'ink', 'drops'), renderIdentity('stream', 'ink', 'veins')]
+    for (const identity of identities) {
+      const sampler = createRenderMetrics(identity)
+      sampler.record(100)
+      const serialized = JSON.stringify(sampler.snapshot())
+      expect(readRenderMetrics(serialized, identity)).toMatchObject(identity)
+      for (const other of identities.filter(other => other.mode !== identity.mode)) expect(readRenderMetrics(serialized, other)).toBeNull()
+    }
+    expect(readRenderMetrics(undefined, identities[0]!)).toBeNull()
+  })
+})
 describe('large score baseline', () => {
   for (const count of [100, 700, 2000, 5000]) it(`compiles and seeks an original ${count}-note fixture`, () => {
     const score = syntheticScore(count)

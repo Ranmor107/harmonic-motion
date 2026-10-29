@@ -21,21 +21,38 @@ import { createInkPresentation } from '../visual/presentation/inkPresentation'
 import { RIBBON_STAGE, streamCameraTarget } from '../visual/camera/streamCamera'
 import { evaluatePerformer } from '../engine/choreography/evaluator'
 import { RenderDiagnostics } from './RenderDiagnostics'
+import { renderIdentity } from './renderMetrics'
 
-class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+interface SceneBoundaryProps { children: ReactNode; score: NormalizedScore; mode: string }
+class SceneBoundary extends Component<SceneBoundaryProps, { failed: boolean }> {
   state = { failed: false }
   static getDerivedStateFromError() { return { failed: true } }
+  componentDidUpdate(previous: SceneBoundaryProps) {
+    if (this.state.failed && (previous.score !== this.props.score || previous.mode !== this.props.mode)) this.setState({ failed: false })
+  }
   render() {
-    return this.state.failed ? <div className="scene-fallback">The 3D view could not start. Enable hardware acceleration and reload.</div> : this.props.children
+    return this.state.failed ? <div className="scene-canvas"><div className="scene-fallback" role="alert">
+      The stage could not start. Retry the view, or choose another score or view.
+      <button onClick={() => this.setState({ failed: false })}>Retry view</button>
+    </div></div> : this.props.children
   }
 }
 
-export function Scene({ score, world, plan, preset, playback, cameraController, viewMode, visibilityMode, fitRequest, follow, onNavigate, focusTrackId }: {
+interface SceneProps {
   score: NormalizedScore; world: WorldModel; plan: PerformancePlan; preset: VisualPreset; playback: PlaybackSnapshot
   cameraController: CameraController; viewMode: ViewMode; visibilityMode: VisibilityMode; fitRequest: number
   follow: boolean; onNavigate: () => void; focusTrackId?: string
-}) {
+}
+
+export function Scene(props: SceneProps) {
+  const identity = renderIdentity(props.viewMode, props.preset.streamStyle, props.preset.inkMode, props.visibilityMode)
+  return <SceneBoundary score={props.score} mode={identity.mode}><SceneContent {...props} /></SceneBoundary>
+}
+
+function SceneContent({ score, world, plan, preset, playback, cameraController, viewMode, visibilityMode, fitRequest, follow, onNavigate, focusTrackId }: SceneProps) {
   const ink = viewMode === 'stream' && preset.streamStyle === 'ink'
+  const diagnostics = import.meta.env.DEV && new URLSearchParams(window.location.search).has('benchmark')
+  const identity = renderIdentity(viewMode, preset.streamStyle, preset.inkMode, visibilityMode)
   const model = useMemo(() => createMusicalPresentation(score, preset.presentation, focusTrackId), [score, preset.presentation, focusTrackId])
   const ensemble = useMemo(() => viewMode === 'ensemble' ? createEnsemblePresentation(score, model) : undefined, [score, model, viewMode])
   const inkModel = useMemo(() => ink ? createInkPresentation(score, preset.presentation, focusTrackId) : undefined, [score, preset.presentation, focusTrackId, ink])
@@ -52,10 +69,9 @@ export function Scene({ score, world, plan, preset, playback, cameraController, 
     : preset.camera, [preset.camera, viewMode, stage])
   const cameraBounds = viewMode === 'ensemble' ? ensemble!.bounds : viewMode === 'stream' ? RIBBON_STAGE.bounds : world.bounds
   return <div className="scene-canvas" style={{ background }} aria-label={ink ? '水墨音乐舞台' : 'Generated music constellation'}>
-    <SceneBoundary>
       <Canvas frameloop={ink ? 'never' : 'always'} style={{ visibility: ink ? 'hidden' : 'visible' }} dpr={[1, 1.75]} gl={{ antialias: true, alpha: true }} fallback={<div className="scene-fallback">WebGL is unavailable. Enable hardware acceleration to see the world.</div>}>
         <AdaptiveDpr pixelated />
-        {import.meta.env.DEV && new URLSearchParams(window.location.search).has('benchmark') && <RenderDiagnostics />}
+        {diagnostics && !ink && <RenderDiagnostics mode={identity.mode} score={score} />}
         <ambientLight intensity={preset.theme.lighting.ambient} />
         <directionalLight position={[10, 10, 10]} intensity={preset.theme.lighting.key} color={preset.theme.lighting.color} />
         <CameraRig bounds={cameraBounds} config={cameraConfig} controller={cameraController} fitRequest={fitRequest} follow={viewMode !== 'ensemble' && follow} travel={viewMode === 'stream'} followPosition={followPosition} playback={playback} onNavigate={onNavigate} />
@@ -70,7 +86,6 @@ export function Scene({ score, world, plan, preset, playback, cameraController, 
         </> : viewMode === 'stream' ? <StreamRenderer model={model} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} focusTrackId={focusTrackId} />
           : <EnsembleRenderer model={ensemble!} theme={preset.theme} effects={preset.effects} presentation={preset.presentation} playback={playback} focusTrackId={focusTrackId} />}
       </Canvas>
-    </SceneBoundary>
-    {ink && <InkStreamRenderer model={inkModel!} mode={preset.inkMode ?? 'drops'} playback={playback} effects={preset.effects.hit.enabled} />}
+    {ink && <InkStreamRenderer model={inkModel!} mode={preset.inkMode ?? 'drops'} playback={playback} effects={preset.effects.hit.enabled} diagnostics={diagnostics} />}
   </div>
 }

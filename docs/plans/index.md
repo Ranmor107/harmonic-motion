@@ -24,6 +24,7 @@ plan 是实施边界，不是永久架构规范。真正的架构决策另用 [A
 
 | Plan | Status | Path | Evidence / next step |
 | --- | --- | --- | --- |
+| Readable ink, recoverable failures and trustworthy diagnostics | Active | [active plan](active/2026-10-23-reliability-and-diagnostics.md) | 用户选定 A03 → A06/A08 → A10；不展开未选审计项 |
 | Built-in classical scores | Completed · uploaded | [completed plan](completed/2026-10-07-builtin-classics.md) | `e2cbacc` 已上传；五首许可/来源可追溯的 MIDI、默认曲合并与保存；[验证](../VERIFICATION.md#builtin-classics-2026-10-07) |
 | Audit step 1: saved-score recovery and sparse-song memory | Completed · uploaded | [completed plan](completed/2026-10-06-audit-input-recovery.md) | `f9e2900` 已上传；A01/A02 已修复，118 tests、lint/build、隔离浏览器通过；[证据](../VERIFICATION.md#audit-step-1-2026-10-06) |
 | Ink folio: drops, veins and classical UI | Completed · local verified | [completed plan](completed/2026-10-01-ink-folio-integration.md) | 正式集成宣纸落墨、墨脉与册页 UI，复用主站曲库和统一时间；[验证证据](../VERIFICATION.md#ink-folio-2026-10-01) |

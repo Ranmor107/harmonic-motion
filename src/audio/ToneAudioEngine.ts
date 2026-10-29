@@ -18,6 +18,7 @@ export class ToneAudioEngine implements AudioEngine {
   private scheduler = new NoteScheduler([])
   private volume = DEFAULT_VOLUME
   private muted = false
+  private errorHandler?: (cause: unknown) => void
 
   constructor(private readonly clock: PlaybackClock) {}
 
@@ -28,6 +29,8 @@ export class ToneAudioEngine implements AudioEngine {
   }
 
   async play(): Promise<void> { await Tone.start() }
+
+  setErrorHandler(handler: (cause: unknown) => void): void { this.errorHandler = handler }
 
   setVolume(volume: number): void {
     this.volume = Math.max(0, Math.min(1, volume))
@@ -58,7 +61,12 @@ export class ToneAudioEngine implements AudioEngine {
     this.master ??= new Tone.Gain(this.muted ? 0 : this.volume).toDestination()
     this.output = new Tone.Limiter(-1).connect(this.master)
     this.pump()
-    this.timer = setInterval(() => this.pump(), AUDIO.intervalMs)
+    this.timer = setInterval(() => {
+      try { this.pump() } catch (cause) {
+        this.pause()
+        this.errorHandler?.(cause)
+      }
+    }, AUDIO.intervalMs)
   }
 
   private pump(): void {

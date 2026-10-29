@@ -40,13 +40,13 @@ export function createInkPresentation(score: NormalizedScore, config: Presentati
     for (const note of ordered) {
       const lead = leadIds.has(note.id)
       const previous = lastPitch.get(note.midi)
-      const repeated = previous && note.startTime - previous.note.startTime <= .9 && lead === previous.lead
+      const repeated = previous && previous.repeats < 3 && note.startTime - previous.note.startTime <= .9 && lead === previous.lead
       const mark: InkNote = {
         note, lead, bass: mid < leadMid - 12, seed: seedOf(note.id), stroke: lead,
         y: lead ? clamp(.39 - (note.midi - leadMid) * .012, .16, .52)
           : clamp(.64 + ((rank % 5) - 2) * .024 - (note.midi - mid) * .008 + (mid < leadMid - 12 ? .04 : 0), .53, .82),
         anchor: repeated ? previous.anchor : note.startTime,
-        repeats: repeated ? Math.min(3, previous.repeats + 1) : 0,
+        repeats: repeated ? previous.repeats + 1 : 0,
       }
       notes.push(mark)
       lastPitch.set(note.midi, mark)

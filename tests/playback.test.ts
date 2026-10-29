@@ -107,6 +107,64 @@ describe('Playback coordination', () => {
   function audioMock() {
     return { load: vi.fn(async () => {}), play: vi.fn(async () => {}), pause: vi.fn(), stop: vi.fn(), seek: vi.fn(), dispose: vi.fn() }
   }
+  it.each(['unlock', 'schedule', 'load'] as const)('stops song time and clears audio after %s failure, then permits retry', async stage => {
+    const { clock, advance } = setup()
+    const audio = audioMock()
+    const report = vi.fn()
+    const controller = new PlaybackController(clock, audio, report)
+    const failure = new Error(`${stage} failed`)
+    if (stage === 'unlock') audio.play.mockRejectedValueOnce(failure)
+    if (stage === 'schedule') audio.seek.mockImplementationOnce(() => { throw failure })
+    if (stage === 'load') audio.load.mockRejectedValueOnce(failure)
+    await expect(stage === 'load' ? controller.load(createDemoScore()) : controller.play()).rejects.toBe(failure)
+    expect(clock.getState().status).not.toBe('playing')
+    const position = clock.getCurrentTime()
+    advance(2)
+    expect(clock.getCurrentTime()).toBe(position)
+    expect(audio.pause).toHaveBeenCalledOnce()
+    expect(report).toHaveBeenCalledWith(failure)
+    await controller.load(createDemoScore())
+    await controller.play()
+    expect(clock.getState().status).toBe('playing')
+    controller.dispose()
+  })
+
+  it('pauses and reports a failed seek during playback without advancing silently', async () => {
+    const { clock, advance } = setup()
+    const audio = audioMock()
+    const report = vi.fn()
+    const controller = new PlaybackController(clock, audio, report)
+    await controller.load(createDemoScore())
+    await controller.play()
+    audio.seek.mockImplementationOnce(() => { throw new Error('seek failed') })
+    expect(() => controller.seek(5)).toThrow('seek failed')
+    expect(clock.getState()).toMatchObject({ status: 'paused', time: 5 })
+    advance(2)
+    expect(clock.getCurrentTime()).toBe(5)
+    expect(audio.pause).toHaveBeenCalledOnce()
+    expect(report).toHaveBeenCalledOnce()
+    controller.dispose()
+  })
+
+  it('ignores a stale unlock or load rejection after a newer operation starts', async () => {
+    for (const operation of ['play', 'load'] as const) {
+      const { clock } = setup()
+      const audio = audioMock()
+      const report = vi.fn()
+      let reject!: (cause: unknown) => void
+      audio[operation].mockImplementationOnce(() => new Promise<void>((_resolve, fail) => { reject = fail }))
+      const controller = new PlaybackController(clock, audio, report)
+      const pending = operation === 'play' ? controller.play() : controller.load(createDemoScore())
+      await controller.load(createQuickStudyScore())
+      await controller.play()
+      reject(new Error('old operation failed'))
+      await pending
+      expect(clock.getState().status).toBe('playing')
+      expect(report).not.toHaveBeenCalled()
+      expect(audio.pause).not.toHaveBeenCalled()
+      controller.dispose()
+    }
+  })
   it('keeps audio seeks and the song clock in lockstep', async () => {
     const { clock } = setup()
     const audio = audioMock()

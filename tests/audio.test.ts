@@ -7,13 +7,14 @@ const fake = vi.hoisted(() => ({
   now: 10,
   voices: [] as { options: unknown; triggerAttackRelease: ReturnType<typeof vi.fn>; dispose: ReturnType<typeof vi.fn> }[],
   masters: [] as { gain: { rampTo: ReturnType<typeof vi.fn> }; dispose: ReturnType<typeof vi.fn> }[],
+  trigger: vi.fn(),
 }))
 vi.mock('tone', () => ({
   immediate: () => fake.now,
   start: async () => {},
   Frequency: (midi: number) => ({ toFrequency: () => midi }),
   Synth: class {
-    triggerAttackRelease = vi.fn()
+    triggerAttackRelease = vi.fn((...args: unknown[]) => fake.trigger(...args))
     dispose = vi.fn()
     constructor(readonly options: unknown) { fake.voices.push(this) }
     connect() { return this }
@@ -28,9 +29,42 @@ vi.mock('tone', () => ({
 }))
 import { ToneAudioEngine } from '../src/audio/ToneAudioEngine'
 
-afterEach(() => { vi.useRealTimers(); fake.voices = []; fake.masters = []; fake.now = 10 })
+afterEach(() => { vi.useRealTimers(); fake.voices = []; fake.masters = []; fake.now = 10; fake.trigger.mockReset() })
 
 describe('Tone audio adapter', () => {
+  it.each(['first', 'later'] as const)('cleans all voices and pauses the authoritative clock after the %s pump fails', async stage => {
+    vi.useFakeTimers()
+    const score = normalizeScore({ metadata: { title: 'Failure recovery', source: 'demo' }, tracks: [{
+      name: 'Voice', channel: 0, instrument: 0,
+      notes: [{ time: 0, duration: 2, midi: 60, velocity: 0.7 }, { time: 1, duration: 1, midi: 64, velocity: 0.7 }],
+    }] })
+    const clock = new PlaybackClock(score.duration, () => fake.now)
+    const audio = new ToneAudioEngine(clock)
+    const report = vi.fn()
+    const controller = new PlaybackController(clock, audio, report)
+    await controller.load(score)
+    const failure = new Error('schedule failed')
+    if (stage === 'first') {
+      fake.trigger.mockImplementationOnce(() => { throw failure })
+      await expect(controller.play()).rejects.toBe(failure)
+    } else {
+      await controller.play()
+      fake.trigger.mockImplementationOnce(() => { throw failure })
+      fake.now = 11
+      vi.advanceTimersByTime(25)
+    }
+    expect(clock.getState().status).toBe('paused')
+    const position = clock.getCurrentTime()
+    fake.now += 2
+    expect(clock.getCurrentTime()).toBe(position)
+    expect(report).toHaveBeenCalledOnce()
+    expect(report).toHaveBeenCalledWith(failure)
+    for (const voice of fake.voices) expect(voice.dispose).toHaveBeenCalledOnce()
+    expect(vi.getTimerCount()).toBe(0)
+    await controller.play()
+    expect(clock.getState().status).toBe('playing')
+    controller.dispose()
+  })
   it('gives overlapping unisons independent voices and cancels scheduled audio on seek', async () => {
     vi.useFakeTimers()
     const score = normalizeScore({ metadata: { title: 'Unisons', source: 'demo' }, tracks: [{

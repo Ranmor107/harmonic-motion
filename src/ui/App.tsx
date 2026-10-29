@@ -28,17 +28,20 @@ function StreamStyleButtons({ style, onSelect, mobile = false }: {
   </div>
 }
 
-export function App() {
+export function App({ persistenceEnabled = true }: { persistenceEnabled?: boolean }) {
   const {
     compiled, preset, viewMode, visibilityMode, streamStyleId, inkMode, sessions, activeSessionId,
     addScores, restoreSessions, selectSession, removeSession, regenerate, setPreset, setViewMode, setVisibilityMode, setStreamStyleId, setInkMode,
   } = useStudio()
   const { score, world, plan } = compiled
   const builtin = BUILTIN_SCORES.find(entry => entry.id === activeSessionId)
+  const [error, setError] = useState('')
   const [{ controller, audio }] = useState(() => {
     const clock = new PlaybackClock(0, audioNow)
     const audio = new ToneAudioEngine(clock)
-    return { controller: new PlaybackController(clock, audio), audio }
+    return { controller: new PlaybackController(clock, audio, cause => {
+      setError(`Audio paused: ${cause instanceof Error ? cause.message : String(cause)}. Check your audio settings and press Play to retry.`)
+    }), audio }
   })
   const [playback, setPlayback] = useState<PlaybackState>({ status: 'stopped', time: 0, duration: score.duration })
   const snapshot = useRef(playback)
@@ -47,13 +50,14 @@ export function App() {
   const drawerTrigger = useRef<HTMLButtonElement>(null)
   const drawerClose = useRef<HTMLButtonElement>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [starting, setStarting] = useState(false)
   const [volume, setVolume] = useState(DEFAULT_VOLUME)
   const [muted, setMuted] = useState(false)
   const [readReady, setReadReady] = useState(false)
   const [ready, setReady] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const [loadAttempt, setLoadAttempt] = useState(0)
   const [storageReady, setStorageReady] = useState(false)
   const [recoveryWarning, setRecoveryWarning] = useState('')
   const restorePosition = useRef<number | null>(null)
@@ -77,9 +81,11 @@ export function App() {
     setStreamStyleId(style)
   }
   const setFollow = (value: boolean) => setFollowViews(current => ({ ...current, [viewMode]: value }))
-  const storageFailed = useCallback(() => {
+  const storageFailed = useCallback((cause?: unknown) => {
     setStorageReady(false)
-    setError('Local saving is unavailable. Your scores will remain only in this session.')
+    const message = `本机存储暂时不可用${cause instanceof Error ? `：${cause.message}` : '。'} 原保存数据已保留；本次改动仅在内存中。关闭其他占用此站点的窗口后，可刷新重试。`
+    setRecoveryWarning(message)
+    setError(message)
   }, [])
   const currentPreferences = useCallback((): SavedPreferences => ({
     version: 1, activeSessionId, position: controller.clock.getState().time,
@@ -87,11 +93,11 @@ export function App() {
     volume, muted, followViews, melodyTracks,
   }), [activeSessionId, controller, viewMode, visibilityMode, streamStyleId, inkMode, preset.effects.hit.enabled, volume, muted, followViews, melodyTracks])
   const persistNow = useCallback(() => {
-    if (!storageReady) return
+    if (!persistenceEnabled || !storageReady) return
     const preferences = currentPreferences()
     lastSavedPosition.current = preferences.position
     void savePreferences(preferences).catch(storageFailed)
-  }, [storageReady, currentPreferences, storageFailed])
+  }, [persistenceEnabled, storageReady, currentPreferences, storageFailed])
 
   useEffect(() => {
     document.title = `${branding.name} — ${branding.descriptor}`
@@ -104,6 +110,7 @@ export function App() {
   }, [])
 
   useEffect(() => {
+    if (!persistenceEnabled) { setStorageReady(false); setReadReady(true); return }
     let active = true
     void Promise.allSettled([loadSavedState(), loadBuiltinScores()]).then(([savedResult, builtinResult]) => {
       if (!active) return
@@ -146,34 +153,36 @@ export function App() {
       setStorageReady(savedResult.status === 'fulfilled' && restored.rejected === 0)
     }).catch(() => { if (active) storageFailed() }).finally(() => { if (active) setReadReady(true) })
     return () => { active = false }
-  }, [audio, restoreSessions, setPreset, setViewMode, setVisibilityMode, storageFailed, setStreamStyleId, setInkMode])
+  }, [persistenceEnabled, audio, restoreSessions, setPreset, setViewMode, setVisibilityMode, storageFailed, setStreamStyleId, setInkMode])
 
   useEffect(() => {
     if (!readReady) return
     let active = true
+    setReady(false)
+    setLoadError('')
     void controller.load(score).then(() => {
       if (!active) return
       if (restorePosition.current !== null) {
         const position = restorePosition.current >= score.duration ? 0 : Math.max(0, restorePosition.current)
-        restorePosition.current = null
         controller.seek(position)
+        restorePosition.current = null
         snapshot.current = controller.clock.getState()
         setPlayback(snapshot.current)
       }
       setReady(true)
-    }).catch(cause => { if (active) setError(String(cause)) })
+    }).catch(cause => { if (active) setLoadError(`声音加载失败：${cause instanceof Error ? cause.message : String(cause)}`) })
     return () => { active = false }
-  }, [controller, score, readReady])
+  }, [controller, score, readReady, loadAttempt])
 
   useEffect(() => {
-    if (!ready || !storageReady) return
+    if (!persistenceEnabled || !ready || !storageReady) return
     void saveSessions(sessions.filter(session => session.id !== 'score-0').map(session => ({
       id: session.id, filename: session.filename, seed: session.seed, score: session.compiled.score,
     }))).catch(storageFailed)
-  }, [ready, storageReady, sessions, storageFailed])
+  }, [persistenceEnabled, ready, storageReady, sessions, storageFailed])
 
   useEffect(() => {
-    if (!ready || !storageReady) return
+    if (!persistenceEnabled || !ready || !storageReady) return
     persistNow()
     const savePosition = () => {
       if (Math.abs(currentPreferences().position - lastSavedPosition.current) >= 1) persistNow()
@@ -181,7 +190,7 @@ export function App() {
     const timer = setInterval(savePosition, 3000)
     window.addEventListener('pagehide', persistNow)
     return () => { clearInterval(timer); window.removeEventListener('pagehide', persistNow) }
-  }, [ready, storageReady, currentPreferences, persistNow])
+  }, [persistenceEnabled, ready, storageReady, currentPreferences, persistNow])
 
   useEffect(() => {
     let frame: number
@@ -242,21 +251,24 @@ export function App() {
     finally { setStarting(false) }
   }, [controller, persistNow])
 
-  const seekBy = useCallback((seconds: number) => {
-    controller.seek(controller.clock.getCurrentTime() + seconds)
+  const seekTo = useCallback((time: number) => {
+    let succeeded = true
+    try { controller.seek(time) } catch { succeeded = false }
     snapshot.current = controller.clock.getState()
     setPlayback(snapshot.current)
     persistNow()
+    return succeeded
   }, [controller, persistNow])
+
+  const seekBy = useCallback((seconds: number) => {
+    seekTo(controller.clock.getCurrentTime() + seconds)
+  }, [controller, seekTo])
 
   const replayRecent = useCallback(() => {
     const state = controller.clock.getState()
-    controller.seek(Math.max(0, state.time - 10))
-    snapshot.current = controller.clock.getState()
-    setPlayback(snapshot.current)
-    persistNow()
+    if (!seekTo(Math.max(0, state.time - 10))) return
     if (state.status !== 'playing') void togglePlayback()
-  }, [controller, persistNow, togglePlayback])
+  }, [controller, seekTo, togglePlayback])
 
   const toggleFullscreen = useCallback(async () => {
     try {
@@ -351,7 +363,10 @@ export function App() {
   const showGuide = entered && activeSessionId === 'score-0'
   const effectivelyMuted = muted || volume === 0
 
-  if (!ready) return <main className="studio restoring">Restoring your local library…</main>
+  if (!ready) return <main className="studio restoring"><section>
+    <p role={loadError ? 'alert' : 'status'}>{loadError || (readReady ? 'Preparing audio…' : 'Restoring your local library…')}</p>
+    {loadError && <><p>播放尚未开始，曲库数据不会被删除。检查音频设置后可重试。</p><button onClick={() => { setError(''); setLoadAttempt(attempt => attempt + 1) }}>重试加载声音</button></>}
+  </section></main>
 
   return <main ref={studio} className="studio" data-appearance={ink ? 'ink' : 'original'}>
     <header className="topbar">
@@ -474,12 +489,7 @@ export function App() {
         <div className="timeline-wrap">
           <input className="timeline" type="range" aria-label="Song position" min={0} max={score.duration} step={0.001} value={playback.time} style={{ background: `linear-gradient(to right, var(--brass) ${progress}%, var(--line) ${progress}%)` }} onKeyDown={event => {
             if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); if (!event.repeat) seekBy(event.key === 'ArrowLeft' ? -5 : 5) }
-          }} onChange={event => {
-            controller.seek(Number(event.target.value))
-            snapshot.current = controller.clock.getState()
-            setPlayback(snapshot.current)
-            persistNow()
-          }} aria-valuetext={`${playback.time.toFixed(2)} seconds of ${score.duration.toFixed(2)}`} />
+          }} onChange={event => seekTo(Number(event.target.value))} aria-valuetext={`${playback.time.toFixed(2)} seconds of ${score.duration.toFixed(2)}`} />
           <div className="timeline-ticks" aria-hidden="true">{[0, 0.25, 0.5, 0.75, 1].map(fraction => <span key={fraction} style={{ left: `${fraction * 100}%` }}>{timeLabel(fraction * score.duration)}</span>)}</div>
         </div>
         <span className="time total-time">{timeLabel(score.duration)}</span>

@@ -6,5 +6,6 @@ export interface AudioEngine {
   pause(): void
   stop(): void
   seek(time: number): void
+  setErrorHandler?(handler: (cause: unknown) => void): void
   dispose(): void
 }

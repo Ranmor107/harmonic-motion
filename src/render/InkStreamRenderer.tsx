@@ -3,16 +3,20 @@ import type { InkMode } from '../domain/visual'
 import { buildInkFrame, INK_LIMITS, type InkPresentation } from '../visual/presentation/inkPresentation'
 import type { PlaybackSnapshot } from './types'
 import { inkVertex, inkFragment } from './inkShaders'
+import { createRenderMetrics, renderIdentity } from './renderMetrics'
 
 // Owns only GPU resources. Musical time is always read from the host snapshot.
-export function InkStreamRenderer({ model, mode, playback, effects }: {
-  model: InkPresentation; mode: InkMode; playback: PlaybackSnapshot; effects: boolean
+export function InkStreamRenderer({ model, mode, playback, effects, diagnostics = false }: {
+  model: InkPresentation; mode: InkMode; playback: PlaybackSnapshot; effects: boolean; diagnostics?: boolean
 }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const [failure, setFailure] = useState('')
   const [revision, setRevision] = useState(0)
   const current = useRef({ model, mode, effects })
-  useEffect(() => { current.current = { model, mode, effects } }, [model, mode, effects])
+  useEffect(() => {
+    current.current = { model, mode, effects }
+    if (canvas.current) delete canvas.current.dataset.renderMetrics
+  }, [model, mode, effects])
   useEffect(() => {
     const surface = canvas.current!
     const gl = surface.getContext('webgl2', { alpha: true, premultipliedAlpha: false, antialias: true })
@@ -25,13 +29,14 @@ export function InkStreamRenderer({ model, mode, playback, effects }: {
     let observer: ResizeObserver | undefined
     const dispose = () => {
       cancelAnimationFrame(frame)
+      delete surface.dataset.renderMetrics
       observer?.disconnect()
       buffers.forEach(buffer => gl.deleteBuffer(buffer))
       shaders.forEach(shader => gl.deleteShader(shader))
       if (vao) gl.deleteVertexArray(vao)
       if (program) gl.deleteProgram(program)
     }
-    const lost = (event: Event) => { event.preventDefault(); cancelAnimationFrame(frame); setFailure('水墨画面暂时中断，音乐仍可控制。请重试画面。') }
+    const lost = (event: Event) => { event.preventDefault(); cancelAnimationFrame(frame); delete surface.dataset.renderMetrics; setFailure('水墨画面暂时中断，音乐仍可控制。请重试画面。') }
     const restored = () => { setFailure(''); setRevision(value => value + 1) }
     surface.addEventListener('webglcontextlost', lost)
     surface.addEventListener('webglcontextrestored', restored)
@@ -73,14 +78,16 @@ export function InkStreamRenderer({ model, mode, playback, effects }: {
       const values = new Float32Array(INK_LIMITS.marks * 12)
       let width = 0, height = 0, dirty = true, lastTime = -1
       let previous = current.current
+      let lastStatus = playback.current.status, continuous = false
+      let sampler = diagnostics ? createRenderMetrics(renderIdentity('stream', 'ink', previous.mode)) : undefined
       observer = new ResizeObserver(() => { dirty = true })
       observer.observe(surface)
       const draw = () => {
         frame = requestAnimationFrame(draw)
-        if (document.hidden) return
-        const time = playback.current.time
+        if (document.hidden) { continuous = false; return }
+        const { time, status } = playback.current
         const settings = current.current
-        if (!dirty && time === lastTime && settings === previous) return
+        if (!dirty && time === lastTime && settings === previous && (!diagnostics || status === lastStatus)) return
         if (dirty) {
           width = surface.clientWidth; height = surface.clientHeight
           const dpr = Math.min(devicePixelRatio || 1, 1.75)
@@ -103,7 +110,17 @@ export function InkStreamRenderer({ model, mode, playback, effects }: {
         gl.uniform1f(uniforms.uEffects!, settings.effects ? 1 : 0)
         gl.uniform1f(uniforms.uOffset!, Math.max(0, time - 9) * width * .84 / INK_LIMITS.window)
         gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, marks.length)
-        lastTime = time; previous = settings
+        if (sampler) {
+          if (settings !== previous) sampler = createRenderMetrics(renderIdentity('stream', 'ink', settings.mode))
+          const frames = sampler.record(performance.now(), continuous && status === lastStatus && status === 'playing')
+          if (frames === 1 || frames % 30 === 0) surface.dataset.renderMetrics = JSON.stringify({ ...sampler.snapshot(),
+            drawCalls: 1, triangles: marks.length * 2, lines: 0, instances: marks.length, instanceCapacity: INK_LIMITS.marks,
+            cpuBufferBytes: values.byteLength, gpuBufferBytes: INK_LIMITS.marks * 48 + 48,
+            buffers: buffers.length, programs: 1, vertexArrays: 1, textures: 0,
+            canvasWidth: surface.width, canvasHeight: surface.height, cssWidth: width, cssHeight: height })
+        }
+        continuous = true
+        lastTime = time; previous = settings; lastStatus = status
       }
       draw()
     } catch (error) {
@@ -116,9 +133,9 @@ export function InkStreamRenderer({ model, mode, playback, effects }: {
       surface.removeEventListener('webglcontextlost', lost)
       surface.removeEventListener('webglcontextrestored', restored)
     }
-  }, [playback, revision])
+  }, [playback, revision, diagnostics])
   return <div className="ink-paper-stage">
-    <canvas ref={canvas} aria-label={mode === 'drops' ? '宣纸落墨音乐舞台' : '墨脉音乐舞台'} />
+    <canvas ref={canvas} data-renderer={diagnostics ? 'ink-webgl2' : undefined} data-render-mode={diagnostics ? `stream:ink:${mode}` : undefined} aria-label={mode === 'drops' ? '宣纸落墨音乐舞台' : '墨脉音乐舞台'} />
     {failure && <div className="scene-fallback" role="alert">{failure}<button onClick={() => { setFailure(''); setRevision(value => value + 1) }}>重试画面</button></div>}
   </div>
 }

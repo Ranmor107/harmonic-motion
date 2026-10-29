@@ -82,6 +82,53 @@ describe('Ink folio integration', () => {
     expect(JSON.stringify(score)).toBe(before)
   })
 
+  it('keeps thirty seconds of repeated lead and accompaniment notes visible in local groups', () => {
+    const score = normalizeScore({ metadata: { title: 'Repeated pitches', source: 'demo' }, tracks: [60, 48].map((midi, channel) => ({
+      name: `Voice ${channel}`, channel, instrument: 0,
+      notes: Array.from({ length: 60 }, (_, index) => ({ time: index * .5, duration: .25, midi, velocity: .8 })),
+    })) })
+    const model = createInkPresentation(score, config, score.tracks[0]!.id)
+    for (let index = 0; index < 60; index++) {
+      const frame = buildInkFrame(model, 'drops', index * .5, 1050, 620)
+      for (const [rank, track] of score.tracks.entries()) {
+        const mark = frame.find(m => m.source === track.notes[index]!.id && m.type === 0)
+        expect(mark).toBeDefined()
+        expect(mark!.x).toBeGreaterThanOrEqual(0)
+        expect(mark!.x).toBeLessThanOrEqual(1050)
+        expect(mark!.memory).toBe(rank === 0 ? .9 : .3)
+      }
+    }
+    for (const track of score.tracks) {
+      const notes = model.notes.filter(n => n.note.trackId === track.id)
+      expect(notes[0]!.anchor).toBe(notes[1]!.anchor)
+      const groups = new Map<number, number>()
+      for (const n of notes) groups.set(n.anchor, (groups.get(n.anchor) ?? 0) + 1)
+      expect(Math.max(...groups.values())).toBeLessThanOrEqual(4)
+      expect(notes.every(n => n.note.startTime - n.anchor <= 2.7)).toBe(true)
+    }
+    for (const mode of ['drops', 'veins'] as const) {
+      const atEnd = buildInkFrame(model, mode, 30, 1050, 620)
+      for (const track of score.tracks) expect(atEnd.some(m => m.source === track.notes.at(-1)!.id)).toBe(true)
+      for (const time of [21.2, .1, 29.6, 8, 30]) buildInkFrame(model, mode, time, 1050, 620)
+      expect(buildInkFrame(model, mode, 30, 1050, 620)).toEqual(atEnd)
+    }
+  })
+
+  it('starts a new repeated-note deposit after a real rest', () => {
+    const score = normalizeScore({ metadata: { title: 'Separated repeats', source: 'demo' }, tracks: [{
+      name: 'Melody', channel: 0, instrument: 0,
+      notes: [0, .6, 2, 2.6].map(time => ({ time, duration: .25, midi: 60, velocity: .8 })),
+    }] })
+    const model = createInkPresentation(score, config)
+    expect(model.notes.map(n => n.anchor)).toEqual([0, 0, 2, 2])
+    for (const mode of ['drops', 'veins'] as const) {
+      const rest = buildInkFrame(model, mode, 1.6, 1050, 620)
+      expect(rest.length).toBeGreaterThan(0)
+      expect(rest.every(m => m.born <= .85)).toBe(true)
+      expect(rest.every(m => score.notes.slice(0, 2).some(n => n.id === m.source))).toBe(true)
+    }
+  })
+
   it('deposits only inside source note times, keeps real rests and reconstructs after arbitrary seeks', () => {
     const score = sample(), model = createInkPresentation(score, config, score.tracks[0]!.id)
     for (const mode of ['drops', 'veins'] as const) {
